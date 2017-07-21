@@ -21,7 +21,7 @@ param (
     [Parameter(Mandatory=$false)] [string] $workingStorageAccountName="smokeworkingstorageacct",
     [Parameter(Mandatory=$false)] [string] $workingContainerName="vhds-under-test",
 
-    [Parameter(Mandatory=$false)] [string] $sourceURI="Unset",
+    [Parameter(Mandatory=$false)] [string] $sourceURI,
 
     # 
     #  A place with the contents of Last Known Good.  This is similar to Latest for packagee
@@ -31,9 +31,15 @@ param (
 
     #
     #  Our location
-    [Parameter(Mandatory=$false)] [string] $location="westus"
+    [Parameter(Mandatory=$false)] [string] $location="westus",
+    [Parameter(Mandatory=$true)] [string] $SubscriptionId
 )
+
+$ErrorActionPreference = "Stop"
 Set-StrictMode -Version 2.0
+
+$scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$FRAMEWORK_SCRIPTS = $scriptPath
 
 $global:sourceResourceGroupName=$sourceResourceGroupName
 $global:sourceStorageAccountName=$sourceStorageAccountName
@@ -49,7 +55,7 @@ $global:testOutputResourceGroup=$testOutputResourceGroup
 $global:testOutputContainerName=$testOutputContainerName
 $global:workingContainerName=$workingContainerName
 
-$global:useSourceURI=[string]::IsNullOrEmpty($global:sourceURI)
+$global:useSourceURI=$false
 
 #
 #  The machines we're working with
@@ -228,13 +234,10 @@ function launch_azure_vms {
         $machine_log = New-Object MachineLogs
         $machine_log.name = $vmName
         $machine_log.job_name = $jobname
-        $global:machineLogs.Add($machine_log)        
+        $global:machineLogs.Add($machine_log)
 
-        $resourceGroup="smoke_working_resource_group"
-        $storageAccount="smokeworkingstorageacct"
-        $containerName="vhds-under-test"
-
-        Start-Job -Name $jobname -ScriptBlock { c:\Framework-Scripts\launch_single_azure_vm.ps1 -resourceGroup $args[0] -storageAccount $args[1] -containerName $args[2] -vmName $args[3]} -ArgumentList @($resourceGroup),@($storageAccount),@($containerName),@($vmName)
+        Start-Job -Name $jobname -ScriptBlock {$ErrorActionPreference = "Stop";Set-StrictMode -Version 2.0;$FRAMEWORK_SCRIPTS= $args[4];& "$FRAMEWORK_SCRIPTS\launch_single_azure_vm.ps1" -resourceGroup $args[0] -storageAccount $args[1] -containerName $args[2] -vmName $args[3]} `
+                  -ArgumentList @($workingResourceGroupName,$workingStorageAccountName,$workingContainerName,$vmName,$FRAMEWORK_SCRIPTS)|Wait-Job | Receive-Job
     }
 
     foreach ($machineLog in $global:machineLogs) {
@@ -546,9 +549,8 @@ Write-Host "    "
 
 Write-Host "Importing the context...." -ForegroundColor Green
 Import-AzureRmContext -Path 'C:\Azure\ProfileContext.ctx' > $null
-
 Write-Host "Selecting the Azure subscription..." -ForegroundColor Green
-Select-AzureRmSubscription -SubscriptionId "2cd20493-fe97-42ef-9ace-ab95b63d82c4" > $null
+Select-AzureRmSubscription -SubscriptionId $SubscriptionId > $null
 Set-AzureRmCurrentStorageAccount –ResourceGroupName $global:sourceResourceGroupName –StorageAccountName $global:sourceStorageAccountName > $null
 
 #
