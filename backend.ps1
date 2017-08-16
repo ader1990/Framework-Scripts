@@ -387,11 +387,13 @@ class AzureBackend : Backend {
                        @($this.StorageAccountName, $this.ContainerName, $InstanceName))
 
         $vm = Set-AzureRmVMOSDisk -VM $vm -Name $InstanceName -VhdUri $blobURIRaw -CreateOption Attach -Linux
+
+        if ($this.enableBootDiagnostics -ne "Yes") {
+            Write-Host "Disabling boot diagnostics" -ForegroundColor Yellow
+            Set-AzureRmVMBootDiagnostics -VM $vm -Disable
+        }
+
         try {
-            if ($this.enableBootDiagnostics -ne "Yes") {
-                Write-Host "Disabling boot diagnostics" -ForegroundColor Yellow
-                Set-AzureRmVMBootDiagnostics -VM $vm -Disable -ResourceGroupName $this.ResourceGroupName
-            }
             Write-Host "Starting the VM" -ForegroundColor Yellow
             $NEWVM = New-AzureRmVM -ResourceGroupName $this.ResourceGroupName -Location $this.Location -VM $vm
             if (!$NEWVM) {
@@ -444,19 +446,20 @@ class AzureBackend : Backend {
         $tries = 0
         while ($trying -eq $true) {
             $trying = $false
+            
+            Write-Host "Starting the VM" -ForegroundColor Yellow
+            $cred = make_cred_initial
+            $vm = Set-AzureRmVMOperatingSystem -VM $vm -Linux -ComputerName $InstanceName -Credential $cred
+            $vm = Set-AzureRmVMSourceImage -VM $vm -PublisherName $blobParts[0] -Offer $blobParts[1] `
+                -Skus $blobParts[2] -Version $blobParts[3]
+            $vm = Set-AzureRmVMOSDisk -VM $vm -VhdUri $osDiskVhdUri -name $InstanceName -CreateOption fromImage -Caching ReadWrite
+
+            if ($this.enableBootDiagnostics -ne "Yes") {
+                Write-Host "Disabling boot diagnostics" -ForegroundColor Yellow
+                Set-AzureRmVMBootDiagnostics -VM $vm -Disable
+            }
+
             try {
-                Write-Host "Starting the VM" -ForegroundColor Yellow
-                $cred = make_cred_initial
-                $vm = Set-AzureRmVMOperatingSystem -VM $vm -Linux -ComputerName $InstanceName -Credential $cred
-                $vm = Set-AzureRmVMSourceImage -VM $vm -PublisherName $blobParts[0] -Offer $blobParts[1] `
-                    -Skus $blobParts[2] -Version $blobParts[3]
-                $vm = Set-AzureRmVMOSDisk -VM $vm -VhdUri $osDiskVhdUri -name $InstanceName -CreateOption fromImage -Caching ReadWrite
-
-                if ($this.enableBootDiagnostics -ne "Yes") {
-                    Write-Host "Disabling boot diagnostics" -ForegroundColor Yellow
-                    Set-AzureRmVMBootDiagnostics -VM $vm -Disable -ResourceGroupName $this.ResourceGroupName
-                }
-
                 $NEWVM = New-AzureRmVM -ResourceGroupName $this.ResourceGroupName -Location $this.Location -VM $vm
                 if (!$NEWVM) {
                     Write-Host "Failed to create VM" -ForegroundColor Red
@@ -520,15 +523,15 @@ class AzureBackend : Backend {
 
         Write-Host "Adding the network interface" -ForegroundColor Yellow
         Add-AzureRmVMNetworkInterface -VM $vm -Id $VNIC.Id
-    
+           
+        if ($this.enableBootDiagnostics -ne "Yes") {
+            Write-Host "Disabling boot diagnostics" -ForegroundColor Yellow
+            Set-AzureRmVMBootDiagnostics -VM $vm -Disable
+        }
+            
         try {
             Write-Host "Starting the VM" -ForegroundColor Yellow
-
-            if ($this.enableBootDiagnostics -ne "Yes") {
-                Write-Host "Disabling boot diagnostics" -ForegroundColor Yellow
-                Set-AzureRmVMBootDiagnostics -VM $vm -Disable -ResourceGroupName $this.ResourceGroupName
-            }
-            
+                
             $NEWVM = New-AzureRmVM -ResourceGroupName $this.ResourceGroupName -Location $this.Location -VM $vm
             if (!$NEWVM) {
                 Write-Host "Failed to create VM" -ForegroundColor Red

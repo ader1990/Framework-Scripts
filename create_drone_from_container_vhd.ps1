@@ -302,6 +302,17 @@ Write-Host "All jobs have completed.  Checking results (this will take a moment.
 
 #
 #  Get the results of that
+$regionSuffix = ("-" + $location + "-" + $VMFlavor) -replace " ","-"
+$regionSuffix = $regionSuffix -replace "_","-"
+$fullDestSuffix = $regionSuffix + $newSuffix
+
+[string]$fullNameList
+foreach ($name in $requestedNames) {
+    $newName = $name + $fullDestSuffix
+    $fullNameList = $fullNameList + $newName + ","
+}
+$fullNameList = $fullNameList -replace ",$"
+
 $status = c:\Framework-Scripts\run_command_on_machines_in_group.ps1 -requestedNames $requestedNames -destSA $destSA -destRG $destRG `
                                                                     -suffix $newSuffix -location $location -command "/bin/uname -a" `
                                                                     -retryCount 5

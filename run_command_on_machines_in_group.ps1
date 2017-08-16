@@ -70,6 +70,7 @@ $commandString =
     while ($timesTried -lt $retryCount) {
         # write-host "Executing remote command on machine $vm_name, resource gropu $destRG"
         $timesTried = $timesTried + 1
+        
         [System.Management.Automation.Runspaces.PSSession]$session = create_psrp_session $vm_name $destRG $destSA $location $cred $o
         if ($? -eq $true -and $session -ne $null) {
             invoke-command -session $session -ScriptBlock $commandBLock -ArgumentList $command

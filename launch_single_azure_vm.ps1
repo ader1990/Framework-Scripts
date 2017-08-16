@@ -21,7 +21,7 @@
     [Parameter(Mandatory=$false)] [string] $suffix = ".vhd",
 
     [Parameter(Mandatory=$false)] [switch] $imageIsGeneralized = $false,
-    [Parameter(Mandatory=$false)] [string] $generalizedBlobURI = ".vhd"
+    [Parameter(Mandatory=$false)] [string] $generalizedBlobURI = ".vhd",
 
     [Parameter(Mandatory=$false)] [string] $enableBootDiagnostics = "No"    
 )

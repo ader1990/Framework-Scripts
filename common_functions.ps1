@@ -51,26 +51,31 @@ function create_psrp_session([string] $vmName, [string] $rg, [string] $SA, [stri
 {
     login_azure $rg $sa $location > $null
 
-    $vm_search_string = $vmName + "*" + $location + "*"
+    $vm_search_string = $vmName  + "*"
     $vm_search_string = $vm_search_string -replace "_","-"
 
-    Write-Verbose "Attempting to locate host by search string $vm_search_string"
+    Write-Host "Attempting to locate host by search string $vm_search_string"
     $ipAddress = Get-AzureRmPublicIpAddress -ResourceGroupName $rg | Where-Object -Property Name -Like $vm_search_string
-    Write-Verbose "Got IP Address $($ipAddress.Name), with IP Address $($ipAddress.IpAddress)"
+    Write-Host "Got IP Address $($ipAddress.Name), with IP Address $($ipAddress.IpAddress)"
 
-    if ($ipAddress.IpAddress.ToLower() -eq "Not Assigned") {
-        Write-Error "Machine $vmName does not have an assigned IP address.  Cannot create PSRP session to the machine."
-        return $null
+    if ($ipAddress -ne $null) {
+        $theAddress = $ipAddress.IpAddress            
+        if ($theAddress.ToLower() -eq "Not Assigned") {
+            Write-Error "Machine $vmName does not have an assigned IP address.  Cannot create PSRP session to the machine."
+            return $null
+        }
+    } else {
+        Write-Error "The public IP for machnine $vmName does appear to exist, and the Magic modules are not loaded.  Cannot process.."
     }
 
     $remoteIP = $ipAddress.IpAddress
-    Write-Verbose "Attempting contact at $remoteIP"
+    Write-Host "Attempting contact at $remoteIP"
     $thisSession = new-PSSession -computername $remoteIP -credential $cred -authentication Basic -UseSSL -Port 443 -SessionOption $o
     if ($? -eq $false) {
         Write-Host "Contact failed..."
         return $null
     } else {
-        Write-Verbose "Contact was successful"
+        Write-Host "Contact was successful"
         return $thisSession
     }
 }
