@@ -41,8 +41,8 @@ $azureBackend.NetworkName = $network
 $azureBackend.SubnetName = $subnet
 $azureBackend.NetworkSecGroupName = $NSG
 
-$azureBackend.addressPrefix = $vnetAddressPrefix
-$azureBackend.subnetPrefix = $vnetSubnetAddressPrefix
+$azureBackend.addressPrefix = $addressPrefix
+$azureBackend.subnetPrefix = $subnetPrefix
 $azureBackend.blobURN = $blobURN
 $azureBackend.blobURI = $generalizedBlobURI
 $azureBackend.suffix = $suffix

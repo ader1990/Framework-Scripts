@@ -148,15 +148,17 @@ function copy_azure_machines {
         Write-Host "Preparing the individual machines..." -ForegroundColor green
         foreach ($oneblob in $blobs) {
             $sourceName=$oneblob.Name
-            $targetName = $sourceName -replace "-RunOnce-Primed.vhd", "-BORG.vhd"
+            if ($sourceName -like "*-RunOnce-Primed.vhd") {
+                $targetName = $sourceName -replace "-RunOnce-Primed.vhd", "-BORG.vhd"
 
-            $vmName = $targetName.Replace(".vhd","")
-            $global:neededVMs.Add($vmName)
-   
-            Write-Host "     --------- Initiating job to copy VHD $vmName from cache to working directory..." -ForegroundColor Yellow
-            $blob = Start-AzureStorageBlobCopy -SrcBlob $sourceName -DestContainer $global:workingContainerName -SrcContainer $global:sourceContainerName -DestBlob $targetName -Context $sourceContext -DestContext $destContext
+                $vmName = $targetName.Replace(".vhd","")
+                $global:neededVMs.Add($vmName)
+    
+                Write-Host "     --------- Initiating job to copy VHD $vmName from cache to working directory..." -ForegroundColor Yellow
+                $blob = Start-AzureStorageBlobCopy -SrcBlob $sourceName -DestContainer $global:workingContainerName -SrcContainer $global:sourceContainerName -DestBlob $targetName -Context $sourceContext -DestContext $destContext
 
-            $global:copyblobs.Add($targetName)
+                $global:copyblobs.Add($targetName)
+            }
         }
     } else {
         Write-Host "Clearing the destination container..."  -ForegroundColor green
@@ -259,7 +261,7 @@ function create_azure_topology {
     
         $suffix = "-BORG.vhd"
 
-        Start-Job -Name $jobname -ScriptBlock { C:\Framework-Scripts\launch_single_asure_vm.ps1 -vmName $args[0] -resourceGroup $args[1] -storageAccount $args[2] -containerName $args[3] `
+        Start-Job -Name $jobname -ScriptBlock { C:\Framework-Scripts\launch_single_azure_vm.ps1 -vmName $args[0] -resourceGroup $args[1] -storageAccount $args[2] -containerName $args[3] `
                                                     -network $args[4] -subnet $args[5] -NSG $args[6] -location $args[7] -VMFlavor $args[8] -addressPrefix $args[9] `
                                                     -subnetPrefix $args[10] -suffix $args[11] } `
                                                     -ArgumentList @($vmName),@($resourceGroup),@($storageAccount),@($containerName),@($network),@($subnet),@($NSG),@($global:location),`
@@ -592,6 +594,9 @@ Write-Host "                                BORG CUBE is initialized"           
 Write-Host "              Starting the Dedicated Remote Nodes of Execution (DRONES)" -ForegroundColor yellow
 Write-Host "    "
 
+get-job | Stop-Job
+get-job | Remove-Job
+
 login_azure
 
 $date1 = Get-Date -Date "01/01/1970"
@@ -606,7 +611,7 @@ Write-Host "Looking for storage account $global:workingStorageAccountName in res
 $existingGroup = Get-AzureRmResourceGroup -Name $global:workingResourceGroupName 
 if ($? -eq $true -and $existingGroup -ne $null -and $global:CleanRG -eq $true) {
     write-host "Resource group already existed.  Deleting resource group." -ForegroundColor Yellow
-    Remove-AzureRmResourceGroup -Name $destRG -Force
+    Remove-AzureRmResourceGroup -Name $global:workingResourceGroupName -Force
 
     write-host "Creating new resource group $global:workingResourceGroupName in loction $global:location"
     New-AzureRmResourceGroup -Name $global:workingResourceGroupName -Location $global:location
@@ -621,7 +626,7 @@ if ($? -eq $true -and $existingGroup -ne $null -and $global:CleanRG -eq $true) {
 Get-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName  -Name $global:workingStorageAccountName
 if ($? -eq $false) {
     Write-Host "Storage account $global:workingResourceGroupName  did not exist.  Creating it and populating with the right containers..." -ForegroundColor Yellow
-    New-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName-Location $global:location -SkuName Standard_LRS -Kind Storage
+    New-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName -Location $global:location -SkuName Standard_LRS -Kind Storage
 
     write-host "Selecting it as the current SA" -ForegroundColor Yellow
     Set-AzureRmCurrentStorageAccount –ResourceGroupName $global:workingResourceGroupName  –StorageAccountName $global:workingStorageAccountName
@@ -636,12 +641,16 @@ Set-AzureRmCurrentStorageAccount –ResourceGroupName $global:workingResourceGro
 #
 #
 #  Copy the virtual machines to the staging container
-#                
+#      
+get-job | Stop-Job
+get-job | Remove-Job          
 copy_azure_machines
 
 #
 #  Launch the virtual machines
-#                
+#        
+get-job | Stop-Job
+get-job | Remove-Job        
 create_azure_topology
 write-host "$global:num_remaining machines have been launched.  Waiting for completion..."
 

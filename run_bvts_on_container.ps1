@@ -182,6 +182,8 @@ foreach ($oneblob in $blobs) {
     $targetName = $targetName -replace ".vhd", "-Booted-and-Verified.vhd"
 
     (Get-Content .\$templateFile).Replace("SMOKE_MACHINE_NAME_HERE",$targetName) | out-file $configFileName
+    (Get-Content .\$configFileName).Replace("STORAGE_ACCOUNT_NAME_HERE",$destSA) | out-file $configFileName
+    (Get-Content .\$configFileName).Replace("LOCATION_HERE<",$location) | out-file $configFileName
 
     #
     # Launch the automation

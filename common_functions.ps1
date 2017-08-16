@@ -137,7 +137,7 @@ function stop_machines_in_group([Microsoft.Azure.Commands.Compute.Models.PSVirtu
     }
 }
 
-function deallocate_machines_in_group([Microsoft.Azure.Commands.Compute.Models.PSVirtualMachine[]] $runningVMs,
+function deallocate_machines_in_list([string[]] $requestedNames,
                                     [string] $destRG,
                                     [string] $destSA,
                                     [string] $location)
@@ -174,10 +174,9 @@ function deallocate_machines_in_group([Microsoft.Azure.Commands.Compute.Models.P
     }
 
     $scriptBlock = [scriptblock]::Create($scriptBlockString)
-    foreach ($singleVM in $runningVMs) {
-        $vm_name = $singleVM.Name
+    foreach ($vm_name in $requestedNames) {
         $vmJobName = $vm_name + "-Deprov"
-        write-host "Starting job to deprovision VM $vm_name"
+        write-host "Starting job to deprovision VM by list $vm_name"
         Start-Job -Name $vmJobName -ScriptBlock $scriptBlock -ArgumentList $vm_name,$destRG,$destSA
     }
 
@@ -186,8 +185,7 @@ function deallocate_machines_in_group([Microsoft.Azure.Commands.Compute.Models.P
         $allDone = $true
         $timeNow = get-date
         write-host "Checking jobs at time $timeNow :" -ForegroundColor Yellow
-        foreach ($singleVM in $runningVMs) {
-            $vm_name = $singleVM.Name
+        foreach ($vm_name in $requestedNames) {
             $vmJobName = $vm_name + "-Deprov"
             $job = Get-Job -Name $vmJobName
             $jobState = $job.State
@@ -264,7 +262,7 @@ function stop_machines_in_list([stringe[]] $requestedNames,
     }
 }
 
-function deallocate_machines_in_group([string[]] $requestedNames,
+function deallocate_machines_in_group([Microsoft.Azure.Commands.Compute.Models.PSVirtualMachine[]]  $runningVMs,
                                     [string] $destRG,
                                     [string] $destSA,
                                     [string] $location)
@@ -290,8 +288,10 @@ function deallocate_machines_in_group([string[]] $requestedNames,
     }
 
     $scriptBlock = [scriptblock]::Create($scriptBlockString)
-    foreach ($vm_name in $requestedNames) {
+    foreach ($singleVM in $runningVMs) {
+        $vm_name = $singleVM.Name
         write-host "Starting job to deprovision VM $vm_name"
+        $vmJobName = $vm_name + "-Deprov"
         Start-Job -Name $vmJobName -ScriptBlock $scriptBlock -ArgumentList $vm_name,$destRG,$destSA
     }
 
