@@ -212,7 +212,7 @@ $scriptBlockString =
         $machineIsUp = $true
         $sleepCount = $sleepCount + 1
         if ($ip -eq $null -or $ip.ToLower() -eq "not assigned") {
-            $machineIsIP = $false
+            $machineIsUP = $false
             start-sleep -Seconds 10
         } else {
             $machineIsUp = $true
