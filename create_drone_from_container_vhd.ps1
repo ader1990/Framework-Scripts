@@ -39,7 +39,7 @@ if ($requestedNames -like "*,*") {
     $vmNameArray += $requestedNames
 }
 
-$regionSuffix = ("-" + $location + "-" + $VMFlavor) -replace " ","-"
+$regionSuffix = ("---" + $location + "-" + $VMFlavor) -replace " ","-"
 $regionSuffix = $regionSuffix -replace "_","-"
 
 $fullSuffix = $regionSuffix + $currentSuffix
@@ -154,7 +154,7 @@ $scriptBlockString =
     $username="$TEST_USER_ACCOUNT_NAME"
     $password="$TEST_USER_ACCOUNT_PAS2" # Could just be "$TEST_USER_ACCOUNT_PASS1_K6"
 
-    $regionSuffix = ("-" + $location + "-" + $vmFlavor) -replace " ","-"
+    $regionSuffix = ("---" + $location + "-" + $vmFlavor) -replace " ","-"
     $regionSuffix = $regionSuffix -replace "_","-"
     $imageName = $newVMName + $regionSuffix
     $imageName = $imageName + $newSuffix
@@ -302,7 +302,7 @@ Write-Host "All jobs have completed.  Checking results (this will take a moment.
 
 #
 #  Get the results of that
-$regionSuffix = ("-" + $location + "-" + $VMFlavor) -replace " ","-"
+$regionSuffix = ("---" + $location + "-" + $VMFlavor) -replace " ","-"
 $regionSuffix = $regionSuffix -replace "_","-"
 $fullDestSuffix = $regionSuffix + $newSuffix
 

@@ -77,7 +77,11 @@ Set-AzureRmCurrentStorageAccount –ResourceGroupName $destRG –StorageAccountN
 foreach ($oneblob in $blobs) {
     $sourceName=$oneblob.Name
 
-    $targetName = $sourceName
+    $targetName = ($sourceName.split("---"))[0]
+    if ($targetName.Length -gt 22) {
+        $targetName = $targetName.substring(0,23)
+    }
+    
     if ($removeTag -ne "") {
         $targetName = $sourceName -replace $removeTag,".vhd"
     }
