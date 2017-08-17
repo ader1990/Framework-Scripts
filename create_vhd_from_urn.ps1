@@ -64,6 +64,7 @@ $location=($location.tolower()).Replace(" ","")
 #  Log in without changing to the RG or SA.  This is intentional
 login_azure
 
+$saLength = $destSA.Length
 Write-Host "Looking for storage account $destSA in resource group $destRG.  Length of name is $saLength"
 #
 $existingGroup = Get-AzureRmResourceGroup -Name $destRG
@@ -196,7 +197,7 @@ $scriptBlockString =
     $azureBackend.blobURN = $blobURN
     $azureBackend.suffix = $suffix
 
-    $azureInstance.enableBootDiagnostics = "No"
+    $azureBackend.enableBootDiagnostics = "No"
 
     $azureInstance = $azureBackend.GetInstanceWrapper($vmName)
 
