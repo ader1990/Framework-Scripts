@@ -53,6 +53,7 @@ $global:sourceResourceGroupName=$sourceResourceGroupName
 $global:sourceStorageAccountName=$sourceStorageAccountName
 $global:sourceContainerName=$sourceContainerName
 $global:location=$location
+$global:VMFlavor=$VMFlavor
 
 $global:workingResourceGroupName=$workingResourceGroupName
 $global:workingStorageAccountName=$workingStorageAccountName
@@ -146,16 +147,23 @@ function copy_azure_machines {
         $destContext=New-AzureStorageContext -StorageAccountName $global:workingStorageAccountName -StorageAccountKey $destKey[0].Value
 
         Write-Host "Preparing the individual machines..." -ForegroundColor green
+        $regionSuffix = ("---" + $global:location + "-" + $global:VMFlavor) -replace " ","-"
+        $regionSuffix = $regionSuffix -replace "_","-"
+        
+        $fullSuffix = $regionSuffix + "-BORG.vhd"
+
         foreach ($oneblob in $blobs) {
-            $sourceName=$oneblob.Name
-            if ($sourceName -like "*-RunOnce-Primed.vhd") {
-                $targetName = $sourceName -replace "-RunOnce-Primed.vhd", "-BORG.vhd"
+            $fullName=$oneblob.Name
+            
+            if ($fullName -like "*-RunOnce-Primed.vhd") {
+                $nameParts = $fullName.split("---")
+                $targetName = $nameParts[0] + $fullSuffix
 
                 $vmName = $targetName.Replace(".vhd","")
                 $global:neededVMs.Add($vmName)
     
                 Write-Host "     --------- Initiating job to copy VHD $vmName from cache to working directory..." -ForegroundColor Yellow
-                $blob = Start-AzureStorageBlobCopy -SrcBlob $sourceName -DestContainer $global:workingContainerName -SrcContainer $global:sourceContainerName -DestBlob $targetName -Context $sourceContext -DestContext $destContext
+                $blob = Start-AzureStorageBlobCopy -SrcBlob $fullName -DestContainer $global:workingContainerName -SrcContainer $global:sourceContainerName -DestBlob $targetName -Context $sourceContext -DestContext $destContext
 
                 $global:copyblobs.Add($targetName)
             }

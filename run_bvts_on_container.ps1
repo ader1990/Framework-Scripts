@@ -174,32 +174,38 @@ $launched_machines = 0
 Set-AzureRmCurrentStorageAccount –ResourceGroupName $sourceRG –StorageAccountName $sourceSA 
 $blobs=get-AzureStorageBlob -Container $sourceContainer -Blob $blobFilter
 
+$regionSuffix = ("---" + $location + "-" + $VMFlavor) -replace " ","-"
+$regionSuffix = $regionSuffix -replace "_","-"
+
+$fullSuffix = $regionSuffix + "-Booted-and-Verified.vhd"
+
 foreach ($oneblob in $blobs) {
-    $sourceName=$oneblob.Name
-    $configFileName="c:\temp\bvt_configs\bvt_exec_" + $sourceName + ".xml"
-    $jobName=$sourceName + "_BVT_Runner"
+    $fullName=$oneblob.Name
+    
+    if ($fullName -like "*$removeTag") {
+        $nameParts = $fullName.split("---")
+        $targetName = $nameParts[0] + $fullSuffix
+        
+        $configFileName="c:\temp\bvt_configs\bvt_exec_" + $targetName + ".xml"
+        $jobName=$sourceName + "_BVT_Runner"
 
-    $targetName = $sourceName
-    if ($removeTag -ne "") {
-        $targetName = $sourceName -replace $removeTag, ".vhd" 
-    }
-    $targetName = $targetName -replace ".vhd", "-Booted-and-Verified.vhd"
+    
+        (Get-Content .\$templateFile).Replace("SMOKE_MACHINE_NAME_HERE",$targetName) | out-file $configFileName -Force
+        (Get-Content .\$configFileName).Replace("STORAGE_ACCOUNT_NAME_HERE",$destSA) | out-file $configFileName -Force
+        (Get-Content .\$configFileName).Replace("LOCATION_HERE",$location) | out-file $configFileName -Force
 
-    (Get-Content .\$templateFile).Replace("SMOKE_MACHINE_NAME_HERE",$targetName) | out-file $configFileName -Force
-    (Get-Content .\$configFileName).Replace("STORAGE_ACCOUNT_NAME_HERE",$destSA) | out-file $configFileName -Force
-    (Get-Content .\$configFileName).Replace("LOCATION_HERE",$location) | out-file $configFileName -Force
-
-    #
-    # Launch the automation
-    write-host "Args are: $sourceName, $configFileName, $distro, $testCycle"
-    Start-Job -Name $jobName -ScriptBlock { C:\Framework-Scripts\run_single_bvt.ps1 -sourceName $args[0] -configFileName $args[1] -distro $args[2] -testCycle $args[3]  } `
-                                            -ArgumentList @($sourceName),@($configFileName),@($distro),@($testCycle)
-    if ($? -ne $true) {
-        Write-Host "Error launching job $jobName for source $targetName.  BVT will not be run." -ForegroundColor Red
-    } else {
-        $launched_machines += 1
-        $launchTime=date
-        Write-Host "Job $jobName launched machine $targetName as BVT $launched_machines at $launchTime" -ForegroundColor Green
+        #
+        # Launch the automation
+        write-host "Args are: $sourceName, $configFileName, $distro, $testCycle"
+        Start-Job -Name $jobName -ScriptBlock { C:\Framework-Scripts\run_single_bvt.ps1 -sourceName $args[0] -configFileName $args[1] -distro $args[2] -testCycle $args[3]  } `
+                                                -ArgumentList @($sourceName),@($configFileName),@($distro),@($testCycle)
+        if ($? -ne $true) {
+            Write-Host "Error launching job $jobName for source $targetName.  BVT will not be run." -ForegroundColor Red
+        } else {
+            $launched_machines += 1
+            $launchTime=date
+            Write-Host "Job $jobName launched machine $targetName as BVT $launched_machines at $launchTime" -ForegroundColor Green
+        }
     }
 }
 

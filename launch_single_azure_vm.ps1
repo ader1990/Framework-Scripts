@@ -53,9 +53,9 @@ $azureInstance = $azureBackend.GetInstanceWrapper($vmName)
 $azureInstance.Cleanup()
 
 if ($true -ne $imageIsGeneralized) {
-    write-verbose "instantinating a VM from a Specialized image..."
+    write-verbose "instantinating VM $vmName from a Specialized image..."
     $azureInstance.CreateFromSpecialized()
 } else {
-    write-verbose "Instantinating a VM from a generalized image..."
+    write-verbose "Instantinating VM $vmName from a generalized image..."
     $azureInstance.CreateFromGeneralized()
 }
