@@ -102,7 +102,7 @@ foreach ($oneblob in $blobs) {
     
     if ($start_copy -eq $true) {
         Write-Host "Initiating job to copy VHD $targetName from container $sourceSA/$sourceContainer to $destSA/$destContainer..." -ForegroundColor Yellow
-        $blob = Start-AzureStorageBlobCopy -SrcBlob $sourceName -DestContainer $destContainer -SrcContainer $sourceContainer -DestBlob $targetName -Context $sourceContext -DestContext $destContext
+        $blob = Start-AzureStorageBlobCopy -SrcBlob $fullName -DestContainer $destContainer -SrcContainer $sourceContainer -DestBlob $targetName -Context $sourceContext -DestContext $destContext
         if ($? -eq $true) {
             $copyblobs.Add($targetName)
         } else {

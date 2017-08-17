@@ -109,7 +109,7 @@ class MonitoredMachine {
 
 $timer=New-Object System.Timers.Timer
 
-class MachineLogs {
+class MachineLog {
     [string] $name="unknown"
     [string] $job_log
     [string] $job_name
@@ -162,7 +162,7 @@ function copy_azure_machines {
                 $vmName = $targetName.Replace(".vhd","")
                 $global:neededVMs.Add($vmName)
     
-                Write-Host "     --------- Initiating job to copy VHD $vmName from cache to working directory..." -ForegroundColor Yellow
+                Write-Host "     --------- Initiating job to copy VHD $fullName from cache to working directory as $targetName..." -ForegroundColor Yellow
                 $blob = Start-AzureStorageBlobCopy -SrcBlob $fullName -DestContainer $global:workingContainerName -SrcContainer $global:sourceContainerName -DestBlob $targetName -Context $sourceContext -DestContext $destContext
 
                 $global:copyblobs.Add($targetName)
@@ -185,8 +185,8 @@ function copy_azure_machines {
 
             $global:neededVMs.Add($vmName)
 
-            Write-Host "Initiating job to copy VHD $vhd_name from cache to working directory..." -ForegroundColor Yellow
-            $blob = Start-AzureStorageBlobCopy -SrcBlob $sourceName -DestContainer $global:workingContainerName -SrcContainer $global:sourceContainerName -DestBlob $targetName -Context $sourceContext -DestContext $destContext
+            Write-Host "Initiating job to copy VHD $vmName from cache to working directory..." -ForegroundColor Yellow
+            $blob = Start-AzureStorageBlobCopy -SrcBlob $singleURI -DestContainer $global:workingContainerName -SrcContainer $global:sourceContainerName -DestBlob $targetName -Context $sourceContext -DestContext $destContext
 
             $global:copyblobs.Add($targetName)
         }
@@ -248,7 +248,7 @@ function create_azure_topology {
         $global:num_remaining += 1
         $jobname=$vmName + "-VMStart"
 
-        $machine_log = New-Object MachineLogs
+        $machine_log = New-Object MachineLog
         $machine_log.name = $vmName
         $machine_log.job_name = $jobname
         $global:machineLogs.Add($machine_log)        
@@ -276,8 +276,7 @@ function create_azure_topology {
                                                                   @($vmFlavor),@($addressPrefix),@($subnetPrefix),@($suffix)
     }
 
-    foreach ($machineLog in $global:machineLogs) {
-            [MachineLogs]$singleLog=$machineLog
+    foreach ($singleLog in $global:machineLogs) {
     
         $jobname=$singleLog.job_name
         $jobStatus=get-job -Name $jobName
