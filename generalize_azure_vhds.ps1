@@ -110,7 +110,8 @@ $scriptBlockText = {
     login_azure
     #
     #  This might not be the best way, but I only have 23 characters here, so we'll go with what the user entered
-    $vhdPrefix = ($vm_name.split("---"))[0]
+    $bar=$vm_name.Replace("---","{")
+    $vhdPrefix = $bar.split("{")[0]
     if ($vhdPrefix.Length -gt 22) {
         $vhdPrefix = $vhdPrefix.substring(0,23)
     }

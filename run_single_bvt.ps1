@@ -13,13 +13,13 @@ Start-Transcript $logFileName -Force
 
 #
 #  Launch the automation
-echo "Starting execution of test $testCycle on machine $sourceName" 
+Write-Output "Starting execution of test $testCycle on machine $sourceName" 
 
 Import-AzureRmContext -Path 'C:\Azure\ProfileContext.ctx'
 Select-AzureRmSubscription -SubscriptionId "$AZURE_SUBSCRIPTION_ID" 
 
 $tests_failed = $false
-cd C:\azure-linux-automation
+Set-Location C:\azure-linux-automation
 C:\azure-linux-automation\AzureAutomationManager.ps1 -xmlConfigFile $configFileName -runtests -email –Distro $distro -cycleName $testCycle -UseAzureResourceManager -EconomyMode
 if ($? -ne $true) {
     $tests_failed = $true

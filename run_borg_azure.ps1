@@ -72,8 +72,10 @@ $global:CleanRG = $CleanRG
 #  The machines we're working with
 $global:neededVms_array=@()
 $global:neededVms = {$neededVms_array}.Invoke()
+$global:neededVms.Clear()
 $global:copyblobs_array=@()
 $global:copyblobs = {$copyblobs_array}.Invoke()
+$global:copyblobs.Clear()
 
 
 $global:completed=0
@@ -116,6 +118,11 @@ class MachineLog {
 }
 [System.Collections.ArrayList]$global:machineLogs = @()
 
+$regionSuffix = ("---" + $global:location + "-" + $global:VMFlavor) -replace " ","-"
+$regionSuffix = $regionSuffix -replace "_","-"
+
+$fullSuffix = $regionSuffix + "-BORG.vhd"
+
 function copy_azure_machines {
     if ($global:useSourceURI -eq $false)
     {
@@ -146,17 +153,14 @@ function copy_azure_machines {
         $destKey=Get-AzureRmStorageAccountKey -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName
         $destContext=New-AzureStorageContext -StorageAccountName $global:workingStorageAccountName -StorageAccountKey $destKey[0].Value
 
-        Write-Host "Preparing the individual machines..." -ForegroundColor green
-        $regionSuffix = ("---" + $global:location + "-" + $global:VMFlavor) -replace " ","-"
-        $regionSuffix = $regionSuffix -replace "_","-"
-        
-        $fullSuffix = $regionSuffix + "-BORG.vhd"
+        Write-Host "Preparing the individual machines..." -ForegroundColor green        
 
         foreach ($oneblob in $blobs) {
             $fullName=$oneblob.Name
             
             if ($fullName -like "*-RunOnce-Primed.vhd") {
-                $nameParts = $fullName.split("---")
+                $bar=$fullName.Replace("---","{")
+                $nameParts = $bar.split("{")
                 $targetName = $nameParts[0] + $fullSuffix
 
                 $vmName = $targetName.Replace(".vhd","")
@@ -179,11 +183,14 @@ function copy_azure_machines {
             $lastPart=$splitUri[$splitUri.Length - 1]
 
             $sourceName = $lastPart
+            $bar=$sourceName.Replace("---","{")
+            $nameParts = $bar.split("{")
+            $targetName = $nameParts[0] + $fullSuffix
             $targetName = $sourceName -replace ".vhd", "-BORG.vhd"
 
             $vmName = $targetName.Replace(".vhd","")
 
-            $global:neededVMs.Add($vmName)
+            $global:neededVMs.Add($sourceName)
 
             Write-Host "Initiating job to copy VHD $vmName from cache to working directory..." -ForegroundColor Yellow
             $blob = Start-AzureStorageBlobCopy -SrcBlob $singleURI -DestContainer $global:workingContainerName -SrcContainer $global:sourceContainerName -DestBlob $targetName -Context $sourceContext -DestContext $destContext
@@ -442,9 +449,7 @@ $action={
         $monitoredMachineName=$monitoredMachine.name
         $monitoredMachineStatus=$monitoredMachine.status
 
-        foreach ($localLog in $global:machineLogs) {
-            [MachineLogs]$singleLog=$localLog
-
+        foreach ($singleLog in $global:machineLogs) {
             #
             #  Don't even try if the new-vm hasn't completed...
             #
@@ -497,9 +502,7 @@ $action={
             $monitoredMachineStatus=$monitoredMachine.status
 
             $calledIt = $false
-            foreach ($localLog in $global:machineLogs) {
-                [MachineLogs]$singleLog=$localLog
-
+            foreach ($singleLog in $global:machineLogs) {
                 $singleLogName = $singleLog.name
                 $singleLogJobName = $singleLog.job_name
 
