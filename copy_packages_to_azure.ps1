@@ -1,6 +1,6 @@
 ﻿param (
     [Parameter(Mandatory=$false)] [string] $destResourceGroup="smoke_output_resource_group",
-    [Parameter(Mandatory=$false)] [string] $destAccountName="smoketestoutstorageacct",
+    [Parameter(Mandatory=$false)] [string] $destAccountName="smokebvtstorageaccount",
     [Parameter(Mandatory=$false)] [string] $destContainer="last-build-packages",
     [Parameter(Mandatory=$false)] [string] $driveLetter="Z:\",
     [Parameter(Mandatory=$false)] [string] $location="westus"
