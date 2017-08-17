@@ -73,20 +73,17 @@ Set-AzureRmCurrentStorageAccount –ResourceGroupName $sourceRG –StorageAccoun
 $blobs=get-AzureStorageBlob -Container $sourceContainer -Blob $blobFilter
 
 Set-AzureRmCurrentStorageAccount –ResourceGroupName $destRG –StorageAccountName $destSA
+$regionSuffix = ("---" + $global:location + "-" + $global:VMFlavor) -replace " ","-"
+$regionSuffix = $regionSuffix -replace "_","-"
+
+$fullSuffix = $regionSuffix + "-Booted-and-Verified.vhd"
 
 foreach ($oneblob in $blobs) {
-    $sourceName=$oneblob.Name
+    $fullName=$oneblob.Name
+    $nameParts = $fullName.split("---")
 
-    $targetName = ($sourceName.split("---"))[0]
-    if ($targetName.Length -gt 22) {
-        $targetName = $targetName.substring(0,23)
-    }
-    
-    if ($removeTag -ne "") {
-        $targetName = $sourceName -replace $removeTag,".vhd"
-    }
-    $targetName = $targetName -replace ".vhd","-Booted-and-Verified.vhd"
-    
+    $targetName = $nameParts[0] + $fullSuffix
+
     $blobIsInDest = $false
     if ($existingBlobs.Name -contains $targetName) {
         $blobIsInDest = $true
@@ -191,8 +188,8 @@ foreach ($oneblob in $blobs) {
 
     
         (Get-Content .\$templateFile).Replace("SMOKE_MACHINE_NAME_HERE",$targetName) | out-file $configFileName -Force
-        (Get-Content .\$configFileName).Replace("STORAGE_ACCOUNT_NAME_HERE",$destSA) | out-file $configFileName -Force
-        (Get-Content .\$configFileName).Replace("LOCATION_HERE",$location) | out-file $configFileName -Force
+        (Get-Content $configFileName).Replace("STORAGE_ACCOUNT_NAME_HERE",$destSA) | out-file $configFileName -Force
+        (Get-Content $configFileName).Replace("LOCATION_HERE",$location) | out-file $configFileName -Force
 
         #
         # Launch the automation
