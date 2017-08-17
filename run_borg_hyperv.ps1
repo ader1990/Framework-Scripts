@@ -128,18 +128,24 @@ function Get-ScriptBlockVHDS {
      $scriptBlock = {
         param($VHDFile,
               $BaseVHDsPath,
-              $WorkingVHDsPath
+              $WorkingVHDsPath,
+              $UseChildrenVHD
         )
         $from = Join-Path $BaseVHDsPath $vhdFile
         $to = Join-Path $WorkingVHDsPath $vhdFile
         Remove-Item -Path $to -Force -ErrorAction SilentlyContinue | Out-Null
-        Write-Output "Starting to copy VHD $VHDFile to working directory..."
-        $out = Robocopy.exe $BaseVHDsPath $WorkingVHDsPath $VHDFile
-        if (!(Test-Path $to)) {
-            throw ("$VHDFile could not be copied. Robocopy output: $out." + `
-                   "LASTEXITCODE: $LASTEXITCODE")
+        if (!$UseChildrenVHD) {
+            Write-Output "Starting to copy VHD $VHDFile to working directory..."
+            $out = Robocopy.exe $BaseVHDsPath $WorkingVHDsPath $VHDFile
+            if (!(Test-Path $to)) {
+                throw ("$VHDFile could not be copied. Robocopy output: $out." + `
+                       "LASTEXITCODE: $LASTEXITCODE")
+            } else {
+                Write-Output "Finished copying $VHDFile to working directory."
+            }
         } else {
-            Write-Output "Finished copying $VHDFile to working directory."
+            New-VHD -ParentPath $from -Path $to | Out-Null
+            Write-Output "Finished creating child vhd: $VHDFile in the working directory."
         }
     }.ToString()
     return $scriptBlock
@@ -157,7 +163,7 @@ Workflow Copy-VHDS {
         $VHDFileName = $vhdFile.Name
         try {
             $output = CreateWait-JobFromScript -ScriptBlock $Workflow:scriptBlock `
-                -ArgumentList @($VHDFileName, $BaseVHDsPath, $WorkingVHDsPath) `
+                -ArgumentList @($VHDFileName, $BaseVHDsPath, $WorkingVHDsPath, $UseChildrenVHD) `
                 -Timeout $VHDCopyTimeout -JobName "CopyVHD-$VHDFileName-$suffix-{0}"
             Write-Output "Job ended with output >> $output <<"
         } catch {
