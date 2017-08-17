@@ -32,10 +32,16 @@ param (
     [Parameter(Mandatory=$false)]
     [int] $VMBootTimeout=20,
     [Parameter(Mandatory=$false)]
-    [string] $VMNamesDumpFilePath="vm-names.txt"
+    [int] $VMCheckTimeout=30,
+    [Parameter(Mandatory=$false)]
+    [string] $VMNamesDumpFilePath="vm-names.txt",
+    [Parameter(Mandatory=$false)]
+    [string] $KernelVersion="3.10.0-693.1.1.el7.x86_64"
 )
 
 $ErrorActionPreference = "Stop"
+$scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
+. "$scriptPath\common_functions.ps1"
 
 function CreateWait-JobFromScript {
     param(
@@ -55,6 +61,7 @@ function CreateWait-JobFromScript {
         $job = Start-Job -Name $JobName -ScriptBlock $s `
             -ArgumentList $ArgumentList
         $jobResult = Wait-Job $job -Timeout $Timeout -Force
+        Stop-Job $JobName -ErrorAction SilentlyContinue -Confirm:$false
         $output = Receive-Job $JobName
         if ($jobResult.State -ne "Completed") {
             throw "Failed to run $JobName with output: $output"
@@ -62,7 +69,6 @@ function CreateWait-JobFromScript {
             return $output
         }
     } finally {
-        Stop-Job $JobName -ErrorAction SilentlyContinue
         Remove-Job $JobName -ErrorAction SilentlyContinue
     }
 }
@@ -218,9 +224,74 @@ Workflow Create-VMS {
     }
 }
 
-function Check-VMS {
-    Write-Host "Checking VMs state..."
-    Write-Host "Finished checking VMs state."
+function Get-ScriptblockCheckVMS {
+    return  {
+        param($VMName, $Credential, $KernelVersion)
+        # (avladu): add a retry method
+        $retries = 0
+        $maxRetries = 10
+        while ($retries -lt $maxRetries) {
+            try {
+                $ipv4Ip = $null
+                $vm = Get-VM -Name $VMName
+                $vmNetAdapter = Get-VMNetworkAdapter -VM $vm
+                foreach ($ip in $vmNetAdapter.IPAddresses) {
+                    if (([ipaddress]$ip).AddressFamily -eq "InterNetwork") {
+                        $ipv4Ip = $ip
+                        break
+                    }
+                }
+                if (!$ipv4Ip) {
+                    Start-Sleep 5
+                    $retries += 1
+                    continue
+                }
+            } catch {
+                Write-Output $_.Message
+            }
+            Write-Output "VM $VMName has been created and started successfully with ip $ip."
+            $session = New-PSSession -ComputerName $ipv4Ip -Authentication Basic -Credential $Credential
+            $kernel = Invoke-Command -ScriptBlock {uname -r} -Session $session
+            $session | Remove-PSSession
+            # (avladu): add a retry check here, in case the kernel is getting installed
+            if ($KernelVersion -ne $kernel) {
+                throw "Kernel versions do not match. Existent kernel $kernel != Desired kernel $KernelVersion"
+            } else {
+                Write-Output "Kernel versions match. Existent kernel $kernel == Desired kernel"
+            }
+            break
+        }
+    }.ToString()
+}
+
+Workflow Check-VMS {
+    param($VMNames, $VMCheckTimeout, $creds, $KernelVersion)
+    InlineScript {
+        Write-Host "Checking VMs state..."
+    }
+    $errors = 0
+    $suffix = Get-Random 1000000
+    $scriptBlock = $null
+    $vmsCreated = @()
+    foreach -parallel ($vmName in $VMNames) {
+        $Workflow:scriptBlock = Get-ScriptblockCheckVMS
+        try {
+            $output = CreateWait-JobFromScript -ScriptBlock $Workflow:scriptBlock `
+                -ArgumentList @($vmName, $creds, $KernelVersion) `
+                -Timeout $VMCheckTimeout -JobName "CheckVM-$vmName-$suffix-{0}"
+            Write-Output "Job ended with output >> $output <<"
+            $Workflow:vmsCreated += $vmName
+        } catch {
+            Write-Output ("Job failed with error: {0}" -f @($_.Message))
+            $Workflow:errors += 1
+        }
+    }
+    if ($Workflow:errors) {
+        throw "VMs checks failed."
+    }
+    InlineScript {
+        Write-Host "Finished checking VMs state."
+    }
 }
 
 function Main {
@@ -252,7 +323,7 @@ function Main {
     }
 
     Create-VMS $WorkingVHDsPath $VMBootTimeout $VMNamesDumpFilePath
-    Check-VMS $WorkingVHDsPath
+    Check-VMS $vmNames $VMCheckTimeout (make_cred) $KernelVersion
 }
 
 Main
