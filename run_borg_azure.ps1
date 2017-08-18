@@ -184,7 +184,6 @@ function copy_azure_machines {
             $bar=$sourceName.Replace("---","{")
             $nameParts = $bar.split("{")
             $targetName = $nameParts[0] + $fullSuffix
-            $targetName = $sourceName -replace ".vhd", "-BORG.vhd"
 
             $vmName = $targetName.Replace(".vhd","")
 
@@ -244,6 +243,33 @@ function copy_azure_machines {
 
 
 function create_azure_topology {
+
+    . C:\Framework-Scripts\backend.ps1
+    # . "$scriptPath\backend.ps1"
+    
+     ## Storage
+    $vnetAddressPrefix = "10.0.0.0/16"
+    $vnetSubnetAddressPrefix = "10.0.0.0/24"
+    
+    $backendFactory = [BackendFactory]::new()
+    $azureBackend = $backendFactory.GetBackend("AzureBackend", @(1))
+    
+    $azureBackend.ResourceGroupName = $destRG
+    $azureBackend.StorageAccountName = $destSA
+    $azureBackend.ContainerName = $destContainer
+    $azureBackend.Location = $location
+    $azureBackend.VMFlavor = $VMFlavor
+    $azureBackend.NetworkName = $vnetName
+    $azureBackend.SubnetName = $subnetName
+    $azureBackend.NetworkSecGroupName = $NSG
+    $azureBackend.addressPrefix = $vnetAddressPrefix
+    $azureBackend.subnetPrefix = $vnetSubnetAddressPrefix
+    $azureBackend.blobURN = $blobURN
+    $azureBackend.suffix = $suffix
+    
+    $azureInstance = $azureBackend.GetInstanceWrapper("AzureSetup")
+    $azureInstance.SetupAzureRG()
+
     foreach ($vmName in $global:neededVms) {
         $machine = new-Object MonitoredMachine
         $machine.name = $vmName
@@ -430,7 +456,7 @@ $action={
     }
 
     $global:elapsed=$global:elapsed+$global:interval
-    Write-Host "Checking elapsed = $global:elapsed against interval limit of $global:boot_timeout_intervals" -ForegroundColor Yellow
+    # Write-Host "Checking elapsed = $global:elapsed against interval limit of $global:boot_timeout_intervals" -ForegroundColor Yellow
 
     if ($global:elapsed -ge $global:boot_timeout_intervals) {
         Write-Host "Elapsed is $global:elapsed"
@@ -623,7 +649,7 @@ if ($? -eq $true -and $existingGroup -ne $null -and $global:CleanRG -eq $true) {
 
     write-host "Creating new resource group $global:workingResourceGroupName in loction $global:location"
     New-AzureRmResourceGroup -Name $global:workingResourceGroupName -Location $global:location
-} elseif ($existingGroup -eq $null -and $global:CleanRG -eq $true) {
+} elseif ($existingGroup -eq $null) {
     write-host "Creating new resource group $global:workingResourceGroupName in loction $global:location"
     New-AzureRmResourceGroup -Name $global:workingResourceGroupName  -Location $global:location
 }
@@ -636,11 +662,14 @@ if ($? -eq $false -or $global:CleanRG -eq $true) {
     Write-Host "Deleting storage account $global:workingStorageAccountName just to create it again..."  -ForegroundColor green
     Remove-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName -Force
     Write-Host "Deleted..."
-    New-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName -Kind BlobStorage -Location $global:location -SkuName Standard_LRS -AccessTier Hot
+    
+    New-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName `
+                              -Kind Storage -Location $global:location -SkuName Standard_LRS 
     Write-Host "Rebuilt..."
-    Set-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName
-    Write-Host "Selected..."
-    New-AzureStorageContainer -name $global:workingContainerName -Permission Blob
+
+    $destKey=Get-AzureRmStorageAccountKey -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName
+    $destContext=New-AzureStorageContext -StorageAccountName $global:workingStorageAccountName -StorageAccountKey $destKey[0].Value
+    New-AzureStorageContainer -name $global:workingContainerName -Permission Blob -Context $destContext
     Write-Host "And populated."
 }
 Set-AzureRmCurrentStorageAccount –ResourceGroupName $global:workingResourceGroupName –StorageAccountName $global:workingStorageAccountName
@@ -648,7 +677,7 @@ Set-AzureRmCurrentStorageAccount –ResourceGroupName $global:workingResourceGro
 Get-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName  -Name $global:workingStorageAccountName
 if ($? -eq $false) {
     Write-Host "Storage account $global:workingStorageAccountName  did not exist.  Creating it and populating with the right containers..." -ForegroundColor Yellow
-    New-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName -Location $global:location -SkuName Standard_LRS -Kind BlobStorage -AccessTier Hot
+    New-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName -Location $global:location -SkuName Standard_LRS 
 
     write-host "Selecting it as the current SA" -ForegroundColor Yellow
     Set-AzureRmCurrentStorageAccount –ResourceGroupName $global:workingResourceGroupName  –StorageAccountName $global:workingStorageAccountName

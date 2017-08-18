@@ -25,11 +25,14 @@ $suffix = $suffix -replace "_","-"
 [System.Collections.ArrayList]$vmNames_array
 $vmNameArray = {$vmNames_array}.Invoke()
 $vmNameArray.Clear()
+write-host "Incoming : " $requestedNames
 if ($requestedNames -ne "Unset" -and $requestedNames -like "*,*") {
     $vmNameArray = $requestedNames.Split(',')
 } else {
-    $vmNameArray += $requestedNames
+    $vmNameArray = $requestedNames.Split(' ')
 }
+
+Write-Host "After : " $vmNameArray
 
 [System.Collections.ArrayList]$base_names_array
 $machineBaseNames = {$base_names_array}.Invoke()
@@ -42,15 +45,16 @@ $machineFullNames.Clear()
 login_azure $sourceRG $sourceSA $location
 
 $vmName = $vmNameArray[0]
-if ($generalizeAll -eq $false -and ($vmNameArray.Count -eq 1  -and $vmNameArray[0] -eq "Unset")) {
-    Write-Host "Must specify either a list of VMs in RequestedNames, or use MakeDronesFromAll.  Unable to process this request."
+if ($generalizeAll -eq $false -and ($vmNameArray.Count -eq 1  -and $vmName -eq "Unset")) {
+    Write-Host "Must specify either a list of VMs in RequestedNames, or use generalizeAll.  Unable to process this request."
     Stop-Transcript
     exit 1
 } else {
     $requestedNames = ""
     $runningVMs = Get-AzureRmVm -ResourceGroupName $sourceRG
 
-    if ($generalizeAll -eq $true) {
+    if ($generalizeAll -eq "True") {
+        Write-Host "Generalizing all running machines..."
         foreach ($vm in $runningVMs) {
             $vm_name=$vm.Name
             $requestedNames = $requestedNames + $vm_name + ","
@@ -58,10 +62,12 @@ if ($generalizeAll -eq $false -and ($vmNameArray.Count -eq 1  -and $vmNameArray[
             $machineFullNames += $vm_name
         }
     } else {
+        write-host "Generalizing only specific machines"
         foreach ($vm in $runningVMs) {
             $vm_name=$vm.Name
             foreach ($name in $requestedNames) {
                 if ($vm_name.contains($name)) {
+                    Write-Host "Including VM $vm_name"
                     $requestedNames = $requestedNames + $vm_name + ","
                     $machineBaseNames += $name
                     $machineFullNames += $vm_name
@@ -125,7 +131,7 @@ $scriptBlockText = {
 
     write-host "Saving image for machnine $machine_name to container $sourceContainer in RG $sourceRG"
     Save-AzureRmVMImage -VMName $machine_name -ResourceGroupName $sourceRG -DestinationContainerName $sourceContainer `
-                        -VHDNamePrefix $vhdPrefix -Path c:\test\vhd_templates\$machine_name
+                        -VHDNamePrefix $vhdPrefix
 
     write-host "Deleting machine $machine_name"
     Remove-AzureRmVM -Name $machine_name -ResourceGroupName $sourceRG -Force
@@ -198,25 +204,7 @@ if ($Failed -eq $true) {
 #  storage container, with the prefix we gave it but some random junk on the back.  We will copy those
 #  VHDs, and their associated JSON files, to the output storage container, renaming them 
 # to <user supplied>---no_loc-no_flav-generalized.vhd
-$bar=$vm_name.Replace("---","{")
-$vhdPrefix = $bar.split("{")[0]
-if ($vhdPrefix.Length -gt 22) {
-    $vhdPrefix = $vhdPrefix.substring(0,23)
-}
-
-$blobFilter = '*.json'
-if ($removeTag -ne "") {
-    $blobFilter = '*' + $removeTag
-}
-Write-Host "Blob filter is $blobFilter"
-
-$generalized_container = "system/Microsoft.Compute/Images/" + $sourceContainer + "/"
-$blobs=get-AzureStorageBlob -Container $generalized_container -Blob $blobFilter
-
-[int]$nameIndex = 0
-foreach ($vm_name in $machineBaseNames) {
-    $machine_name = $machineFullNames[$nameIndex]
-
-    
-    $jsonURI = "https://" + $sourceRG + ".blob.core.windows.net/system/Microsoft.Compute/Images/" + $sourceContainer + "/" + OpenLogic-CentOS-73-LAT-vmTemplate.1b544b03-16b2-46bd-a00e-607dc4f02f45.json
-exit 0
+Write-Host "Copying the generalized images to container $destContainer"
+.\copy_single_image_container_to_container.ps1 -sourceSA $sourceSA -sourceRG $sourceRG -sourceContainer "system" -sourceExtension "" -destSA $destSA `
+                                               -destRG $destRG -destContainer $destContainer -destExtension "-Generalized.vhd" -location $location `
+                                               -vmNamesIn $requestedNames -overwriteVHDs "True" -Verbose

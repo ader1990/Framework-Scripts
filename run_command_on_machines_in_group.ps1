@@ -21,12 +21,13 @@
 [System.Collections.ArrayList]$vmNames_array
 $vmNameArray = {$vmNames_array}.Invoke()
 $vmNameArray.Clear()
+write-host "Incoming : " $requestedNames
 if ($requestedNames -like "*,*") {
     $vmNameArray = $requestedNames.Split(',')
 } else {
-    $vmNameArray += $requestedNames
+    $vmNameArray = $requestedNames.Split(' ')
 }
-
+Write-Host "After : " $vmNameArray
 $suffix = $suffix -replace "_","-"
 
 $commandString = 
@@ -98,7 +99,7 @@ foreach ($baseName in $vmNameArray) {
     $vm_name = $vm_name -replace ".vhd", ""
     $job_name = "run_command_" + $vm_name
 
-    # write-host "Executing remote command on machine $vm_name, resource gropu $destRG"
+    write-host "Executing remote command on machine $vm_name, resource gropu $destRG"
 
     start-job -Name $job_name -ScriptBlock $commandBLock -ArgumentList $DestRG, $DestSA, $location, $suffix, $command, $asRoot, $vm_name, $retryCount > $null
 }

@@ -85,7 +85,7 @@ if ($? -eq $true) {
 
 if (($wasThere -eq $true) -and ($overwriteVHDs -eq $true)) {
     Remove-AzureRmStorageAccount -ResourceGroupName $destRG -Name $destSA -Force
-    New-AzureRmStorageAccount -ResourceGroupName $destRG -Name $destSA -Kind BlobStorage -Location $location -SkuName Standard_LRS -AccessTier Hot
+    New-AzureRmStorageAccount -ResourceGroupName $destRG -Name $destSA -Kind Storage -Location $location -SkuName Standard_LRS
     Set-AzureRmStorageAccount -ResourceGroupName $destRG -Name $destSA
 } elseif (($wasThere -eq $true) -and ($OverwriteVHDs -eq $false)) {
     if ($currentLoc -ne $location) {
@@ -95,7 +95,7 @@ if (($wasThere -eq $true) -and ($overwriteVHDs -eq $true)) {
     Write-Host "Using existing storage account $destSA."
 } else {
     Write-Host "Storagr account did not exist.  Creating now..."
-    New-AzureRmStorageAccount -ResourceGroupName $destRG -Name $destSA -Kind BlobStorage -Location $location -SkuName Standard_LRS -AccessTier Hot
+    New-AzureRmStorageAccount -ResourceGroupName $destRG -Name $destSA -Kind Storage -Location $location -SkuName Standard_LRS
     Set-AzureRmStorageAccount -ResourceGroupName $destRG -Name $destSA
 }
 Set-AzureRmCurrentStorageAccount –ResourceGroupName $destRG –StorageAccountName $destSA 
@@ -205,6 +205,32 @@ $regionSuffix = ("---" + $location + "-" + $VMFlavor) -replace " ","-"
 $regionSuffix = $regionSuffix -replace "_","-"
 
 $fullSuffix = $regionSuffix + "-Booted-and-Verified.vhd"
+
+. C:\Framework-Scripts\backend.ps1
+# . "$scriptPath\backend.ps1"
+
+ ## Storage
+$vnetAddressPrefix = "10.0.0.0/16"
+$vnetSubnetAddressPrefix = "10.0.0.0/24"
+
+$backendFactory = [BackendFactory]::new()
+$azureBackend = $backendFactory.GetBackend("AzureBackend", @(1))
+
+$azureBackend.ResourceGroupName = $destRG
+$azureBackend.StorageAccountName = $destSA
+$azureBackend.ContainerName = $destContainer
+$azureBackend.Location = $location
+$azureBackend.VMFlavor = $VMFlavor
+$azureBackend.NetworkName = $vnetName
+$azureBackend.SubnetName = $subnetName
+$azureBackend.NetworkSecGroupName = $NSG
+$azureBackend.addressPrefix = $vnetAddressPrefix
+$azureBackend.subnetPrefix = $vnetSubnetAddressPrefix
+$azureBackend.blobURN = $blobURN
+$azureBackend.suffix = $suffix
+
+$azureInstance = $azureBackend.GetInstanceWrapper("AzureSetup")
+$azureInstance.SetupAzureRG()
 
 foreach ($oneblob in $blobs) {
     $fullName=$oneblob.Name
@@ -321,3 +347,4 @@ while ($completed_machines -lt $launched_machines) {
         }
     }
 }
+

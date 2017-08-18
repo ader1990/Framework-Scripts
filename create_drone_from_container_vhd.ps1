@@ -36,7 +36,7 @@ $vmNameArray.Clear()
 if ($requestedNames -like "*,*") {
     $vmNameArray = $requestedNames.Split(',')
 } else {
-    $vmNameArray += $requestedNames
+    $vmNameArray = $requestedNames.Split(' ')
 }
 
 $regionSuffix = ("---" + $location + "-" + $VMFlavor) -replace " ","-"

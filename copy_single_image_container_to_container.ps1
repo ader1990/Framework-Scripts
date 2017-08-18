@@ -36,13 +36,17 @@ $copyblobs_array=@()
 $copyblobs = {$copyblobs_array}.Invoke()
 $copyblobs.Clear()
 
+$copyJobs_array=@()
+$copyJobs = {$copyJobs_array}.Invoke()
+$copyJobs.Clear()
+
 $vmNames_array=@()
 $vmNames = {$vmNames_array}.Invoke()
 $vmNames.Clear()
 if ($vmNamesIn -like "*,*") {
     $vmNames = $vmNamesIn.Split(',')
 } else {
-    $vmNames += $vmNamesIn
+    $vmNames = $vmNamesIn.Split(' ')
 }
 
 login_azure $destRG $destSA $location
@@ -101,17 +105,26 @@ if ($makeDronesFromAll -eq $true) {
     Write-Host "Making drones of all VHDs in container $sourceContainer from region $location, with extenstion $sourceExtension.  There will be $blobCount VHDs:"-ForegroundColor Magenta
     $vmNames.Clear()
     foreach ($blob in $blobs) {
-        $copyblobs.Add($blob)
+        $copyblobs += $blob
         $blobName = $blob.Name
         write-host "                       $blobName" -ForegroundColor Magenta
         $vmNames.Add($blobName)
     }
 } else {
+    $blobs=get-AzureStorageBlob -Container $sourceContainer -Blob "*$sourceExtension"
     foreach ($vmName in $vmNames) {
-        $theName = $vmName + $sourceExtension
-        $singleBlob=get-AzureStorageBlob -Container $sourceContainer -Blob $theName
-        if ($? -eq $true) {
-            $copyblobs.Add($singleBlob)
+        $foundIt = $false
+        foreach ($blob in $blobs) {
+            $matchName = "*" + $vmName + "*"
+            if ( $blob.Name -like $matchName)  {
+                $foundIt = $true
+                break
+            }
+        }
+
+        if ($foundIt -eq $true) {
+            write-host "Added blob $theName (" $blob.Name ")"
+            $copyblobs += $blob
         } else {
             Write-Host " ***** ??? Could not find source blob $theName in container $sourceContainer.  This request is skipped" -ForegroundColor Red
         }
@@ -124,20 +137,24 @@ if ($clearDestContainer -eq $true) {
     get-AzureStorageBlob -Container $destContainer -Blob "*$destExtension" | ForEach-Object {Remove-AzureStorageBlob -Blob $_.Name -Container $destContainer }
 }
 
+[int] $index = 0
 foreach ($vmName in $vmNames) {
     $sourceName = $vmName + $sourceExtension
     $targetName = $vmName + $destExtension
 
+    $sourceBlob = $copyBlobs[$index]
+    $sourceBlobName = $sourceBlob.Name
+
+    Write-Host "Copying source blob $sourceBlobName"
+
     Write-Host "Initiating job to copy VHD $sourceName from $sourceRG and $sourceContainer to $targetName in $destRG and $destSA, container $destContainer" -ForegroundColor Yellow
     if ($overwriteVHDs -eq $true) {
-        $blob = Start-AzureStorageBlobCopy -SrcBlob $sourceName -DestContainer $destContainer -SrcContainer $sourceContainer -DestBlob $targetName -Context $sourceContext -DestContext $destContext -Force
+        $blob = Start-AzureStorageBlobCopy -SrcBlob $sourceBlob.Name -DestContainer $destContainer -SrcContainer $sourceContainer -DestBlob $targetName -Context $sourceContext -DestContext $destContext -Force
     } else {
-        $blob = Start-AzureStorageBlobCopy -SrcBlob $sourceName -DestContainer $destContainer -SrcContainer $sourceContainer -DestBlob $targetName -Context $sourceContext -DestContext $destContext
+        $blob = Start-AzureStorageBlobCopy -SrcBlob $sourceBlob.Name -DestContainer $destContainer -SrcContainer $sourceContainer -DestBlob $targetName -Context $sourceContext -DestContext $destContext
     }
 
-    if ($? -eq $true) {
-        $copyblobs.Add($targetName)
-    } else {
+    if ($? -eq $false) {
         Write-Host "Job to copy VHD $targetName failed to start.  Cannot continue"
         Stop-Transcript
         exit 1

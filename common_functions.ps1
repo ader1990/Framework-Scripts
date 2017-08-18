@@ -25,18 +25,16 @@
                     Write-Warning "Storage account $sa is in different region ($currentLoc) than current ($location)."
                     Write-Warning "       You will not be able to create any virtual machines from this account!"
                     Write-Warning "***************************************************************************************"
-                    $sa = $null
                 } else {
                     #
                     #  Take it out and start over
                     Remove-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa -Force
-                    New-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa -Kind BlobStorage -Location $location -SkuName Standard_LRS -AccessTier Hot
-                    Set-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa
+                    New-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa -Kind Storage -Location $location -SkuName Standard_LRS                     Set-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa
                 }
             } else {
                 #
                 #  Account is present and location is good.  Use this one.
-                Set-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa
+                Write-Verbose "Using existing storage account $sa in resource group $rg"
             }
 
             Set-AzureRmCurrentStorageAccount –ResourceGroupName $rg –StorageAccountName $sa 2>&1
@@ -46,7 +44,7 @@
             Write-Warning "***************************************************************************************"
             $sa = $null
         } else {
-            New-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa -Kind BlobStorage -Location $location -SkuName Standard_LRS -AccessTier Hot
+            New-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa -Kind Storage -Location $location -SkuName Standard_LRS 
             Set-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa
         }
     }
