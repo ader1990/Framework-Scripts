@@ -149,7 +149,7 @@ function copy_azure_machines {
 
         Write-Host "Deleting storage account $global:workingStorageAccountName just to create it again..."  -ForegroundColor green
         Remove-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName -Force
-        New-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName -Kind BlobStorage -Location $global:location -SkuName Standard_LRS
+        New-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName -Kind BlobStorage -Location $global:location -SkuName Standard_LRS -AccessTier Hot
         Set-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName
         New-AzureStorageContainer -name $global:workingContainerName -Permission Blob
 
