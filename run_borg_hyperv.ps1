@@ -62,12 +62,18 @@ function CreateWait-JobFromScript {
             -ArgumentList $ArgumentList
         $jobResult = Wait-Job $job -Timeout $Timeout -Force
         Stop-Job $JobName -ErrorAction SilentlyContinue -Confirm:$false
-        $output = Receive-Job $JobName
+        $output = Receive-Job $JobName -Keep
         if ($jobResult.State -ne "Completed") {
-            throw "Failed to run $JobName with output: $output"
+            Write-Output "Job $JobName failed with output >>`r`n $output`r`n <<"
+            throw "Job $JobName failed with output >> $output <<"
         } else {
-            return $output
+            Write-Output "Job $JobName succeeded with output >>`r`n $output`r`n <<"
         }
+    } catch {
+        if (!($PSItem -like "Job $JobName failed with output*")) {
+            Write-Output "Job $JobName failed with error: >> `r`n$PSItem`r`n <<"
+        }
+        throw
     } finally {
         Remove-Job $JobName -ErrorAction SilentlyContinue
     }
@@ -115,12 +121,10 @@ Workflow Cleanup-VMS {
             Remove-VM -Name $VMName -Force -ErrorAction SilentlyContinue | Out-Null
         }
         try {
-            $output = CreateWait-JobFromScript -ScriptBlock $Workflow:scriptBlock `
+            CreateWait-JobFromScript -ScriptBlock $Workflow:scriptBlock `
                 -ArgumentList @($vmName) -Timeout $VMCleanTimeout `
                 -JobName "DeallocateVM-$vmName-$suffix-{0}"
-            Write-Output "Job ended with output >> $output <<"
         } catch {
-            Write-Output ("Job failed with error: {0}" -f @($_.Message))
             $Workflow:errors += 1
         }
     }
@@ -168,12 +172,10 @@ Workflow Copy-VHDS {
         $Workflow:scriptBlock = Get-ScriptBlockVHDS
         $VHDFileName = $vhdFile.Name
         try {
-            $output = CreateWait-JobFromScript -ScriptBlock $Workflow:scriptBlock `
+            CreateWait-JobFromScript -ScriptBlock $Workflow:scriptBlock `
                 -ArgumentList @($VHDFileName, $BaseVHDsPath, $WorkingVHDsPath, $UseChildrenVHD) `
                 -Timeout $VHDCopyTimeout -JobName "CopyVHD-$VHDFileName-$suffix-{0}"
-            Write-Output "Job ended with output >> $output <<"
         } catch {
-            Write-Output ("Job failed with error: {0}" -f @($_.Message))
             $Workflow:errors += 1
         }
     }
@@ -204,13 +206,11 @@ Workflow Create-VMS {
             Write-Output "VM $VMName has been created and started successfully."
         }
         try {
-            $output = CreateWait-JobFromScript -ScriptBlock $Workflow:scriptBlock `
+            CreateWait-JobFromScript -ScriptBlock $Workflow:scriptBlock `
                 -ArgumentList @($vmName, $vhdFile.FullName) `
                 -Timeout $VMBootTimeout -JobName "CreateVM-$vmName-$suffix-{0}"
-            Write-Output "Job ended with output >> $output <<"
             $Workflow:vmsCreated += $vmName
         } catch {
-            Write-Output ("Job failed with error: {0}" -f @($_.Message))
             $Workflow:errors += 1
         }
     }
@@ -228,13 +228,12 @@ function Get-ScriptblockCheckVMS {
     return  {
         param($VMName, $Credential, $KernelVersion)
         # (avladu): add a retry method
-        $retries = 0
-        $maxRetries = 10
-        while ($retries -lt $maxRetries) {
+        while ($true) {
             try {
                 $ipv4Ip = $null
                 $vm = Get-VM -Name $VMName
                 $vmNetAdapter = Get-VMNetworkAdapter -VM $vm
+                Write-Output "Checking if VM $VMName exposes the IPv4 address...`r`n"
                 foreach ($ip in $vmNetAdapter.IPAddresses) {
                     if (([ipaddress]$ip).AddressFamily -eq "InterNetwork") {
                         $ipv4Ip = $ip
@@ -242,8 +241,8 @@ function Get-ScriptblockCheckVMS {
                     }
                 }
                 if (!$ipv4Ip) {
+                    Write-Output "VM $VMName does not expose the IPv4 address yet. Retrying...`r`n"
                     Start-Sleep 5
-                    $retries += 1
                     continue
                 }
             } catch {
@@ -257,7 +256,7 @@ function Get-ScriptblockCheckVMS {
             if ($KernelVersion -ne $kernel) {
                 throw "Kernel versions do not match. Existent kernel $kernel != Desired kernel $KernelVersion"
             } else {
-                Write-Output "Kernel versions match. Existent kernel $kernel == Desired kernel"
+                Write-Output "Kernel versions match. Existent kernel $kernel == Desired kernel`r`n"
             }
             break
         }
@@ -276,13 +275,11 @@ Workflow Check-VMS {
     foreach -parallel ($vmName in $VMNames) {
         $Workflow:scriptBlock = Get-ScriptblockCheckVMS
         try {
-            $output = CreateWait-JobFromScript -ScriptBlock $Workflow:scriptBlock `
+            CreateWait-JobFromScript -ScriptBlock $Workflow:scriptBlock `
                 -ArgumentList @($vmName, $creds, $KernelVersion) `
                 -Timeout $VMCheckTimeout -JobName "CheckVM-$vmName-$suffix-{0}"
-            Write-Output "Job ended with output >> $output <<"
             $Workflow:vmsCreated += $vmName
         } catch {
-            Write-Output ("Job failed with error: {0}" -f @($_.Message))
             $Workflow:errors += 1
         }
     }
