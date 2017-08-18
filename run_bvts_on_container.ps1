@@ -48,7 +48,11 @@ get-job | Remove-Job
 set-location C:\azure-linux-automation
 git pull
 
-login_azure $destRG $destSA $location
+#
+#  The last parameter, the switch, says to recreate the storage
+#  container if there's an error or if it's in a different
+#  region
+login_azure $destRG $destSA $location $true
 
 Write-Host "Stopping all running machines..."  -ForegroundColor green
 $runningVMs = Get-AzureRmVm -ResourceGroupName $sourceRG
