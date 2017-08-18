@@ -147,9 +147,13 @@ function copy_azure_machines {
         $runningVMs = Get-AzureRmVm -ResourceGroupName $global:workingResourceGroupName
         deallocate_machines_in_group $runningVMs $global:workingResourceGroupName $global:workingStorageAccountName $global:location
 
-        Write-Host "Clearing VHDs in the working storage container $global:workingContainerName..."  -ForegroundColor green
-        Get-AzureStorageBlob -Container $global:workingContainerName -blob * | ForEach-Object {Remove-AzureStorageBlob -Blob $_.Name -Container $global:workingContainerName -Force} > $null
+        Write-Host "Deleting storage account $global:workingStorageAccountName just to create it again..."  -ForegroundColor green
+        Remove-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName -Force
+        New-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName -Kind BlobStorage -Location $global:location -SkuName Standard_LRS
+        Set-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName
+        New-AzureStorageContainer -name $global:workingContainerName -Permission Blob
 
+        Write-Host "Getting the storage account access keys.."
         $destKey=Get-AzureRmStorageAccountKey -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName
         $destContext=New-AzureStorageContext -StorageAccountName $global:workingStorageAccountName -StorageAccountKey $destKey[0].Value
 
