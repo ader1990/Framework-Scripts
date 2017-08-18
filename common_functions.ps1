@@ -13,26 +13,39 @@
     if ($rg -ne "" -and $sa -ne "") {
         $existingAccount = Get-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa
         if ($? -eq $true) {
+            #
+            #  Existing account -- use it
             $currentLoc = ($existingAccount.Location).ToString()
 
-            if ($currentLoc -ne $location -and $false -eq $createOnError) {            
-                Write-Warning "***************************************************************************************"
-                Write-Warning "Storage account $sa is in different region ($currentLoc) than current ($location)."
-                Write-Warning "       You will not be able to create any virtual machines from this account!"
-                Write-Warning "***************************************************************************************"
+            if ($currentLoc -ne $location) {
+                if ($false -eq $createOnError) {
+                #
+                    #  Wrong region and we're suppposed to use existing.  This won't work, but we may not care         
+                    Write-Warning "***************************************************************************************"
+                    Write-Warning "Storage account $sa is in different region ($currentLoc) than current ($location)."
+                    Write-Warning "       You will not be able to create any virtual machines from this account!"
+                    Write-Warning "***************************************************************************************"
+                    $sa = $null
+                } else {
+                    #
+                    #  Take it out and start over
+                    Remove-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa -Force
+                    New-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa -Kind BlobStorage -Location $location -SkuName Standard_LRS -AccessTier Hot
+                    Set-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa
+                }
             } else {
-                Remove-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa -Force
-                New-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa -Kind BlobStorage -Location $location -SkuName Standard_LRS -AccessTier Hot
+                #
+                #  Account is present and location is good.  Use this one.
                 Set-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa
             }
 
             Set-AzureRmCurrentStorageAccount –ResourceGroupName $rg –StorageAccountName $sa 2>&1
         } elseif ($false -eq $createOnError) {
             Write-Warning "***************************************************************************************"
-            Write-Warning "Storage account $sa does not exist in location $location."
+            Write-Warning "Storage account $sa does not exist in location $location. and CreateOnError was not set."
             Write-Warning "***************************************************************************************"
+            $sa = $null
         } else {
-            Remove-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa -Force
             New-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa -Kind BlobStorage -Location $location -SkuName Standard_LRS -AccessTier Hot
             Set-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa
         }

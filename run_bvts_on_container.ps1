@@ -48,40 +48,64 @@ get-job | Remove-Job
 set-location C:\azure-linux-automation
 git pull
 
-#
-#  The last parameter, the switch, says to recreate the storage
-#  container if there's an error or if it's in a different
-#  region
-login_azure $destRG $destSA $location $true
-
-Write-Host "Stopping all running machines..."  -ForegroundColor green
-$runningVMs = Get-AzureRmVm -ResourceGroupName $sourceRG
-deallocate_machines_in_group $runningVMs $sourceRG $sourceSA $location
-
-Write-Host "Copying the test VMs packages to BVT resource group"
-$destKey=Get-AzureRmStorageAccountKey -ResourceGroupName $destRG -Name $destSA
-$destContext=New-AzureStorageContext -StorageAccountName $destSA -StorageAccountKey $destKey[0].Value
-
-$sourceKey=Get-AzureRmStorageAccountKey -ResourceGroupName $sourceRG -Name $sourceSA
-$sourceContext=New-AzureStorageContext -StorageAccountName $sourceSA -StorageAccountKey $sourceKey[0].Value
-
 $blobFilter = '*.vhd'
 if ($removeTag -ne "") {
     $blobFilter = '*' + $removeTag
 }
 Write-Host "Blob filter is $blobFilter"
 
-Set-AzureRmCurrentStorageAccount –ResourceGroupName $destRG –StorageAccountName $destSA 
-$existingBlobs=get-AzureStorageBlob -Container $destContainer 
-
-Set-AzureRmCurrentStorageAccount –ResourceGroupName $sourceRG –StorageAccountName $sourceSA 
-$blobs=get-AzureStorageBlob -Container $sourceContainer -Blob $blobFilter
-
-Set-AzureRmCurrentStorageAccount –ResourceGroupName $destRG –StorageAccountName $destSA
 $regionSuffix = ("---" + $location+ "-" + $VMFlavor) -replace " ","-"
 $regionSuffix = $regionSuffix -replace "_","-"
 
 $fullSuffix = $regionSuffix + "-Booted-and-Verified.vhd"
+
+login_azure $sourceRG $sourceSA $location
+
+Write-Host "Stopping all running machines..."  -ForegroundColor green
+$runningVMs = Get-AzureRmVm -ResourceGroupName $sourceRG
+deallocate_machines_in_group $runningVMs $sourceRG $sourceSA $location
+
+$sourceKey=Get-AzureRmStorageAccountKey -ResourceGroupName $sourceRG -Name $sourceSA
+$sourceContext=New-AzureStorageContext -StorageAccountName $sourceSA -StorageAccountKey $sourceKey[0].Value
+
+$blobs=get-AzureStorageBlob -Container $sourceContainer -Blob $blobFilter
+
+Write-Host "Deleting any existing storage account and recreating it."
+$wasThere = $false
+$currentLoc = $null
+$existingAccount = $null
+$existingAccount = Get-AzureRmStorageAccount -ResourceGroupName $destRG -Name $sa
+if ($? -eq $true) {
+    $wasThere = $true
+
+    if ($existingAccount -ne $null) {
+        $currentLoc = ($existingAccount.Location).ToString()
+    }
+}
+
+if (($wasThere -eq $true) -and ($overwriteVHDs -eq $true)) {
+    Remove-AzureRmStorageAccount -ResourceGroupName $destRG -Name $destSA -Force
+    New-AzureRmStorageAccount -ResourceGroupName $destRG -Name $destSA -Kind BlobStorage -Location $location -SkuName Standard_LRS -AccessTier Hot
+    Set-AzureRmStorageAccount -ResourceGroupName $destRG -Name $destSA
+} elseif (($wasThere -eq $true) -and ($OverwriteVHDs -eq $false)) {
+    if ($currentLoc -ne $location) {
+        Write-Error "The storage account exists, but it is in region $currentLoc, while the tests specify region $location.  Tests will exit."
+        exit 1
+    }
+    Write-Host "Using existing storage account $destSA."
+} else {
+    Write-Host "Storagr account did not exist.  Creating now..."
+    New-AzureRmStorageAccount -ResourceGroupName $destRG -Name $destSA -Kind BlobStorage -Location $location -SkuName Standard_LRS -AccessTier Hot
+    Set-AzureRmStorageAccount -ResourceGroupName $destRG -Name $destSA
+}
+Set-AzureRmCurrentStorageAccount –ResourceGroupName $destRG –StorageAccountName $destSA 
+
+Write-Host "Copying the test VMs packages to BVT resource group"
+$destKey=Get-AzureRmStorageAccountKey -ResourceGroupName $destRG -Name $destSA
+$destContext=New-AzureStorageContext -StorageAccountName $destSA -StorageAccountKey $destKey[0].Value
+
+$existingBlobs=get-AzureStorageBlob -Container $destContainer 
+
 
 foreach ($oneblob in $blobs) {
     $fullName=$oneblob.Name

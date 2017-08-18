@@ -198,6 +198,25 @@ if ($Failed -eq $true) {
 #  storage container, with the prefix we gave it but some random junk on the back.  We will copy those
 #  VHDs, and their associated JSON files, to the output storage container, renaming them 
 # to <user supplied>---no_loc-no_flav-generalized.vhd
-Set-Location 
+$bar=$vm_name.Replace("---","{")
+$vhdPrefix = $bar.split("{")[0]
+if ($vhdPrefix.Length -gt 22) {
+    $vhdPrefix = $vhdPrefix.substring(0,23)
+}
 
+$blobFilter = '*.json'
+if ($removeTag -ne "") {
+    $blobFilter = '*' + $removeTag
+}
+Write-Host "Blob filter is $blobFilter"
+
+$generalized_container = "system/Microsoft.Compute/Images/" + $sourceContainer + "/"
+$blobs=get-AzureStorageBlob -Container $generalized_container -Blob $blobFilter
+
+[int]$nameIndex = 0
+foreach ($vm_name in $machineBaseNames) {
+    $machine_name = $machineFullNames[$nameIndex]
+
+    
+    $jsonURI = "https://" + $sourceRG + ".blob.core.windows.net/system/Microsoft.Compute/Images/" + $sourceContainer + "/" + OpenLogic-CentOS-73-LAT-vmTemplate.1b544b03-16b2-46bd-a00e-607dc4f02f45.json
 exit 0
