@@ -64,20 +64,21 @@ function create_psrp_session([string] $vmName, [string] $rg, [string] $SA, [stri
             Write-Error "Machine $vmName does not have an assigned IP address.  Cannot create PSRP session to the machine."
             return $null
         }
-    } else {
-        Write-Error "The public IP for machnine $vmName does appear to exist, and the Magic modules are not loaded.  Cannot process.."
-    }
 
-    $remoteIP = $ipAddress.IpAddress
-    Write-Host "Attempting contact at $remoteIP"
-    $thisSession = new-PSSession -computername $remoteIP -credential $cred -authentication Basic -UseSSL -Port 443 -SessionOption $o
-    if ($? -eq $false) {
-        Write-Host "Contact failed..."
-        return $null
+        $remoteIP = $ipAddress.IpAddress
+        Write-Host "Attempting contact at $remoteIP"
+        $thisSession = new-PSSession -computername $remoteIP -credential $cred -authentication Basic -UseSSL -Port 443 -SessionOption $o
+        if ($? -eq $false) {
+            Write-Host "Contact failed..."
+            return $null
+        } else {
+            Write-Host "Contact was successful"
+            return $thisSession
+        }
     } else {
-        Write-Host "Contact was successful"
-        return $thisSession
+        Write-host "The public IP for machnine $vmName does appear to exist, but the Magic modules are not loaded.  Cannot process this iteration.."
     }
+    return $null
 }
 
 function stop_machines_in_group([Microsoft.Azure.Commands.Compute.Models.PSVirtualMachine[]] $runningVMs,
