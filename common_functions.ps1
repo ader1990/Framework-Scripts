@@ -1,4 +1,10 @@
-﻿function login_azure([string] $rg, [string] $sa, [string] $location) {
+﻿function login_azure {
+    param (
+        [string] $rg = "", 
+        [string] $sa = "", 
+        [string] $location = "" ,
+        [bool] $createOnError = $true)
+
     . "C:\Framework-Scripts\secrets.ps1"
 
     Import-AzureRmContext -Path 'C:\Azure\ProfileContext.ctx' > $null
@@ -9,18 +15,26 @@
         if ($? -eq $true) {
             $currentLoc = ($existingAccount.Location).ToString()
 
-            if ($currentLoc -ne $location) {            
+            if ($currentLoc -ne $location -and $false -eq $createOnError) {            
                 Write-Warning "***************************************************************************************"
                 Write-Warning "Storage account $sa is in different region ($currentLoc) than current ($location)."
                 Write-Warning "       You will not be able to create any virtual machines from this account!"
                 Write-Warning "***************************************************************************************"
+            } else {
+                Remove-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa -Force
+                New-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa -Kind BlobStorage -Location $location -SkuName Standard_LRS -AccessTier Hot
+                Set-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa
             }
 
             Set-AzureRmCurrentStorageAccount –ResourceGroupName $rg –StorageAccountName $sa 2>&1
-        } else {
+        } elseif ($false -eq $createOnError) {
             Write-Warning "***************************************************************************************"
             Write-Warning "Storage account $sa does not exist in location $location."
             Write-Warning "***************************************************************************************"
+        } else {
+            Remove-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa -Force
+            New-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa -Kind BlobStorage -Location $location -SkuName Standard_LRS -AccessTier Hot
+            Set-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa
         }
     }
 

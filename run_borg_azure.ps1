@@ -147,12 +147,6 @@ function copy_azure_machines {
         $runningVMs = Get-AzureRmVm -ResourceGroupName $global:workingResourceGroupName
         deallocate_machines_in_group $runningVMs $global:workingResourceGroupName $global:workingStorageAccountName $global:location
 
-        Write-Host "Deleting storage account $global:workingStorageAccountName just to create it again..."  -ForegroundColor green
-        Remove-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName -Force
-        New-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName -Kind BlobStorage -Location $global:location -SkuName Standard_LRS -AccessTier Hot
-        Set-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName
-        New-AzureStorageContainer -name $global:workingContainerName -Permission Blob
-
         Write-Host "Getting the storage account access keys.."
         $destKey=Get-AzureRmStorageAccountKey -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName
         $destContext=New-AzureStorageContext -StorageAccountName $global:workingStorageAccountName -StorageAccountKey $destKey[0].Value
@@ -638,9 +632,23 @@ if ($? -eq $true -and $existingGroup -ne $null -and $global:CleanRG -eq $true) {
 #
 #  Change the name of the SA to include the region, then Now see if the SA exists
 Get-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName  -Name $global:workingStorageAccountName
+if ($? -eq $false -or $global:CleanRG -eq $true) {
+    Write-Host "Deleting storage account $global:workingStorageAccountName just to create it again..."  -ForegroundColor green
+    Remove-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName -Force
+    Write-Host "Deleted..."
+    New-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName -Kind BlobStorage -Location $global:location -SkuName Standard_LRS -AccessTier Hot
+    Write-Host "Rebuilt..."
+    Set-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName
+    Write-Host "Selected..."
+    New-AzureStorageContainer -name $global:workingContainerName -Permission Blob
+    Write-Host "And populated."
+}
+Set-AzureRmCurrentStorageAccount –ResourceGroupName $global:workingResourceGroupName –StorageAccountName $global:workingStorageAccountName
+
+Get-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName  -Name $global:workingStorageAccountName
 if ($? -eq $false) {
-    Write-Host "Storage account $global:workingResourceGroupName  did not exist.  Creating it and populating with the right containers..." -ForegroundColor Yellow
-    New-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName -Location $global:location -SkuName Standard_LRS -Kind Storage
+    Write-Host "Storage account $global:workingStorageAccountName  did not exist.  Creating it and populating with the right containers..." -ForegroundColor Yellow
+    New-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName -Location $global:location -SkuName Standard_LRS -Kind BlobStorage -AccessTier Hot
 
     write-host "Selecting it as the current SA" -ForegroundColor Yellow
     Set-AzureRmCurrentStorageAccount –ResourceGroupName $global:workingResourceGroupName  –StorageAccountName $global:workingStorageAccountName
