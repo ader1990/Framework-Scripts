@@ -193,4 +193,11 @@ if ($Failed -eq $true) {
     exit 1
 } 
 
+#
+#  The generalization process, if successful, placed the VHDs in a location below the current
+#  storage container, with the prefix we gave it but some random junk on the back.  We will copy those
+#  VHDs, and their associated JSON files, to the output storage container, renaming them 
+# to <user supplied>---no_loc-no_flav-generalized.vhd
+Set-Location 
+
 exit 0

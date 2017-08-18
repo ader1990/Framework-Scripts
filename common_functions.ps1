@@ -3,7 +3,7 @@
         [string] $rg = "", 
         [string] $sa = "", 
         [string] $location = "" ,
-        [bool] $createOnError = $true)
+        [bool] $createOnError = $false)
 
     . "C:\Framework-Scripts\secrets.ps1"
 
