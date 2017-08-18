@@ -17,6 +17,8 @@ param (
     [Parameter(Mandatory=$false)] [string] $suffix="-Runonce-Primed.vhd"
 )
 
+$destContainer = "generalized-images"
+
 $suffix = $suffix -replace "_","-"
 
 . C:\Framework-Scripts\common_functions.ps1
@@ -205,6 +207,6 @@ if ($Failed -eq $true) {
 #  VHDs, and their associated JSON files, to the output storage container, renaming them 
 # to <user supplied>---no_loc-no_flav-generalized.vhd
 Write-Host "Copying the generalized images to container $destContainer"
-.\copy_single_image_container_to_container.ps1 -sourceSA $sourceSA -sourceRG $sourceRG -sourceContainer "system" -sourceExtension "" -destSA $destSA `
-                                               -destRG $destRG -destContainer $destContainer -destExtension "-Generalized.vhd" -location $location `
+.\copy_single_image_container_to_container.ps1 -sourceSA $sourceSA -sourceRG $sourceRG -sourceContainer "system" -sourceExtension "" -destSA $sourceSA `
+                                               -destRG $sourceRG -destContainer $destContainer -destExtension "-Generalized.vhd" -location $location `
                                                -vmNamesIn $requestedNames -overwriteVHDs "True" -Verbose

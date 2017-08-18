@@ -666,7 +666,11 @@ if ($? -eq $false -or $global:CleanRG -eq $true) {
     New-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName `
                               -Kind Storage -Location $global:location -SkuName Standard_LRS 
     Write-Host "Rebuilt..."
+}
 
+Get-AzureStorageContainer -Name $global:workingContainerName
+if ($? -eq $false) {
+    Write-Host "Setting up storage container $global:workingContainerName"  -ForegroundColor green
     $destKey=Get-AzureRmStorageAccountKey -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName
     $destContext=New-AzureStorageContext -StorageAccountName $global:workingStorageAccountName -StorageAccountKey $destKey[0].Value
     New-AzureStorageContainer -name $global:workingContainerName -Permission Blob -Context $destContext
