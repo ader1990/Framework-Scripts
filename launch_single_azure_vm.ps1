@@ -1,5 +1,5 @@
 ﻿param (
-    [Parameter(Mandatory=$true)] [string] $vmName,
+    [Parameter(Mandatory=$true)] [string] $vmName="WTF",
     [Parameter(Mandatory=$true)] [string] $resourceGroup="smoke_working_resource_group",
     [Parameter(Mandatory=$true)] [string] $storageAccount="smokework",
     [Parameter(Mandatory=$true)] [string] $containerName="vhds-under-test",
@@ -26,6 +26,7 @@
     [Parameter(Mandatory=$false)] [string] $enableBootDiagnostics = "No"    
 )
 
+Write-Host "------------------------->>> Launching VM for $vmName"
 $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
 . "$scriptPath\backend.ps1"
 

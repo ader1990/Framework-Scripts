@@ -13,7 +13,7 @@ class Instance {
         Start-Transcript -Path $transcriptPath -Force  -Append
         $this.Backend = $Backend
         $this.Name = $Name
-        Write-Host ("Initialized instance wrapper" + $this.Name) -ForegroundColor Blue
+        Write-Host ("Initialized instance wrapper" + $this.Name) -ForegroundColor Magenta
     }
 
     [void] Cleanup () {
@@ -71,7 +71,7 @@ class Backend {
     [String] $Name="BaseBackend"
 
     Backend ($Params) {
-        Write-Host ("Initialized backend " + $this.Name) -ForegroundColor Blue
+        Write-Host ("Initialized backend " + $this.Name) -ForegroundColor Magenta
     }
 
     [Instance] GetInstanceWrapper ($InstanceName) {
@@ -185,7 +185,10 @@ class AzureBackend : Backend {
         $regionSuffix = ("---" + $this.Location + "-" + $this.VMFlavor) -replace " ","-"
         $regionSuffix = $regionSuffix -replace "_","-"
 
-        $imageName = $InstanceName + $regionSuffix
+        $bar=$InstanceName.Replace("---","{")
+        $imageName = $bar.split("{")[0]
+
+        $imageName = $imageName + $regionSuffix
         $imageName = $imageName + $this.suffix
         $imageName = $imageName  -replace ".vhd", ""
 

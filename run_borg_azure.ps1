@@ -254,25 +254,30 @@ function create_azure_topology {
     $backendFactory = [BackendFactory]::new()
     $azureBackend = $backendFactory.GetBackend("AzureBackend", @(1))
     
-    $azureBackend.ResourceGroupName = $destRG
-    $azureBackend.StorageAccountName = $destSA
-    $azureBackend.ContainerName = $destContainer
-    $azureBackend.Location = $location
-    $azureBackend.VMFlavor = $VMFlavor
-    $azureBackend.NetworkName = $vnetName
-    $azureBackend.SubnetName = $subnetName
-    $azureBackend.NetworkSecGroupName = $NSG
-    $azureBackend.addressPrefix = $vnetAddressPrefix
-    $azureBackend.subnetPrefix = $vnetSubnetAddressPrefix
-    $azureBackend.blobURN = $blobURN
-    $azureBackend.suffix = $suffix
+    $azureBackend.ResourceGroupName = $global:workingResourceGroupName
+    $azureBackend.StorageAccountName = $global:workingStorageAccountName
+    $azureBackend.ContainerName = "drones"
+    $azureBackend.Location = $global:location
+    $azureBackend.VMFlavor = $global:VMFlavor
+    $azureBackend.NetworkName = "SmokeVNet"
+    $azureBackend.SubnetName = "SmokeSubnet-1"
+    $azureBackend.NetworkSecGroupName = "SmokeNSG"
+    $azureBackend.addressPrefix = "vnetAddressPrefix"
+    $azureBackend.subnetPrefix = "vnetSubnetAddressPrefix"
+    $azureBackend.blobURN = "None"
+    $azureBackend.suffix = "-Smoke-1"
     
     $azureInstance = $azureBackend.GetInstanceWrapper("AzureSetup")
     $azureInstance.SetupAzureRG()
 
+    $requestedNames = ""
     foreach ($vmName in $global:neededVms) {
+        write-host "FUCKING NAME IS $vmName HERE"
+        $requestedNames = $requestedNames + $vmName + " "
+    
         $machine = new-Object MonitoredMachine
         $machine.name = $vmName
+        
         $machine.status = "Booting" # $status
         $global:monitoredMachines.Add($machine)
 
@@ -288,7 +293,6 @@ function create_azure_topology {
         $storageAccount="smokework"
         $containerName="vhds-under-test"
 
-    
         $network="SmokeVNet"
         $subnet="SmokeSubnet-1"
         $NSG="SmokeNSG"
@@ -300,11 +304,31 @@ function create_azure_topology {
     
         $suffix = "-BORG.vhd"
 
-        Start-Job -Name $jobname -ScriptBlock { C:\Framework-Scripts\launch_single_azure_vm.ps1 -vmName $args[0] -resourceGroup $args[1] -storageAccount $args[2] -containerName $args[3] `
-                                                    -network $args[4] -subnet $args[5] -NSG $args[6] -location $args[7] -VMFlavor $args[8] -addressPrefix $args[9] `
-                                                    -subnetPrefix $args[10] -suffix $args[11] } `
-                                                    -ArgumentList @($vmName),@($resourceGroup),@($storageAccount),@($containerName),@($network),@($subnet),@($NSG),@($global:location),`
-                                                                  @($vmFlavor),@($addressPrefix),@($subnetPrefix),@($suffix)
+        $scriptText = {
+            param (
+                [Parameter(Mandatory=$false)] [string] $vm_name,
+                [Parameter(Mandatory=$false)] [string] $rg,
+                [Parameter(Mandatory=$false)] [string] $sa,
+                [Parameter(Mandatory=$false)] [string] $cn,
+                [Parameter(Mandatory=$false)] [string] $nw,
+                [Parameter(Mandatory=$false)] [string] $sn,
+                [Parameter(Mandatory=$false)] [string] $nsg,
+                [Parameter(Mandatory=$false)] [string] $loc,
+                [Parameter(Mandatory=$false)] [string] $flav,
+                [Parameter(Mandatory=$false)] [string] $apf,
+                [Parameter(Mandatory=$false)] [string] $spf,
+                [Parameter(Mandatory=$false)] [string] $sfc
+            )
+
+            C:\Framework-Scripts\launch_single_azure_vm.ps1 -vmName $vm_name -resourceGroup $rg -storageAccount $sa -containerName $cn `
+                                                            -network $nw -subnet $sn -NSG $nsg -location $loc -VMFlavor $flav `
+                                                            -addressPrefix $apf -subnetPrefix $spf -suffix $sfc 
+        }
+
+        $scriptBlock = [scriptblock]::Create($scriptText)
+
+        Start-Job -Name $jobname -ScriptBlock $scriptBlock -ArgumentList $vmName,$resourceGroup,$storageAccount,$containerName,$network,$subnet,`
+                                                                         $NSG,$global:location,$vmFlavor,$addressPrefix,$subnetPrefix,$suffix
     }
 
     foreach ($singleLog in $global:machineLogs) {
@@ -718,7 +742,7 @@ Register-ObjectEvent -InputObject $timer -EventName elapsed –SourceIdentifier 
 $global:timer_is_running=1
 $timer.Interval = 1000
 $timer.Enabled = $true
-$timer.start()
+$timer.start() > $null
 
 Write-Host "Finished launching the VMs.  Waiting for Completed to go to 1.  Completed is presently $global:completed" -ForegroundColor Yellow
 while ($global:completed -eq 0) {
