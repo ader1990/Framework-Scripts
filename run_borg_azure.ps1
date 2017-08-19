@@ -53,7 +53,7 @@ $global:sourceResourceGroupName=$sourceResourceGroupName
 $global:sourceStorageAccountName=$sourceStorageAccountName
 $global:sourceContainerName=$sourceContainerName
 $global:location=$location
-$global:VMFlavor=$VMFlavor
+$global:VMFlavor=$VMFlavor.ToLower()
 
 $global:workingResourceGroupName=$workingResourceGroupName
 $global:workingStorageAccountName=$workingStorageAccountName

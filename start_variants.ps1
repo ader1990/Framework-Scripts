@@ -117,9 +117,10 @@ $comandScript = {
 
         $sourceURI = ("https://{0}.blob.core.windows.net/{1}/{2}" -f @($sourceSA, $sourceContainer, $blobName))
 
+        $vmFlavLow = $vmFlavor.ToLower()
         Write-verbose "Attempting to create virtual machine $newVMName from source URI $sourceURI.  This may take some time."
         C:\Framework-Scripts\launch_single_azure_vm.ps1 -vmName $newVMName -resourceGroup $destRG -storageAccount $destSA -containerName $destContainer `
-                                                    -network $network -subnet $subnet -NSG $NSG -Location $location -VMFlavor $vmFlavor -suffix $newSuffix `
+                                                    -network $network -subnet $subnet -NSG $NSG -Location $location -VMFlavor $vmFlavLow -suffix $newSuffix `
                                                     -imageIsGeneralized -generalizedBlobURI $sourceURI
         if ($? -ne $true) {
             Write-error "Error creating VM $newVMName.  This VM must be manually examined!!"
@@ -131,7 +132,7 @@ $comandScript = {
     #
     #  Just because it's up doesn't mean it's accepting connections yet.  Wait 2 minutes, then try to connect.  I tried 1 minute,
     #  but kept getting timeouts on the Ubuntu machines.
-    $regionSuffix = ("-" + $location + "-" + $vmFlavor) -replace " ","-"
+    $regionSuffix = ("-" + $location + "-" + $vmFlavor.ToLower()) -replace " ","-"
     $regionSuffix = $regionSuffix -replace "_","-"
     $imageName = $newVMName + $regionSuffix
     $imageName = $imageName + $newSuffix

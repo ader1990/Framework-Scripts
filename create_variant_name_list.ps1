@@ -45,7 +45,7 @@ exit 1
 
 foreach ($vmName in $vmNameArray) {
     foreach ($oneFlavor in $flavorsArray) {
-        $regionSuffix = ("---" + $location + "-" + $oneFlavor) -replace " ","-"
+        $regionSuffix = ("---" + $location + "-" + $oneFlavor.ToLower()) -replace " ","-"
         $regionSuffix = $regionSuffix -replace "_","-"
 
         $imageName = $vmName + $regionSuffix

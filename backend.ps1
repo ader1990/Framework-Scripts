@@ -182,7 +182,9 @@ class AzureBackend : Backend {
         $this.suffix = $this.suffix -replace "_","-"
         login_azure $this.ResourceGroupName $this.StorageAccountName $this.Location
 
-        $regionSuffix = ("---" + $this.Location + "-" + $this.VMFlavor) -replace " ","-"
+        $flavLow = $this.VMFlavor
+        $flavLow = $flavLow.ToLower()
+        $regionSuffix = ("---" + $this.Location + "-" + $flavLow) -replace " ","-"
         $regionSuffix = $regionSuffix -replace "_","-"
 
         $bar=$InstanceName.Replace("---","{")

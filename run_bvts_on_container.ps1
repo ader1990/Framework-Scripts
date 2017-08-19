@@ -54,7 +54,7 @@ if ($removeTag -ne "") {
 }
 Write-Host "Blob filter is $blobFilter"
 
-$regionSuffix = ("---" + $location+ "-" + $VMFlavor) -replace " ","-"
+$regionSuffix = ("---" + $location+ "-" + $VMFlavor.ToLower()) -replace " ","-"
 $regionSuffix = $regionSuffix -replace "_","-"
 
 $fullSuffix = $regionSuffix + "-Booted-and-Verified.vhd"
@@ -201,7 +201,7 @@ $launched_machines = 0
 Set-AzureRmCurrentStorageAccount –ResourceGroupName $sourceRG –StorageAccountName $sourceSA 
 $blobs=get-AzureStorageBlob -Container $sourceContainer -Blob $blobFilter
 
-$regionSuffix = ("---" + $location + "-" + $VMFlavor) -replace " ","-"
+$regionSuffix = ("---" + $location + "-" + $VMFlavor.ToLower()) -replace " ","-"
 $regionSuffix = $regionSuffix -replace "_","-"
 
 $fullSuffix = $regionSuffix + "-Booted-and-Verified.vhd"
@@ -220,7 +220,7 @@ $azureBackend.ResourceGroupName = $destRG
 $azureBackend.StorageAccountName = $destSA
 $azureBackend.ContainerName = $destContainer
 $azureBackend.Location = $location
-$azureBackend.VMFlavor = $VMFlavor
+$azureBackend.VMFlavor = $VMFlavor.ToLower()
 $azureBackend.NetworkName = $vnetName
 $azureBackend.SubnetName = $subnetName
 $azureBackend.NetworkSecGroupName = $NSG
