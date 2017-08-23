@@ -5,9 +5,9 @@
 #  Author:  John W. Fawcett, Principal Software Development Engineer, Microsoft
 #
 param (
-    [Parameter(Mandatory=$false)] [string] $sourceSA="smokework",
-    [Parameter(Mandatory=$false)] [string] $sourceRG="smoke_working_resource_group",
-    [Parameter(Mandatory=$false)] [string] $sourceContainer="vhds-under-test",
+    [Parameter(Mandatory=$false)] [string] $sourceSA="smoketestoutstorageacct",
+    [Parameter(Mandatory=$false)] [string] $sourceRG="smoke_output_resource_group",
+    [Parameter(Mandatory=$false)] [string] $sourceContainer="generalized-images",
 
     [Parameter(Mandatory=$false)] [string] $destSA="smokebvt",
     [Parameter(Mandatory=$false)] [string] $destRG="smoke_bvts_resource_group",

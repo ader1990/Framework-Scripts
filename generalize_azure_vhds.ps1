@@ -9,6 +9,11 @@ param (
     [Parameter(Mandatory=$false)] [string] $sourceRG="smoke_working_resource_group",
     [Parameter(Mandatory=$false)] [string] $sourceContainer="vhds-under-test",
 
+    [Parameter(Mandatory=$false)] [string] $destSA="smokework",
+    [Parameter(Mandatory=$false)] [string] $destRB="smoke_working_resource_group",
+    [Parameter(Mandatory=$false)] [string] $destContainer="generalized-images",
+
+
     [Parameter(Mandatory=$false)] [string] $requestedNames,
     [Parameter(Mandatory=$false)] [string] $generalizeAll,
 
@@ -16,8 +21,6 @@ param (
 
     [Parameter(Mandatory=$false)] [string] $suffix="-Runonce-Primed.vhd"
 )
-
-$destContainer = "generalized-images"
 
 $suffix = $suffix -replace "_","-"
 

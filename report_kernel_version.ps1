@@ -51,9 +51,93 @@ if (Get-Item -ErrorAction SilentlyContinue -Path /root/expected_version ) {
 } 
 
 if (($kernel_name.CompareTo($expected)) -ne 0) {
-    phoneHome "Azure insertion cancelled because OS version did not match expected..."
-    phoneHome "Installed version is $kernel_name"
-    phoneHome "Expected version is $expected"
+    write-verbose "Kernel did not boot into the desired version.  Checking to see if this is a newer version.."
+    $boot_again = $false
+    $failed = $false
+    $oldGrub=get-content /etc/default/grub
+    if (Test-Path /bin/rpm) {
+        #
+        #  rpm-based system
+        #
+        $kernels = rpm -qa | sls "kernel" | sls 'kernel-[0-9].*'
+
+        $kernelArray = @()
+        
+        foreach ($kernel in $kernels) {
+            $KernelParts = $Kernel -split '-'
+            $vers = $kernelParts[1]
+        
+            if ($kernelArray -contains $vers) {
+            } else {
+                $kernelArray += $vers
+            }
+        }
+
+        foreach ($grubLine in $oldGrub) {
+            if ($grubLine -match "GRUB_DEFAULT") {
+                $parts = $grubLine -split("=")
+        
+                [int]$parts[1] = [int]$parts[1] + 1
+                if ($parts[1] -ge $kernelArray.count) {
+                    write-host "No more kernels to try"
+                    $failed = $true
+                    break
+                } else {
+                    write-verbose "Downgrading one level"
+                    $boot_again = $true
+                }
+        
+                $grubLine = "GRUB_DEFAULT=" + $parts[1]
+            }
+        
+            $grubLine | out-file "/tmp/y" -append -force
+        }
+    } else {
+        $kernels = dpkg --list | sls linux-image        
+        $kernelArray = @()
+        
+        foreach ($kernel in $kernels) {
+            $KernelParts = $Kernel -split '\s+'
+            $vers = $kernelParts[2]
+        
+            if ($kernelArray -contains $vers) {
+            } else {
+                $kernelArray += $vers
+            }
+        }
+        
+        foreach ($grubLine in $oldGrub) {
+            if ($grubLine -match "GRUB_DEFAULT") {
+                $parts = $grubLine -split("=")
+        
+                [int]$parts[1] = [int]$parts[1] + 1
+                if ($parts[1] -ge $kernelArray.count) {
+                    write-host "No more kernels to try"
+                    $failed = $true
+                    break
+                } else {
+                    write-verbose "Downgrading one level"
+                    $boot_again = $true
+                }
+        
+                $grubLine = "GRUB_DEFAULT=" + $parts[1]
+            }
+        
+            $grubLine | out-file "/tmp/y" -append -force
+        }
+    }
+        
+    if ($boot_again = $true) {
+        copy-Item -Path "/tmp/y" -Destination "/root/runonce.d"
+        copy-Item -Path "/root/Framework-Scripts/report_kernel_version.ps1" -Destination "/etc/default/grub"
+        PhoneHome "Kernel did not come up with the correct version, but the correct version is listed.  "
+        reboot
+    } elseif ($failed -eq $true) {
+        phoneHome "BORG FAILED because no OS version would boot that match expected..."
+        phoneHome "Installed version is $kernel_name"
+        phoneHome "Expected version is $expected"
+        exit 1
+    }
 }
 
 if (($kernel_name.CompareTo($expected)) -ne 0) {
