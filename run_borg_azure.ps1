@@ -190,7 +190,7 @@ function copy_azure_machines {
     } else {
         Write-Host "Clearing the destination container..."  -ForegroundColor green
         Write-Host "Deleting any currently running machines in  target storage $global:workingResourceGroupName / $global:workingStorageAccountName / $global:workingContainerName..."  -ForegroundColor green
-        
+
         Get-AzureStorageBlob -Container $global:workingContainerName -blob * | ForEach-Object {Remove-AzureStorageBlob -Blob $_.Name -Container $global:workingContainerName -Force}  > $null
 
         foreach ($singleURI in $global:URI) {
@@ -495,7 +495,6 @@ $action={
     }
 
     if ($global:timer_is_running -eq 0) {
-        Write-Host "Timer is not running -- exiting"
         return
     }
 

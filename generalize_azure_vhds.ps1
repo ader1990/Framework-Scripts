@@ -134,6 +134,7 @@ $scriptBlockText = {
     if ($vhdPrefix.Length -gt 22) {
         $vhdPrefix = $vhdPrefix.substring(0,23)
     }
+    Write-Host "Set the VHD Prefix to " $vhdPrefix
 
     Start-Transcript -Path C:\temp\transcripts\generalize_$machine_name.transcript -Force
     write-host "Stopping machine $machine_name for VHD generalization"
@@ -143,8 +144,7 @@ $scriptBlockText = {
     Set-AzureRmVM -Name $machine_name -ResourceGroupName $sourceRG -Generalized
 
     write-host "Saving image for machnine $machine_name to container $sourceContainer in RG $sourceRG"
-    Save-AzureRmVMImage -VMName $machine_name -ResourceGroupName $sourceRG -DestinationContainerName $sourceContainer `
-                        -VHDNamePrefix $vhdPrefix
+    Save-AzureRmVMImage -VMName $machine_name -ResourceGroupName $sourceRG -DestinationContainerName $sourceContainer -VHDNamePrefix $vhdPrefix
 
     write-host "Deleting machine $machine_name"
     Remove-AzureRmVM -Name $machine_name -ResourceGroupName $sourceRG -Force
