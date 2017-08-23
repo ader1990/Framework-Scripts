@@ -207,6 +207,120 @@ if ($Failed -eq $true) {
 #  VHDs, and their associated JSON files, to the output storage container, renaming them 
 # to <user supplied>---no_loc-no_flav-generalized.vhd
 Write-Host "Copying the generalized images to container $destContainer"
-.\copy_single_image_container_to_container.ps1 -sourceSA $sourceSA -sourceRG $sourceRG -sourceContainer "system" -sourceExtension "" -destSA $destSA `
-                                               -destRG $destRG -destContainer $destContainer -destExtension "-Generalized.vhd" -location $location `
-                                               -vmNamesIn $requestedNames -overwriteVHDs "True" -Verbose
+
+$destKey=Get-AzureRmStorageAccountKey -ResourceGroupName $destRG -Name $destSA
+$destContext=New-AzureStorageContext -StorageAccountName $destSA -StorageAccountKey $destKey[0].Value
+
+$sourceKey=Get-AzureRmStorageAccountKey -ResourceGroupName $sourceRG -Name $sourceSA
+$sourceContext=New-AzureStorageContext -StorageAccountName $sourceSA -StorageAccountKey $sourceKey[0].Value
+
+$copyBlobs = @()
+
+Set-AzureRmCurrentStorageAccount –ResourceGroupName $sourceRG –StorageAccountName $sourceSA
+if ($makeDronesFromAll -eq $true) {
+    $blobs=get-AzureStorageBlob -Container $sourceContainer -Blob "*.vhd"
+    $blobCount = $blobs.Count
+    Write-Host "Copying generalized VHDs in container $sourceContainer from region $location, with extenstion $sourceExtension.  There will be $blobCount VHDs:"-ForegroundColor Magenta
+    foreach ($blob in $blobs) {
+        $copyblobs += $blob
+        $blobName = $blob.Name
+        write-host "                       $blobName" -ForegroundColor Magenta
+    }
+} else {
+    $blobs=get-AzureStorageBlob -Container $sourceContainer -Blob "*$sourceExtension"
+    foreach ($vmName in $vmNames) {
+        $foundIt = $false
+        foreach ($blob in $blobs) {
+            $matchName = "*" + $vmName + "*"
+            if ( $blob.Name -match $matchName)  {
+                $foundIt = $true
+                break
+            }
+        }
+
+        if ($foundIt -eq $true) {
+            write-host "Added blob $theName (" $blob.Name ")"
+            $copyblobs += $blob
+        } else {
+            Write-Host " ***** ??? Could not find source blob $theName in container $sourceContainer.  This request is skipped" -ForegroundColor Red
+        }
+    }
+}
+
+Set-AzureRmCurrentStorageAccount –ResourceGroupName $destRG –StorageAccountName $destSA
+if ($clearDestContainer -eq $true) {
+    Write-Host "Clearing destination container of all jobs with extension $destExtension"
+    get-AzureStorageBlob -Container $destContainer -Blob "*$destExtension" | ForEach-Object {Remove-AzureStorageBlob -Blob $_.Name -Container $destContainer }
+}
+
+[int] $index = 0
+foreach ($blob in $copyblobs) {
+    $sourceBlobName = $blob.Name
+
+    Write-Host "Copying source blob $sourceBlobName"
+
+    $bar=$sourceBlobName.Replace("---","{")
+    $targetName = $bar.split("{")[0] + "-generalized.vhd"
+
+    Write-Host "Initiating job to copy VHD $sourceName from $sourceRG and $sourceContainer to $targetName in $destRG and $destSA, container $destContainer" -ForegroundColor Yellow
+    if ($overwriteVHDs -eq $true) {
+        $blob = Start-AzureStorageBlobCopy -SrcBlob $sourceBlob.Name -DestContainer $destContainer -SrcContainer $sourceContainer -DestBlob $targetName -Context $sourceContext -DestContext $destContext -Force
+    } else {
+        $blob = Start-AzureStorageBlobCopy -SrcBlob $sourceBlob.Name -DestContainer $destContainer -SrcContainer $sourceContainer -DestBlob $targetName -Context $sourceContext -DestContext $destContext
+    }
+
+    if ($? -eq $false) {
+        Write-Host "Job to copy VHD $targetName failed to start.  Cannot continue"
+        Stop-Transcript
+        exit 1
+    }
+}
+
+Start-Sleep -Seconds 5
+Write-Host "All jobs have been launched.  Initial check is:" -ForegroundColor Yellow
+
+$stillCopying = $true
+while ($stillCopying -eq $true) {
+    $stillCopying = $false
+
+    write-host ""
+    write-host "Checking blob copy status..." -ForegroundColor yellow
+
+    foreach ($blob in $copyblobs) {
+        $sourceBlobName = $blob.Name
+        $bar=$sourceBlobName.Replace("---","{")
+        $targetName = $bar.split("{")[0] + "-generalized.vhd"
+
+        $copyStatus = Get-AzureStorageBlobCopyState -Blob $targetName -Container $destContainer -ErrorAction SilentlyContinue
+        $status = $copyStatus.Status
+        if ($? -eq $false) {
+            Write-Host "        Could not get copy state for job $targetName.  Job may not have started." -ForegroundColor Yellow
+            break
+        } elseif ($status -eq "Pending") {
+            $bytesCopied = $copyStatus.BytesCopied
+            $bytesTotal = $copyStatus.TotalBytes
+            if ($bytesTotal -le 0) {
+                Write-Host "        Job $targetName not started copying yet." -ForegroundColor green
+            } else {
+                $pctComplete = ($bytesCopied / $bytesTotal) * 100
+                Write-Host "        Job $targetName has copied $bytesCopied of $bytesTotal bytes ($pctComplete %)." -ForegroundColor green
+            }
+            $stillCopying = $true
+        } else {
+            if ($status -eq "Success") {
+                Write-Host "   **** Job $targetName has completed successfully." -ForegroundColor Green                    
+            } else {
+                Write-Host "   **** Job $targetName has failed with state $Status." -ForegroundColor Red
+            }
+        }
+    }
+
+    if ($stillCopying -eq $true) {
+        Start-Sleep -Seconds 10
+    } else {
+        Write-Host "All copy jobs have completed.  Rock on." -ForegroundColor Green
+    }
+}
+# Stop-Transcript
+
+exit 0
