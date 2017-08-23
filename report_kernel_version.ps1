@@ -5,7 +5,7 @@
 #  artificial failure (something happened during install), with the failure point in the argument.
 #
 #  Author:  John W. Fawcett, Principal Software Development Engineer, Microsoft
-#
+# #
 param (
     [Parameter(Mandatory=$false)] [string] $failure_point=""
 )
