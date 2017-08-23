@@ -17,7 +17,7 @@ param (
     [Parameter(Mandatory=$false)] [string] $requestedNames,
     [Parameter(Mandatory=$false)] [string] $generalizeAll,
 
-    [Parameter(Mandatory=$false)] [string] $location,
+    [Parameter(Mandatory=$false)] [string] $location="",
 
     [Parameter(Mandatory=$false)] [string] $suffix="-Runonce-Primed.vhd"
 )
@@ -217,7 +217,7 @@ if ($Failed -eq $true) {
 #  storage container, with the prefix we gave it but some random junk on the back.  We will copy those
 #  VHDs, and their associated JSON files, to the output storage container, renaming them 
 # to <user supplied>---no_loc-no_flav-generalized.vhd
-Write-Host "Copying generalized VHDs in container $sourceContainer from region $location, with extenstion $sourceExtension."-ForegroundColor Magenta
+Write-Host "Copying generalized VHDs in container $sourceContainer from region $location."-ForegroundColor Magenta
 
 $destKey=Get-AzureRmStorageAccountKey -ResourceGroupName $destRG -Name $destSA
 $destContext=New-AzureStorageContext -StorageAccountName $destSA -StorageAccountKey $destKey[0].Value
@@ -228,17 +228,18 @@ $sourceContext=New-AzureStorageContext -StorageAccountName $sourceSA -StorageAcc
 $copyBlobs = @()
 
 Set-AzureRmCurrentStorageAccount –ResourceGroupName $sourceRG –StorageAccountName $sourceSA
+Write-Host "Copying generalized VHDs in container $sourceContainer from region $location to $destRG / $destSA / $destContainer"
 if ($makeDronesFromAll -eq $true) {
-    $blobs=get-AzureStorageBlob -Container $sourceContainer -Blob "*.vhd"
+    $blobs=get-AzureStorageBlob -Container $sourceRG  -Blob "*.vhd"
     $blobCount = $blobs.Count
-    Write-Host "Copying generalized VHDs in container $sourceContainer from region $location, with extenstion $sourceExtension.  There will be $blobCount VHDs :"-ForegroundColor Magenta
+    Write-Host "Copying generalized VHDs in container / $sourceRG / $sourceSA / $sourceContainer from region $location.  There will be $blobCount VHDs :"-ForegroundColor Magenta
     foreach ($blob in $blobs) {
         $copyblobs += $blob
         $blobName = $blob.Name
         write-host "                       $blobName" -ForegroundColor Magenta
     }
 } else {
-    $blobs=get-AzureStorageBlob -Container $sourceContainer -Blob "*$sourceExtension"
+    $blobs=get-AzureStorageBlob -Container $sourceContainer -Blob "*.vhd"
     foreach ($vmName in $vmNames) {
         $foundIt = $false
         foreach ($blob in $blobs) {

@@ -145,7 +145,7 @@ function copy_azure_machines {
         #  In the source group, stop any machines, then get the keys.
         Set-AzureRmCurrentStorageAccount –ResourceGroupName $global:sourceResourceGroupName –StorageAccountName $global:sourceStorageAccountName > $null
 
-        Write-Host "Stopping any currently running machines in the source resource group..."  -ForegroundColor green
+        Write-Host "Stopping any currently running machines in source resource group $global:sourceResourceGroupName / $global:sourceStorageAccountName / $global:sourceContainerName..."  -ForegroundColor green
         $runningVMs = Get-AzureRmVm -ResourceGroupName $global:sourceResourceGroupName
         deallocate_machines_in_group $runningVMs $global:sourceResourceGroupName $global:sourceStorageAccountName $global:location
 
@@ -158,7 +158,7 @@ function copy_azure_machines {
         #  Switch to the target resource group
         Set-AzureRmCurrentStorageAccount –ResourceGroupName $global:workingResourceGroupName –StorageAccountName $global:workingStorageAccountName > $null
 
-        Write-Host "Stopping and deleting any currently running machines in the target resource group..."  -ForegroundColor green
+        Write-Host "Stopping and deleting any currently running machines in  target storage $global:workingResourceGroupName / $global:workingStorageAccountName / $global:workingContainerName..."  -ForegroundColor green
         $runningVMs = Get-AzureRmVm -ResourceGroupName $global:workingResourceGroupName
         deallocate_machines_in_group $runningVMs $global:workingResourceGroupName $global:workingStorageAccountName $global:location
 
@@ -180,13 +180,17 @@ function copy_azure_machines {
                 $global:neededVMs.Add($vmName)
     
                 Write-Host "     --------- Initiating job to copy VHD $fullName from cache to working directory as $targetName..." -ForegroundColor Yellow
-                $blob = Start-AzureStorageBlobCopy -SrcBlob $fullName -DestContainer $global:workingContainerName -SrcContainer $global:sourceContainerName -DestBlob $targetName -Context $sourceContext -DestContext $destContext
+                $blob = Start-AzureStorageBlobCopy -SrcBlob $fullName -DestContainer $global:workingContainerName `
+                                                   -SrcContainer $global:sourceContainerName -DestBlob $targetName `
+                                                   -Context $sourceContext -DestContext $destContext
 
                 $global:copyblobs.Add($targetName)
             }
         }
     } else {
         Write-Host "Clearing the destination container..."  -ForegroundColor green
+        Write-Host "Deleting any currently running machines in  target storage $global:workingResourceGroupName / $global:workingStorageAccountName / $global:workingContainerName..."  -ForegroundColor green
+        
         Get-AzureStorageBlob -Container $global:workingContainerName -blob * | ForEach-Object {Remove-AzureStorageBlob -Blob $_.Name -Container $global:workingContainerName -Force}  > $null
 
         foreach ($singleURI in $global:URI) {
