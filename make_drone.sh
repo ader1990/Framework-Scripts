@@ -78,6 +78,7 @@ fi
 framework_scripts_path="/root/Framework-Scripts"
 #if ! [ -d $framework_scripts_path ]; then
   git clone https://github.com/FawcettJohnW/Framework-Scripts.git $framework_scripts_path
+  chmod -R 755 /root
 #fi;
 #
 # REVISED: I don't believe the following line is really necessary.
