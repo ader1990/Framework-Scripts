@@ -30,14 +30,11 @@ $suffix = $suffix -replace "_","-"
 [System.Collections.ArrayList]$vmNames_array
 $vmNameArray = {$vmNames_array}.Invoke()
 $vmNameArray.Clear()
-write-host "Incoming : " $requestedNames
 if ($requestedNames -ne "Unset" -and $requestedNames -like "*,*") {
     $vmNameArray = $requestedNames.Split(',')
 } else {
     $vmNameArray = $requestedNames.Split(' ')
 }
-
-Write-Host "After : " $vmNameArray
 
 [System.Collections.ArrayList]$base_names_array
 $machineBaseNames = {$base_names_array}.Invoke()

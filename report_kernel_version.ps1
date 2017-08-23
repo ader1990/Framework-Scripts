@@ -10,6 +10,9 @@ param (
     [Parameter(Mandatory=$false)] [string] $failure_point=""
 )
 
+$global:isHyperV=$true
+$global:logFileName="/opt/microsoft/report_kernel_version.log"
+
 function callItIn($c, $m) {
     $output_path="c:\temp\$c"
     
@@ -18,8 +21,11 @@ function callItIn($c, $m) {
 }
 
 function phoneHome($m) {
-
-    invoke-command -session $s -ScriptBlock ${function:callItIn} -ArgumentList $c,$m
+    if ($global:isHyperV -eq $true) {
+        invoke-command -session $s -ScriptBlock ${function:callItIn} -ArgumentList $c,$m
+    } else {
+        $m | out-file $global:logFileName -Append
+    }
 }
 
 . "/root/Framework-Scripts/secrets.ps1"
@@ -27,11 +33,22 @@ function phoneHome($m) {
 #
 #  Set up the PSRP session
 #
-$o = New-PSSessionOption -SkipCACheck -SkipRevocationCheck -SkipCNCheck
-$pw=convertto-securestring -AsPlainText -force -string "$TEST_USER_ACCOUNT_PASS"
-$cred=new-object -typename system.management.automation.pscredential -argumentlist "$TEST_USER_ACCOUNT_NAME",$pw
-$s=new-PSSession -computername lis-f1637.redmond.corp.microsoft.com -credential $cred -authentication Basic -SessionOption $o
+nslookup cdmbuildsna01.redmond.corp.microsoft.com
+if ($? -eq $false) {
+    $global:isHyperV = $false
+    phoneHome "It looks like we're in Azure"
+} else {
+    phoneHome "It looks like we're in Hyper-V"
+}
 
+if ($global:isHyperV -eq $true) {
+    $o = New-PSSessionOption -SkipCACheck -SkipRevocationCheck -SkipCNCheck
+    $pw=convertto-securestring -AsPlainText -force -string "$TEST_USER_ACCOUNT_PASS"
+    $cred=new-object -typename system.management.automation.pscredential -argumentlist "$TEST_USER_ACCOUNT_NAME",$pw
+    $s=new-PSSession -computername lis-f1637.redmond.corp.microsoft.com -credential $cred -authentication Basic -SessionOption $o
+}
+
+echo "Starting report-Kernel_version" | out-file $global:logFileName  -Force
 #
 #  What machine are we on?  This will be our log file name on the host
 #
