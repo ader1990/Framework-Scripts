@@ -11,7 +11,7 @@ param (
     [Parameter(Mandatory=$false)] [string] $pkg_mount_source="Undefined",
 
     [Parameter(Mandatory=$false)] [string] $pkg_resourceGroup="smoke_output_resource_group",
-    [Parameter(Mandatory=$false)] [string] $pkg_storageaccount="smoketestoutstorageacct",
+    [Parameter(Mandatory=$false)] [string] $pkg_storageaccount="smoketestoutstorageacct ",
     [Parameter(Mandatory=$false)] [string] $pkg_container="last-build-packages",
 
     [Parameter(Mandatory=$false)] [string] $pkg_location="westus"
