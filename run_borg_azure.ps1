@@ -391,13 +391,14 @@ $action={
                     $localSession = create_psrp_session $machineName $global:workingResourceGroupName $global:workingStorageAccountName `
                                                         $global:location $global:cred $global:o
 
-                    Write-Host "Creating PowerShell Remoting session to machine $machineName"  -ForegroundColor green
+                    
                     if ($localSession -ne $null) {
+                        Write-Host "Creating PowerShell Remoting session to machine $machineName"  -ForegroundColor green
                         $machineIsUp = $true
                         $localMachine.session = $localSession
                     }
                 } else {
-                    Write-Host "Re-using old session"
+                    # Write-Host "Re-using old session"
                     $machineIsUp = $true
                     $localSession = $localMachine.session
                 }
@@ -409,7 +410,7 @@ $action={
             $exceptionCaught = $false
             try {            
                 $installed_vers=invoke-command -session $localSession -ScriptBlock {/bin/uname -r}
-                Write-Host "$machineName installed version retrieved as $installed_vers" -ForegroundColor Cyan
+                # Write-Host "$machineName installed version retrieved as $installed_vers" -ForegroundColor Cyan
                       
                 #
                 #  This must be done as root
@@ -418,7 +419,7 @@ $action={
                 $runCommand = "echo $password | sudo -S bash -c `'$command`'"
                 $commandBLock=[scriptblock]::Create($runCommand)
                 $expected_vers = invoke-command -session $localSession -ScriptBlock $commandBLock -ArgumentList $command      
-                Write-Host "$machineName Expected version retrieved as $expected_vers" -ForegroundColor Cyan
+                # Write-Host "$machineName Expected version retrieved as $expected_vers" -ForegroundColor Cyan
                 $expected_vers = ($expected_vers.Split(" "))[0]
             }
             Catch

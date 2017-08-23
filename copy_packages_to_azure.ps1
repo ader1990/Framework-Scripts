@@ -46,7 +46,7 @@ if ($? -eq $false) {
 #
 #  Copy the kernel packages to Azure.
 #
-$drive = $driveLetter+"\"
+$drive = $driveLetter+"\latest"
 Get-ChildItem $drive | Set-AzureStorageBlobContent -Container $destContainer -force
 if ($? -eq $false) {
     $failure_point="CopyPackages"
