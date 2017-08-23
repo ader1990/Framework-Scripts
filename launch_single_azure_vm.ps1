@@ -26,6 +26,25 @@
     [Parameter(Mandatory=$false)] [string] $enableBootDiagnostics = "No"    
 )
 
+$vmName = $vmName.Trim()
+$resourceGroup = $resourceGroup.Trim()
+$storageAccount = $storageAccount.Trim()
+$containerName = $containerName.Trim()
+$network = $network.Trim()
+$subnet = $subnet.Trim()
+$NSG = $NSG.Trim()
+$addAdminUser = $addAdminUser.Trim()
+$adminUser = $adminUser.Trim()
+$adminPW = $adminPW.Trim()
+$Location = $Location.Trim()
+$VMFlavor = $VMFlavor.Trim()
+$addressPrefix  = $addressPrefix.Trim()
+$subnetPrefix  = $subnetPrefix.Trim()
+$suffix  = $suffix.Trim()
+$imageIsGeneralized  = $imageIsGeneralized.Trim()
+$generalizedBlobURI  = $generalizedBlobURI.Trim()
+$enableBootDiagnostics  = $enableBootDiagnostics.Trim()
+
 Write-Host "------------------------->>> Launching VM for $vmName"
 $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
 . "$scriptPath\backend.ps1"

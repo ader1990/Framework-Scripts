@@ -19,6 +19,18 @@ param (
     [Parameter(Mandatory=$false)] [string] $excludeVHDs=$false
 )
 
+$sourceSA = $sourceSA.Trim()
+$sourceRG = $sourceRG.Trim()
+$sourceContainer = $sourceContainer.Trim()
+$sourcePkgContainer = $sourcePkgContainer.Trim()
+$destSA = $destSA.Trim()
+$destRG = $destRG.Trim()
+$destContainer = $destContainer.Trim()
+$destPkgContainer = $destPkgContainer.Trim()
+$location = $location.Trim()
+$excludePackages = $excludePackages.Trim()
+$excludeVHDs = $excludeVHDs.Trim()
+
 . "C:\Framework-Scripts\secrets.ps1"
 
 $copyblobs_array=@()

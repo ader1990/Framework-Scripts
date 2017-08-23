@@ -6,6 +6,11 @@
     [Parameter(Mandatory=$false)] [string] $location="westus"
 )
 
+$destResourceGroup=$destResourceGroup.Trim()
+$destAccountName=$destAccountName.Trim()
+$destContainer=$destContainer.Trim()
+$driveLetter=$driveLetter.Trim()
+$location=$location.Trim()
 . "C:\Framework-Scripts\common_functions.ps1"
 
 

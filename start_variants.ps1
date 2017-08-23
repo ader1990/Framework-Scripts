@@ -27,6 +27,21 @@ param (
     [Parameter(Mandatory=$false)] [string] $location="westus"
 )
 
+$sourceSA = $sourceSA.Trim()
+$sourceRG = $sourceRG.Trim()
+$sourceContainer = $sourceContainer.Trim()
+$destSA = $destSA.Trim()
+$destRG = $destRG.Trim()
+$destContainer = $destContainer.Trim()
+$Flavors = $Flavors.Trim()
+$requestedNames  = $requestedNames.Trim()
+$currentSuffix = $currentSuffix.Trim()
+$newSuffix = $newSuffix.Trim()
+$network = $network.Trim()
+$subnet = $subnet.Trim()
+$NSG = $NSG.Trim()
+$location = $location.Trim()
+
 [System.Collections.ArrayList]$vmNames_array
 $vmNameArray = {$vmNames_array}.Invoke()
 $vmNameArray.Clear()

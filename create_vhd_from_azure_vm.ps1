@@ -22,6 +22,17 @@ param (
 
     [Parameter(Mandatory=$false)] [string[]] $vmNames=""
 )
+
+$sourceSA = $sourceSA.Trim()
+$sourceRG = $sourceRG.Trim()
+$sourceContainer = $sourceContainer.Trim()
+$destSA = $destSA.Trim()
+$destRG = $destRG.Trim()
+$destContainer = $destContainer.Trim()
+$location = $location.Trim()
+$VMFlavor = $VMFlavor.Trim()
+$destExtension = $destExtension.Trim()
+
 Start-Transcript C:\temp\transcripts\create_vhd_from_azure_vm.log -Force
 
 $regionSuffix = ("---" + $location + "-" + $VMFlavor.ToLower()) -replace " ","-"

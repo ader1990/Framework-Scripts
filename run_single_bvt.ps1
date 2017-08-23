@@ -5,6 +5,10 @@
     [Parameter(Mandatory=$true)] [string] $testCycle="BVT"
 )
 
+$sourceName = $sourceName.Trim()
+$configFileName = $configFileName.Trim()
+$distro = $distro.Trim()
+$testCycle = $testCycle.Trim()
 
 $logFileName = "c:\temp\transcripts\" + $sourceName + "_transcript.log"
 Start-Transcript $logFileName -Force

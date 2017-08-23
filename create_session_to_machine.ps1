@@ -11,6 +11,11 @@
     [Parameter(Mandatory=$false)] [int] $retryCount=2
 )
     
+$destSA = $destSA.Trim()
+$destRG = $destRG.Trim()
+$suffix = $suffix.Trim()
+$location = $location.Trim()
+
 . c:\Framework-Scripts\common_functions.ps1
 . c:\Framework-Scripts\secrets.ps1
 

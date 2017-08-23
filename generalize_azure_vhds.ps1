@@ -22,6 +22,14 @@ param (
     [Parameter(Mandatory=$false)] [string] $suffix="-Runonce-Primed.vhd"
 )
 
+$sourceSA = $sourceSA.Trim()
+$sourceRG = $sourceRG.Trim()
+$sourceContainer = $sourceContainer.Trim()
+$destSA = $destSA.Trim()
+$destRG = $destRG.Trim()
+$destContainer = $destContainer.Trim()
+$suffix = $suffix.Trim()
+
 $suffix = $suffix -replace "_","-"
 
 . C:\Framework-Scripts\common_functions.ps1
@@ -83,6 +91,9 @@ if ($generalizeAll -eq $false -and ($vmNameArray.Count -eq 1  -and $vmName -eq "
     $suffix = ""
 }
 
+Write-Host "Making sure we're up to date"
+C:\Framework-Scripts\run_command_on_machines_in_group.ps1 -requestedNames $requestedNames -destSA $sourceSA -destRG $sourceRG `
+                                                          -suffix $suffix -asRoot "True" -location $location -command "git pull /root/Framework-Scripts"
 Write-Host "Replacing cloud-init..."
 C:\Framework-Scripts\run_command_on_machines_in_group.ps1 -requestedNames $requestedNames -destSA $sourceSA -destRG $sourceRG `
                                                           -suffix $suffix -asRoot "True" -location $location -command "/bin/mv /usr/bin/cloud-init.DO_NOT_RUN_THIS_POS /usr/bin/cloud-init"
@@ -206,7 +217,7 @@ if ($Failed -eq $true) {
 #  storage container, with the prefix we gave it but some random junk on the back.  We will copy those
 #  VHDs, and their associated JSON files, to the output storage container, renaming them 
 # to <user supplied>---no_loc-no_flav-generalized.vhd
-Write-Host "Copying the generalized images to container $destContainer"
+Write-Host "Copying generalized VHDs in container $sourceContainer from region $location, with extenstion $sourceExtension."-ForegroundColor Magenta
 
 $destKey=Get-AzureRmStorageAccountKey -ResourceGroupName $destRG -Name $destSA
 $destContext=New-AzureStorageContext -StorageAccountName $destSA -StorageAccountKey $destKey[0].Value
@@ -220,7 +231,7 @@ Set-AzureRmCurrentStorageAccount –ResourceGroupName $sourceRG –StorageAccoun
 if ($makeDronesFromAll -eq $true) {
     $blobs=get-AzureStorageBlob -Container $sourceContainer -Blob "*.vhd"
     $blobCount = $blobs.Count
-    Write-Host "Copying generalized VHDs in container $sourceContainer from region $location, with extenstion $sourceExtension.  There will be $blobCount VHDs:"-ForegroundColor Magenta
+    Write-Host "Copying generalized VHDs in container $sourceContainer from region $location, with extenstion $sourceExtension.  There will be $blobCount VHDs :"-ForegroundColor Magenta
     foreach ($blob in $blobs) {
         $copyblobs += $blob
         $blobName = $blob.Name

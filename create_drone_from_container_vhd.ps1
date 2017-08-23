@@ -22,6 +22,22 @@
     [Parameter(Mandatory=$false)] [string] $newSuffix="-RunOnce-Primed"
 )
 
+$makeDronesFromAll = $makeDronesFromAll.Trim()
+$overwriteVHDs = $overwriteVHDs.Trim()
+$sourceSA = $sourceSA.Trim()
+$sourceRG = $sourceRG.Trim()
+$sourceContainer = $sourceContainer.Trim()
+$destSA = $destSA.Trim()
+$destRG = $destRG.Trim()
+$destContainer = $destContainer.Trim()
+$location = $location.Trim()
+$vmFlavor = $vmFlavor.Trim()
+$NSG = $NSG.Trim()
+$network = $network.Trim()
+$subnet = $subnet.Trim()
+$currentSuffix = $currentSuffix.Trim()
+$newSuffix = $newSuffix.Trim()
+
 Start-Transcript -Path C:\temp\transcripts\create_drone_from_container.transcript -Force
 
 . "C:\Framework-Scripts\common_functions.ps1"

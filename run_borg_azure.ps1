@@ -39,6 +39,20 @@ param (
     [Parameter(Mandatory=$false)] [string] $CleanRG="false"
 )
 
+$sourceResourceGroupName = $sourceResourceGroupName.Trim()
+$sourceStorageAccountName = $sourceStorageAccountName.Trim()
+$sourceContainerName = $sourceContainerName.Trim()
+$workingResourceGroupName = $workingResourceGroupName.Trim()
+$workingStorageAccountName = $workingStorageAccountName.Trim()
+$workingContainerName = $workingContainerName.Trim()
+$sourceURI = $sourceURI.Trim()
+$testOutputResourceGroup = $testOutputResourceGroup.Trim()
+$testOutputStorageAccountName = $testOutputStorageAccountName.Trim()
+$testOutputContainerName = $testOutputContainerName.Trim()
+$location = $location.Trim()
+$vmFlavor = $vmFlavor.Trim()
+$CleanRG = $CleanRG.Trim()
+
 get-job | Stop-Job  > $null
 get-job | remove-job  > $null
 
@@ -53,6 +67,7 @@ $global:sourceResourceGroupName=$sourceResourceGroupName
 $global:sourceStorageAccountName=$sourceStorageAccountName
 $global:sourceContainerName=$sourceContainerName
 $global:location=$location
+
 $global:VMFlavor=$VMFlavor.ToLower()
 
 $global:workingResourceGroupName=$workingResourceGroupName

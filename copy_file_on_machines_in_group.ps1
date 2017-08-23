@@ -11,7 +11,13 @@
 
     [Parameter(Mandatory=$false)] [int] $retryCount=2 
 )
-    
+
+$destSA = $destSA.Trim()
+$destRG = $destRG.Trim()
+$location = $location.Trim()
+$suffix = $suffix.Trim()
+$scriptName = $scriptName.Trim()
+
 $suffix = $suffix -replace "_","-"
     
 . c:\Framework-Scripts\common_functions.ps1

@@ -22,6 +22,16 @@ param (
     [Parameter(Mandatory=$true)] [string] $testCycle="BVT"
 )
 
+$sourceSA = $sourceSA.Trim()
+$sourceRG = $sourceRG.Trim()
+$sourceContainer = $sourceContainer.Trim()
+$location = $location.Trim()
+$templateFile = $templateFile.Trim()
+$removeTag = $removeTag.Trim()
+$OverwriteVHDs = $OverwriteVHDs.Trim()
+$distro = $distro.Trim()
+$testCycle = $testCycle.Trim()
+
 . C:\Framework-Scripts\common_functions.ps1
 . C:\Framework-Scripts\secrets.ps1
 

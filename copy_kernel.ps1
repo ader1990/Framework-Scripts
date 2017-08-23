@@ -21,12 +21,18 @@ git pull
 
 . "/root/Framework-Scripts/secrets.ps1"
 
+$pkg_mount_point=$pkg_mount_point.Trim()
+$pkg_mount_source=$pkg_mount_source.Trim()
+$pkg_resourceGroup=$pkg_resourceGroup.Trim()
+$pkg_storageaccount=$pkg_storageaccount.Trim()
+$pkg_container=$pkg_container.Trim()
+$pkg_location=$pkg_location.Trim()
+
 $global:isHyperV = $false
 $global:o = New-PSSessionOption -SkipCACheck -SkipRevocationCheck -SkipCNCheck
 $global:pw=convertto-securestring -AsPlainText -force -string "$TEST_USER_ACCOUNT_PASS"
 $global:cred=new-object -typename system.management.automation.pscredential -argumentlist "$TEST_USER_ACCOUNT_NAME",$global:pw
 $global:session=$null
-
 function ErrOut([string] $failPoint) {
     #
     #  Not really sure what happened.  Better let a human have a look...

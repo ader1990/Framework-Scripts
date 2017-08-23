@@ -17,6 +17,16 @@
     [Parameter(Mandatory=$false)] [string] $VMFlavor="standard_d2_v2"
 )
 
+$destSA = $destSA.Trim()
+$destRG = $destRG.Trim()
+$destContainer = $destContainer.Trim()
+$location = $location.Trim()
+$useExistingResources = $useExistingResources.Trim()
+$vnetName = $vnetName.Trim()
+$subnetName = $subnetName.Trim()
+$NSG = $NSG.Trim()
+$suffix = $suffix.Trim()
+$VMFlavor = $VMFlavor.Trim()
 $suffix = $suffix -replace "_","-"
 
 get-job | Stop-Job

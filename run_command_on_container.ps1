@@ -21,6 +21,18 @@ param (
     [Parameter(Mandatory=$false)] [string] $location="westus"
 )
 
+$sourceSA = $sourceSA.Trim()
+$sourceRG = $sourceRG.Trim()
+$sourceContainer = $sourceContainer.Trim()
+$suffix = $suffix.Trim()
+$command = $command.Trim()
+$asRoot = $asRoot.Trim()
+$StartMachines = $StartMachines.Trim()
+$network = $network.Trim()
+$subnet = $subnet.Trim()
+$NSG = $NSG.Trim()
+$location = $location.Trim()
+
 . "C:\Framework-Scripts\common_functions.ps1"
 . "C:\Framework-Scripts\secrets.ps1"
 
