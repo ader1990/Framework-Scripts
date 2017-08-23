@@ -10,6 +10,9 @@ param (
     [Parameter(Mandatory=$false)] [string] $failure_point=""
 )
 
+cd /root/Framework-Scripts
+git pull
+
 $global:isHyperV=$true
 $global:logFileName="/opt/microsoft/report_kernel_version.log"
 
