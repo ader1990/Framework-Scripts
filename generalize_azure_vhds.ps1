@@ -10,7 +10,7 @@ param (
     [Parameter(Mandatory=$false)] [string] $sourceContainer="vhds-under-test",
 
     [Parameter(Mandatory=$false)] [string] $destSA="smokework",
-    [Parameter(Mandatory=$false)] [string] $destRB="smoke_working_resource_group",
+    [Parameter(Mandatory=$false)] [string] $destRG="smoke_working_resource_group",
     [Parameter(Mandatory=$false)] [string] $destContainer="generalized-images",
 
 
@@ -210,6 +210,6 @@ if ($Failed -eq $true) {
 #  VHDs, and their associated JSON files, to the output storage container, renaming them 
 # to <user supplied>---no_loc-no_flav-generalized.vhd
 Write-Host "Copying the generalized images to container $destContainer"
-.\copy_single_image_container_to_container.ps1 -sourceSA $sourceSA -sourceRG $sourceRG -sourceContainer "system" -sourceExtension "" -destSA $sourceSA `
-                                               -destRG $sourceRG -destContainer $destContainer -destExtension "-Generalized.vhd" -location $location `
+.\copy_single_image_container_to_container.ps1 -sourceSA $sourceSA -sourceRG $sourceRG -sourceContainer "system" -sourceExtension "" -destSA $destSA `
+                                               -destRG $destRG -destContainer $destContainer -destExtension "-Generalized.vhd" -location $location `
                                                -vmNamesIn $requestedNames -overwriteVHDs "True" -Verbose
