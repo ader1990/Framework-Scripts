@@ -270,6 +270,13 @@ if ($makeDronesFromAll -eq $true) {
 }
 
 Set-AzureRmCurrentStorageAccount –ResourceGroupName $destRG –StorageAccountName $destSA
+
+Get-AzureStorageBlob -Container $destContainer -Prefix "*"
+if ($? -eq $false) {
+    Write-Host "creating the generalization destination container" -ForegroundColor Yellow
+    New-AzureStorageContainer -Name $destContainer -Permission Blob
+}
+
 [int] $index = 0
 foreach ($blob in $copyblobs) {
     $blobName = $blob.Name
