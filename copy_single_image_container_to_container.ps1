@@ -155,6 +155,8 @@ foreach ($vmName in $vmNames) {
     $sourceBlob = $copyBlobs[$index]
     $sourceBlobName = $sourceBlob.Name
 
+    $index = $index + 1
+
     Write-Host "Copying source blob $sourceBlobName"
 
     Write-Host "Initiating job to copy VHD $sourceName from $sourceRG and $sourceContainer to $targetName in $destRG and $destSA, container $destContainer" -ForegroundColor Yellow

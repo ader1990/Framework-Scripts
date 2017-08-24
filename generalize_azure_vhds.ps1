@@ -277,7 +277,6 @@ if ($? -eq $false) {
     New-AzureStorageContainer -Name $destContainer -Permission Blob
 }
 
-[int] $index = 0
 foreach ($blob in $copyblobs) {
     $blobName = $blob.Name
     $longName=($blobName -split "drones/")[1]
