@@ -12,7 +12,6 @@ vi /etc/ssh/sshd_config
 kill -HUP `pidof sshd`
 apt-get install -y git
 ssh-keygen
-Add key to GitHub
 
 git clone git@github.com:FawcettJohnW/Framework-Scripts.git
 cp Framework-Scripts/update_and_copy.ps1 runonce.d/
