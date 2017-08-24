@@ -245,15 +245,13 @@ if ($makeDronesFromAll -eq $true) {
         foreach ($blob in $blobs) {
             $matchName = "*" + $vmName + "*"
             if ( $blob.Name -match $matchName)  {
+                $copyblobs += $blob
+                write-host "Added blob $theName (" $blob.Name ")"
                 $foundIt = $true
-                break
             }
         }
-
-        if ($foundIt -eq $true) {
-            write-host "Added blob $theName (" $blob.Name ")"
-            $copyblobs += $blob
-        } else {
+            
+        if ($foundIt -eq $false) {
             Write-Host " ***** ??? Could not find source blob $theName in container $sourceContainer.  This request is skipped" -ForegroundColor Red
         }
     }
@@ -267,12 +265,12 @@ if ($clearDestContainer -eq $true) {
 
 [int] $index = 0
 foreach ($blob in $copyblobs) {
-    $sourceBlobName = $blob.Name
-
+    $blobName = $blob.Name
+    $longName=($blobName -split "drones/")[1]
+    $baseName=($longName -split "-osdisk")[0]
+    $targetName = $baseName + "-generalized.vhd"
+    
     Write-Host "Copying source blob $sourceBlobName"
-
-    $bar=$sourceBlobName.Replace("---","{")
-    $targetName = $bar.split("{")[0] + "-generalized.vhd"
 
     Write-Host "Initiating job to copy VHD $sourceName from $sourceRG and $sourceContainer to $targetName in $destRG and $destSA, container $destContainer" -ForegroundColor Yellow
     if ($overwriteVHDs -eq $true) {
