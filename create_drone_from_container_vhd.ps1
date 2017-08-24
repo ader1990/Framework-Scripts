@@ -197,11 +197,12 @@ $scriptBlockString =
     #  Send make_drone to the new machine
     #
     #  The first one gets the machine added to known_hosts
-    Write-Host "Copying make_drone to target $ip.." -ForegroundColor Green
+    
 
     #
     #  Now transfer the files
     $ipTemp = $ip + ":/tmp"
+    Write-Host "Copying make_drone to target $ipTemp.." -ForegroundColor Green
     while ($true) {
         $sslReply=@(Write-Output "y" | C:\azure-linux-automation\tools\pscp -pw $password -l $username C:\Framework-Scripts\README.md $ipTemp)
         Write-Output "SSL Rreply is $sslReply"
@@ -222,14 +223,15 @@ $scriptBlockString =
         exit 1
     }
 
-    try_pscp C:\temp\nix_files\secrets.sh $ipTemp
+    Write-Host "Copying secrets to target $ipTemp.." -ForegroundColor Green
+    try_pscp c:\temp\nix_files\secrets.sh $ipTemp
     if ($? -ne $true) {
         Write-Host "Error copying secrets.sh to $newVMName.  This VM must be manually examined!!" -ForegroundColor red
         Stop-Transcript
         exit 1
     }
 
-    try_pscp C:\temp\nix_files\secrets.ps1 $ipTemp
+    try_pscp c:\temp\nix_files\secrets.ps1 $ipTemp
     if ($? -ne $true) {
         Write-Host "Error copying secrets.ps1 to $newVMName.  This VM must be manually examined!!" -ForegroundColor red
         Stop-Transcript

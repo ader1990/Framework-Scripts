@@ -388,14 +388,14 @@ function try_pscp([string] $file,
 
         if ($plink_err -ne $null -and $plink_err -match "*connection timed out*")
         {
-            Write-Host "Timeout on pscp of $file"
+            Write-Host "Timeout on pscp of $file to $ipTemp"
             $try_again = $true
         } elseif ($results -eq $false) {
-            write-host "General error copying file..."
+            write-host "General error copying file $file to $ipTemp..."
             Write-Output $out
             return 1
         } else {
-            Write-Host "Successful copy"
+            Write-Host "$file Successfully copied to $ipTemp"
             return 0
         }
     }
