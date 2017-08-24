@@ -253,7 +253,7 @@ $scriptBlockString =
 
     #
     #  Now run make_drone
-    Write-Host "And now running..."
+    Write-Host "And now running make_drone.  This may take a few minutes.  How about a nice cup of very strong tea?"
     try_plink $ip $linuxDroneCommand
     if ($? -ne $true) {
         Write-Host "Error running make_drone command.  This VM must be manually examined!!" -ForegroundColor red

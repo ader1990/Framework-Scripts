@@ -42,7 +42,7 @@ $vmNameArray = {$vmNames_array}.Invoke()
 $vmNameArray.Clear()
 if ($requestedNames -ne "Unset" -and $requestedNames -like "*,*") {
     $vmNameArray = $requestedNames.Split(',')
-} else {
+} elseif ($requestedNames -ne "unset") {
     $vmNameArray = $requestedNames.Split(' ')
 }
 
@@ -346,7 +346,7 @@ while ($stillCopying -eq $true) {
     if ($stillCopying -eq $true) {
         Start-Sleep -Seconds 10
     } else {
-        Write-Host "All copy jobs have completed.  Rock on." -ForegroundColor Green
+        Write-Host "All copy jobs have completed.  Your generalized VHDs are in $destRG / $destSA / $destContainer.  It could be groovy." -ForegroundColor Green
     }
 }
 Stop-Transcript
