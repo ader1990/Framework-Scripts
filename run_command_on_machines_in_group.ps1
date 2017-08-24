@@ -56,7 +56,7 @@ $commandString =
     #
     #  Session stuff
     #
-    $o = New-PSSessionOption -SkipCACheck -SkipRevocationCheck -SkipCNCheck > $null
+    $o = New-PSSessionOption -SkipCACheck -SkipRevocationCheck -SkipCNCheck
     $cred = make_cred
 
     $suffix = $suffix.Replace(".vhd","")
@@ -75,7 +75,7 @@ $commandString =
     [bool]$success = $false
     $result = ""
     while ($timesTried -lt $retryCount) {
-        # write-host "Executing remote command on machine $vm_name, resource gropu $destRG"
+        # write-host "Executing remote command on machine $vm_name, resource group $destRG"
         $timesTried = $timesTried + 1
         
         [System.Management.Automation.Runspaces.PSSession]$session = create_psrp_session $vm_name $destRG $destSA $location $cred $o
