@@ -369,18 +369,20 @@ function try_pscp([string] $file,
     
     $try_again = $true
     $result = $false
+    $plink_err = $null
     while ($try_again -eq $true) {
         $try_again = $false
         try {
-            $out = C:\azure-linux-automation\tools\pscp -pw $TEST_USER_ACCOUNT_PAS2 -l $TEST_USER_ACCOUNT_NAME $file $ipTemp
+            $out = C:\azure-linux-automation\tools\pscp -pw $TEST_USER_ACCOUNT_PAS2 -l $TEST_USER_ACCOUNT_NAME $file $ipTemp 2>&1
             $result = $?
+            $plink_err = $out | ?{$_.gettype().Name -eq "ErrorRecord"}
         }
         catch {
                 Write-Host "pscp Exception caught -- trying again"
                 $try_again = $true
         }
 
-        if ($result -eq $false -and $out -match "*connection timed out*")
+        if ($plink_err -ne $null -and $plink_err -match "*connection timed out*")
         {
             Write-Host "Timeout on pscp of $file"
             $try_again = $true
@@ -408,9 +410,7 @@ function try_plink([string] $ip,
         $try_again = $false
         try {
             $out = C:\azure-linux-automation\tools\plink.exe -C -v -pw $TEST_USER_ACCOUNT_PAS2 -P $port -l $TEST_USER_ACCOUNT_NAME $ip $command 2>&1
-            $plink_err = $out | ?($_.gettype().Name -eq "ErrorRecord") {
-                
-            }
+            $plink_err = $out | ?{$_.gettype().Name -eq "ErrorRecord"}
             $results = $?
         }
         catch {
@@ -418,7 +418,7 @@ function try_plink([string] $ip,
                 $try_again = $true
         }
 
-        if ($results -eq $false -and $plink_err -match "*connection timed out*")
+        if ($plink_err -ne $null -and $plink_err -match "*connection timed out*")
         {
             Write-Host "Timeout on plink of $command"
             $try_again = $true
