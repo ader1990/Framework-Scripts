@@ -41,7 +41,6 @@ $VMFlavor = $VMFlavor.Trim()
 $addressPrefix  = $addressPrefix.Trim()
 $subnetPrefix  = $subnetPrefix.Trim()
 $suffix  = $suffix.Trim()
-$imageIsGeneralized  = $imageIsGeneralized.Trim()
 $generalizedBlobURI  = $generalizedBlobURI.Trim()
 $enableBootDiagnostics  = $enableBootDiagnostics.Trim()
 
