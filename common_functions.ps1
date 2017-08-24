@@ -93,7 +93,7 @@ function create_psrp_session([string] $vmName, [string] $rg, [string] $SA, [stri
         $remoteIP = $ipAddress.IpAddress
         Write-Host "Attempting contact at $remoteIP"
         $existingSession = Get-PSSession -Name $remoteIP
-        if ($existingSession -eq $null) {}
+        if ($? -eq $false -or $existingSession -eq $null) {
             $thisSession = new-PSSession -computername $remoteIP -credential $cred -authentication Basic -UseSSL -Port 443 -SessionOption $o -name $remoteIP
             if ($? -eq $false) {
                 Write-Host "Contact failed..."
