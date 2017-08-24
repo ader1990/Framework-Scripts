@@ -281,8 +281,8 @@ function create_azure_topology {
     $azureBackend.NetworkName = "SmokeVNet"
     $azureBackend.SubnetName = "SmokeSubnet-1"
     $azureBackend.NetworkSecGroupName = "SmokeNSG"
-    $azureBackend.addressPrefix = "vnetAddressPrefix"
-    $azureBackend.subnetPrefix = "vnetSubnetAddressPrefix"
+    $azureBackend.addressPrefix = $vnetAddressPrefix
+    $azureBackend.subnetPrefix = $vnetSubnetAddressPrefix
     $azureBackend.blobURN = "None"
     $azureBackend.suffix = "-Smoke-1"
     

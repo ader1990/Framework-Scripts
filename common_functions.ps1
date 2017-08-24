@@ -85,7 +85,7 @@ function create_psrp_session([string] $vmName, [string] $rg, [string] $SA, [stri
 
     if ($ipAddress -ne $null) {
         $theAddress = $ipAddress.IpAddress            
-        if ($theAddress.ToLower() -eq "Not Assigned") {
+        if ($theAddress.ToLower() -eq "not assigned") {
             Write-Error "Machine $vmName does not have an assigned IP address.  Cannot create PSRP session to the machine."
             return $null
         }
@@ -95,7 +95,7 @@ function create_psrp_session([string] $vmName, [string] $rg, [string] $SA, [stri
         $existingSession = Get-PSSession -Name $remoteIP
         if ($? -eq $false -or $existingSession -eq $null) {
             $thisSession = new-PSSession -computername $remoteIP -credential $cred -authentication Basic -UseSSL -Port 443 -SessionOption $o -name $remoteIP
-            if ($? -eq $false) {
+            if ($? -eq $false -or $thisSession -eq $null) {
                 Write-Host "Contact failed..."
                 return $null
             } else {
