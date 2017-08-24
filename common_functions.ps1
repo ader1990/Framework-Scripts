@@ -378,7 +378,7 @@ function try_pscp([string] $file,
         {
             Write-Host "Timeout on pscp of $file"
             $try_again = $true
-        } elseif ($result -eq $false) {
+        } elseif ($results -eq $false) {
             write-host "General error copying file..."
             return 1
         } else {
@@ -412,7 +412,7 @@ function try_plink([string] $ip,
         {
             Write-Host "Timeout on plink of $command"
             $try_again = $true
-        } elseif ($result -eq $false) {
+        } elseif ($results -eq $false) {
             write-host "General error executing command..."
             return 1
         } else {
