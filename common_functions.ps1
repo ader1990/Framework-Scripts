@@ -79,35 +79,40 @@ function create_psrp_session([string] $vmName, [string] $rg, [string] $SA, [stri
     $vm_search_string = $vmName  + "*"
     $vm_search_string = $vm_search_string -replace "_","-"
 
-    Write-Host "Attempting to locate host by search string $vm_search_string"
-    $ipAddress = Get-AzureRmPublicIpAddress -ResourceGroupName $rg | Where-Object -Property Name -Like $vm_search_string
-    Write-Host "Got IP Address $($ipAddress.Name), with IP Address $($ipAddress.IpAddress)"
+    [int]$attempts = 0
+    while ($attempts -lt 5) {
+        $attempts = $attempts + 1
+        Write-Host "Attempting to locate host by search string $vm_search_string"
+        $ipAddress = Get-AzureRmPublicIpAddress -ResourceGroupName $rg | Where-Object -Property Name -Like $vm_search_string
+        Write-Host "Got IP Address $($ipAddress.Name), with IP Address $($ipAddress.IpAddress)"
 
-    if ($ipAddress -ne $null) {
-        $theAddress = $ipAddress.IpAddress            
-        if ($theAddress.ToLower() -eq "not assigned") {
-            Write-Error "Machine $vmName does not have an assigned IP address.  Cannot create PSRP session to the machine."
-            return $null
-        }
-
-        $remoteIP = $ipAddress.IpAddress
-        Write-Host "Attempting contact at $remoteIP"
-        $existingSession = Get-PSSession -Name $remoteIP
-        if ($? -eq $false -or $existingSession -eq $null) {
-            $thisSession = new-PSSession -computername $remoteIP -credential $cred -authentication Basic -UseSSL -Port 443 -SessionOption $o -name $remoteIP
-            if ($? -eq $false -or $thisSession -eq $null) {
-                Write-Host "Contact failed..."
+        if ($ipAddress -ne $null) {
+            $theAddress = $ipAddress.IpAddress            
+            if ($theAddress.ToLower() -eq "not assigned") {
+                Write-Error "Machine $vmName does not have an assigned IP address.  Cannot create PSRP session to the machine."
                 return $null
+            }
+
+            $remoteIP = $ipAddress.IpAddress
+            Write-Host "Attempting contact at $remoteIP"
+            $existingSession = Get-PSSession -Name $remoteIP
+            if ($? -eq $false -or $existingSession -eq $null) {
+                $thisSession = new-PSSession -computername $remoteIP -credential $cred -authentication Basic -UseSSL -Port 443 -SessionOption $o -name $remoteIP
+                if ($? -eq $false -or $thisSession -eq $null) {
+                    Write-Host "Contact failed.  This is attempt $attempts of 5.  Will retry in 15 seconds."
+                    start-sleep -Seconds 15
+                } else {
+                    Write-Host "Contact was successful"
+                    return $thisSession
+                }
             } else {
-                Write-Host "Contact was successful"
-                return $thisSession
+                Write-Host "Re-using session for $remoteIP"
+                return $existingSession
             }
         } else {
-            Write-Host "Re-using session for $remoteIP"
-            return $existingSession
+            Write-host "The public IP for machnine $vmName does appear to exist, but the Magic modules are not loaded.  Cannot process this iteration.."
+            start-sleep -Seconds 15
         }
-    } else {
-        Write-host "The public IP for machnine $vmName does appear to exist, but the Magic modules are not loaded.  Cannot process this iteration.."
     }
     return $null
 }
