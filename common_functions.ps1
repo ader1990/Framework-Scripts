@@ -92,13 +92,19 @@ function create_psrp_session([string] $vmName, [string] $rg, [string] $SA, [stri
 
         $remoteIP = $ipAddress.IpAddress
         Write-Host "Attempting contact at $remoteIP"
-        $thisSession = new-PSSession -computername $remoteIP -credential $cred -authentication Basic -UseSSL -Port 443 -SessionOption $o
-        if ($? -eq $false) {
-            Write-Host "Contact failed..."
-            return $null
+        $existingSession = Get-PSSession -Name $remoteIP
+        if ($existingSession -eq $null) {}
+            $thisSession = new-PSSession -computername $remoteIP -credential $cred -authentication Basic -UseSSL -Port 443 -SessionOption $o -name $remoteIP
+            if ($? -eq $false) {
+                Write-Host "Contact failed..."
+                return $null
+            } else {
+                Write-Host "Contact was successful"
+                return $thisSession
+            }
         } else {
-            Write-Host "Contact was successful"
-            return $thisSession
+            Write-Host "Re-using session for $remoteIP"
+            return $existingSession
         }
     } else {
         Write-host "The public IP for machnine $vmName does appear to exist, but the Magic modules are not loaded.  Cannot process this iteration.."

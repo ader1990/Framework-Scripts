@@ -98,7 +98,7 @@ C:\Framework-Scripts\run_command_on_machines_in_group.ps1 -requestedNames $reque
                                                           -suffix $suffix -asRoot "True" -location $location -command "cd /HIPPEE/Framework-Scripts; git pull"
 Write-Host "Replacing cloud-init..."
 C:\Framework-Scripts\run_command_on_machines_in_group.ps1 -requestedNames $requestedNames -destSA $sourceSA -destRG $sourceRG `
-                                                          -suffix $suffix -asRoot "True" -location $location -command "/bin/mv /usr/bin/cloud-init.DO_NOT_RUN_THIS_POS /usr/bin/cloud-init"
+                                                          -suffix $suffix -asRoot "True" -location $location -command "/bin/mv /usr/bin/cloud-init.DO_NOT_RUN_THIS /usr/bin/cloud-init"
 
 Write-Host "Deprovisioning..."
 C:\Framework-Scripts\run_command_on_machines_in_group.ps1 -requestedNames $requestedNames -destSA $sourceSA -destRG $sourceRG `

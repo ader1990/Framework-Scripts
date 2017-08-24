@@ -179,7 +179,7 @@ $scriptBlockString =
 
     Write-Host "Deleting any existing VM" -ForegroundColor Green
     $runningVMs = Get-AzureRmVm -ResourceGroupName $destRG -status | Where-Object -Property Name -Like "$vmName*" | Remove-AzureRmVM -Force 
-    if ($runningVMs -ne $null) {
+    if ($? -eq $true -and $runningVMs -ne $null) {
         deallocate_machines_in_group $runningVMs $destRG $destSA $location
     }
     
@@ -212,6 +212,7 @@ $scriptBlockString =
     $azureInstance = $azureBackend.GetInstanceWrapper($vmName)
 
     $azureInstance.CreateFromURN()
+    
     #
     #  Disable Cloud-Init so it doesn't try to deprovision the machine (known bug in Azure)
     write-host "Attempting to contact the machine..." -ForegroundColor Green
@@ -241,7 +242,7 @@ $scriptBlockString =
 
     #
     # Disable cloud-init
-    $disableCommand0="mv /usr/bin/cloud-init /usr/bin/cloud-init.DO_NOT_RUN_THIS_POS"
+    $disableCommand0="mv /usr/bin/cloud-init /usr/bin/cloud-init.DO_NOT_RUN_THIS"
     $runDisableCommand0="`"echo `'$password`' | sudo -S bash -c `'$disableCommand0`'`""
 
     #
