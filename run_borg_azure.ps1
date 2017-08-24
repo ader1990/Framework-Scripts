@@ -291,7 +291,6 @@ function create_azure_topology {
 
     $requestedNames = ""
     foreach ($vmName in $global:neededVms) {
-        write-host "FUCKING NAME IS $vmName HERE"
         $requestedNames = $requestedNames + $vmName + " "
     
         $machine = new-Object MonitoredMachine

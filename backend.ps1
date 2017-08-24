@@ -272,7 +272,7 @@ class AzureBackend : Backend {
     {
         $sg = Get-AzureRmNetworkSecurityGroup -Name $this.NetworkSecGroupName -ResourceGroupName $this.ResourceGroupName
         if (!$sg) {
-            write-host "Network security group does not exist for this region.  Creating now..." -ForegroundColor Yellow
+            # write-host "Network security group does not exist for this region.  Creating now..." -ForegroundColor Yellow
             $rule1 = New-AzureRmNetworkSecurityRuleConfig -Name "ssl-rule" -Description "Allow SSL over HTTP" `
                                                             -Access "Allow" -Protocol "Tcp" -Direction "Inbound" -Priority "100" `
                                                             -SourceAddressPrefix "Internet" -SourcePortRange "*" `
@@ -285,7 +285,7 @@ class AzureBackend : Backend {
             New-AzureRmNetworkSecurityGroup -Name $this.NetworkSecGroupName -ResourceGroupName $this.ResourceGroupName -Location $this.Location -SecurityRules $rule1,$rule2
 
             $sg = Get-AzureRmNetworkSecurityGroup -Name $this.NetworkSecGroupName -ResourceGroupName $this.ResourceGroupName
-            Write-Host "Done."
+            # Write-Host "Done."
         }
 
         return $sg
@@ -296,7 +296,7 @@ class AzureBackend : Backend {
     {
         $VMVNETObject = Get-AzureRmVirtualNetwork -Name $this.NetworkName -ResourceGroupName $this.ResourceGroupName
         if (!$VMVNETObject) {
-            write-host "Network does not exist for this region.  Creating now..." -ForegroundColor Yellow
+            # write-host "Network does not exist for this region.  Creating now..." -ForegroundColor Yellow
             $VMSubnetObject = New-AzureRmVirtualNetworkSubnetConfig -Name $this.SubnetName  -AddressPrefix $this.subnetPrefix -NetworkSecurityGroup $sg
             New-AzureRmVirtualNetwork   -Name $this.NetworkName -ResourceGroupName $this.ResourceGroupName -Location $this.Location -AddressPrefix $this.addressPrefix -Subnet $VMSubnetObject
             $VMVNETObject = Get-AzureRmVirtualNetwork -Name $this.NetworkName -ResourceGroupName $this.ResourceGroupName
@@ -310,7 +310,7 @@ class AzureBackend : Backend {
     {
         $VMSubnetObject = Get-AzureRmVirtualNetworkSubnetConfig -Name $this.SubnetName -VirtualNetwork $VMVNETObject 
         if (!$VMSubnetObject) {
-            write-host "Subnet does not exist for this region.  Creating now..." -ForegroundColor Yellow
+            # write-host "Subnet does not exist for this region.  Creating now..." -ForegroundColor Yellow
             Add-AzureRmVirtualNetworkSubnetConfig -Name $this.SubnetName -VirtualNetwork $VMVNETObject -AddressPrefix $this.subnetPrefix -NetworkSecurityGroup $sg
             Set-AzureRmVirtualNetwork -VirtualNetwork $VMVNETObject 
             $VMVNETObject = Get-AzureRmVirtualNetwork -Name $this.NetworkName -ResourceGroupName $this.ResourceGroupName
@@ -328,7 +328,7 @@ class AzureBackend : Backend {
         $pipName = $pipName.replace("_","-")
         $pip = Get-AzureRmPublicIpAddress -ResourceGroupName $this.ResourceGroupName -Name $pipName 
         if (!$pip) {
-            write-host "Public IP does not exist for this region.  Creating now..." -ForegroundColor Yellow
+            # write-host "Public IP does not exist for this region.  Creating now..." -ForegroundColor Yellow
             New-AzureRmPublicIpAddress -ResourceGroupName $this.ResourceGroupName -Location $this.Location `
                 -Name $pipName -AllocationMethod Dynamic -IdleTimeoutInMinutes 4
             $pip = Get-AzureRmPublicIpAddress -ResourceGroupName $this.ResourceGroupName -Name $pipName
@@ -344,7 +344,7 @@ class AzureBackend : Backend {
     {
         $VNIC = Get-AzureRmNetworkInterface -Name $nicName -ResourceGroupName $this.ResourceGroupName 
         if (!$VNIC) {
-            Write-Host "Creating new network interface" -ForegroundColor Yellow
+            # Write-Host "Creating new network interface" -ForegroundColor Yellow
             #
             #  Get the PIP
             $pip2 = Get-AzureRmPublicIpAddress -ResourceGroupName $this.ResourceGroupName -Name $nicName
