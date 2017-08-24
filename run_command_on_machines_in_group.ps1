@@ -127,6 +127,7 @@ while ($allDone -eq $false) {
     $allDone = $true
     $numNeeded = $vmNameArray.Count
     $vmsFinished = 0
+    $jobBlocked = $false
 
     foreach ($baseName in $vmNameArray) {
         $vm_name = $baseName
@@ -151,22 +152,30 @@ while ($allDone -eq $false) {
             #  to the command, but for now let's just pass on the 'Blocked' thing until we see
             #  them for at least 5 minutes
             Write-verbose "**********************  HOST MACHINE $vm_name IS BLOCKED WAITING INPUT.  COMMAND WILL NEVER COMPLETE!!"
-            $jobBlocked = $true
+
+            if ($jobBlocked -eq $false) {
+                $jobBlocked = $true
+                $blockedTime = $blockedTime + 10
+
+                if ($blockedTime -gt 600) {
+                    Write-Error "**********************  JOB ON HOST MACHINE $vm_name HAS BEEN BLOCKED FOR 5 MINUTES.  ABORTING EXECUTION"
+
+                    return 1
+                }
+            }
         } else {
             $vmsFinished = $vmsFinished + 1
         }
     }
 
+    #
+    #  Reset the blocked time so we don't accumulate
+    if ($jobBlocked -eq $false) {
+        $blockedTime = 0
+    }
+
     if ($allDone -eq $false) {
         Start-Sleep -Seconds 10
-
-        if ($jobBlocked -eq $true) {
-            $blockedTime = $blockedTime + 10
-            if ($blockedTime -gt 600) {
-                Write-Error "**********************  JOB ON HOST MACHINE $vm_name HAS BEEN BLOCKED FOR 5 MINUTES.  ABORTING EXECUTION"
-
-            }
-        }
     } elseif ($vmsFinished -eq $numNeeded) {
         break
     }

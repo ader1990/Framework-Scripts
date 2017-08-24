@@ -362,21 +362,23 @@ function try_pscp([string] $file,
     . C:\Framework-Scripts\secrets.ps1
     
     $try_again = $true
+    $result = $false
     while ($try_again -eq $true) {
         $try_again = $false
         try {
             $out = C:\azure-linux-automation\tools\pscp -pw $TEST_USER_ACCOUNT_PAS2 -l $TEST_USER_ACCOUNT_NAME $file $ipTemp
+            $result = $?
         }
         catch {
                 Write-Host "pscp Exception caught -- trying again"
                 $try_again = $true
         }
 
-        if ($? -eq $false -and $out -contains "pscp connection timed out")
+        if ($result -eq $false -and $out -match "*connection timed out*")
         {
             Write-Host "Timeout on pscp of $file"
             $try_again = $true
-        } elseif ($? -eq $false) {
+        } elseif ($result -eq $false) {
             write-host "General error copying file..."
             return 1
         } else {
@@ -394,21 +396,23 @@ function try_plink([string] $ip,
     $port=22
     
     $try_again = $true
+    $result = $false
     while ($try_again -eq $true) {
         $try_again = $false
         try {
             $out = C:\azure-linux-automation\tools\plink.exe -C -v -pw $TEST_USER_ACCOUNT_PAS2 -P $port -l $TEST_USER_ACCOUNT_NAME $ip $command
+            $results = $?
         }
         catch {
                 Write-Host "plink Exception caught -- trying again"
                 $try_again = $true
         }
 
-        if ($? -eq $false -and $out -contains "connection timed out")
+        if ($results -eq $false -and $out -match "*connection timed out*")
         {
             Write-Host "Timeout on plink of $command"
             $try_again = $true
-        } elseif ($? -eq $false) {
+        } elseif ($result -eq $false) {
             write-host "General error executing command..."
             return 1
         } else {
