@@ -248,7 +248,9 @@ if ($makeDronesFromAll -eq $true) {
     }
 } else {
     $blobs=get-AzureStorageBlob -Container $sourceContainer -Blob "*.vhd"
+    write-host "Blobs are :" $blobs
     foreach ($vmName in $vmNames) {
+        Write-Host "Looking for a match of $vmName in the blobs"
         $foundIt = $false
         foreach ($blob in $blobs) {
             $blobName = $blob.Name
@@ -268,13 +270,6 @@ if ($makeDronesFromAll -eq $true) {
 }
 
 Set-AzureRmCurrentStorageAccount –ResourceGroupName $destRG –StorageAccountName $destSA
-foreach ($blob in $copyblobs) {
-    $longName=($blobName -split "drones/")[1]
-    $blobPrefix=($longName -split "-osdisk")[0]
-
-    
-}
-
 [int] $index = 0
 foreach ($blob in $copyblobs) {
     $blobName = $blob.Name
