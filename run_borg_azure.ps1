@@ -594,7 +594,7 @@ $action={
 
                                 if ($monitoredMachine.session -eq $null) {
 
-                                    $localSession = create_psrp_session $machineName $global:workingResourceGroupName $global:workingStorageAccountName `
+                                    $localSession = create_psrp_session $monitoredMachineName $global:workingResourceGroupName $global:workingStorageAccountName `
                                                                         $global:location $cred $o
                                     
                                     if ($localSession -ne $null) {
