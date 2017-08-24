@@ -10,7 +10,7 @@ param (
     [Parameter(Mandatory=$false)] [string] $failure_point=""
 )
 
-cd /root/Framework-Scripts
+cd /HIPPEE/Framework-Scripts
 git pull
 
 $global:isHyperV=$true
@@ -31,7 +31,7 @@ function phoneHome($m) {
     }
 }
 
-. "/root/Framework-Scripts/secrets.ps1"
+. "/HIPPEE/Framework-Scripts/secrets.ps1"
 
 #
 #  Set up the PSRP session
@@ -66,8 +66,8 @@ if ($failure_point -eq "") {
         $kernel_name = $failure_point
 }
  
-if (Get-Item -ErrorAction SilentlyContinue -Path /root/expected_version ) {
-    $expected=Get-Content /root/expected_version
+if (Get-Item -ErrorAction SilentlyContinue -Path /HIPPEE/expected_version ) {
+    $expected=Get-Content /HIPPEE/expected_version
 } 
 
 if (($kernel_name.CompareTo($expected)) -ne 0) {
@@ -148,8 +148,8 @@ if (($kernel_name.CompareTo($expected)) -ne 0) {
     }
         
     if ($boot_again = $true) {
-        copy-Item -Path "/tmp/y" -Destination "/root/runonce.d"
-        copy-Item -Path "/root/Framework-Scripts/report_kernel_version.ps1" -Destination "/etc/default/grub"
+        copy-Item -Path "/tmp/y" -Destination "/HIPPEE/runonce.d"
+        copy-Item -Path "/HIPPEE/Framework-Scripts/report_kernel_version.ps1" -Destination "/etc/default/grub"
         PhoneHome "Kernel did not come up with the correct version, but the correct version is listed.  "
         reboot
     } elseif ($failed -eq $true) {

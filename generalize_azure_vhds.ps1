@@ -93,7 +93,7 @@ if ($generalizeAll -eq $false -and ($vmNameArray.Count -eq 1  -and $vmName -eq "
 
 Write-Host "Making sure we're up to date"
 C:\Framework-Scripts\run_command_on_machines_in_group.ps1 -requestedNames $requestedNames -destSA $sourceSA -destRG $sourceRG `
-                                                          -suffix $suffix -asRoot "True" -location $location -command "git pull /root/Framework-Scripts"
+                                                          -suffix $suffix -asRoot "True" -location $location -command "git pull /HIPPEE/Framework-Scripts"
 Write-Host "Replacing cloud-init..."
 C:\Framework-Scripts\run_command_on_machines_in_group.ps1 -requestedNames $requestedNames -destSA $sourceSA -destRG $sourceRG `
                                                           -suffix $suffix -asRoot "True" -location $location -command "/bin/mv /usr/bin/cloud-init.DO_NOT_RUN_THIS_POS /usr/bin/cloud-init"

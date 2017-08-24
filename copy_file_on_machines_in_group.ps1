@@ -42,7 +42,7 @@ $cred = make_cred
 
 $password="$TEST_USER_ACCOUNT_PASS"
 
-$command="cp -f /root/Framework-Scripts/" + $scriptName + " /root/runonce.d"
+$command="cp -f /HIPPEE/Framework-Scripts/" + $scriptName + " /root/runonce.d"
 $runCommand = "echo $password | sudo -S bash -c `'$command`'"
 
 $commandBLock=[scriptblock]::Create($runCommand)

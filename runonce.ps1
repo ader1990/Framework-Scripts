@@ -2,16 +2,16 @@
 #
 #  Reused from the StackOverflow article.  Solution by Dennis Williamson
 #
-#  Place this file in /root/Framework_Scripts/
-#  Create directory /root//runonce.d
-#  Add the line "@reboot root /root/Framework_Scripts/runonce.ps1" to /etc/crontab
+#  Place this file in /HIPPEE/Framework_Scripts/
+#  Create directory /HIPPEE//runonce.d
+#  Add the line "@reboot root /HIPPEE/Framework_Scripts/runonce.ps1" to /etc/crontab
 #
-#  When there's a script you want to run at the next boot, put it in /root/runonce.d.
+#  When there's a script you want to run at the next boot, put it in /HIPPEE/runonce.d.
 #
 #  Author:  John W. Fawcett, Principal Software Development Engineer, Microsoft
 #
 
-. /root/Framework-Scripts/secrets.ps1
+. /HIPPEE/Framework-Scripts/secrets.ps1
 
 function callItIn($c, $m) {
     $output_path="c:\temp\progress_logs\$c"
@@ -23,7 +23,7 @@ function callItIn($c, $m) {
 $global:isHyperV = $false
 
 function phoneHome($m) {
-    . /root/Framework-Scripts/secrets.ps1
+    . /HIPPEE/Framework-Scripts/secrets.ps1
     
     if ($global:isHyperV -eq $true) {
         invoke-command -session $s -ScriptBlock ${function:callItIn} -ArgumentList $c,$m
@@ -79,7 +79,7 @@ phoneHome "RunOnce starting up on machine $c"
 #
 #  Check for the runonce directory
 #
-if ((Test-Path /root/runonce.d) -eq 0) {
+if ((Test-Path /HIPPEE/runonce.d) -eq 0) {
     echo "No runonce directory found"
     $LASTEXITCODE = 1
     exit $LASTERRORCODE
@@ -91,14 +91,14 @@ if ((Test-Path /root/runonce.d) -eq 0) {
 
 $scriptsArray=@()
 
-Get-ChildItem /root/runonce.d -exclude ran |
+Get-ChildItem /HIPPEE/runonce.d -exclude ran |
 foreach-Object {
     $script=$_.Name
 
     echo "Found script $script"
     phoneHome "RunOnce has located $script in execution folder"
 
-    $fullName='/root/runonce.d/ran/'+$script
+    $fullName='/HIPPEE/runonce.d/ran/'+$script
 
     Move-Item -force $_ $fullName
 

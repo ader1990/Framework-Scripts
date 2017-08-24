@@ -75,7 +75,9 @@ fi
 # 
 # Retrieve our depot.
 #
-framework_scripts_path="/root/Framework-Scripts"
+mkdir /HIPPEE
+chmod -R 755 /HIPPEE
+framework_scripts_path="/HIPPEE/Framework-Scripts"
 #if ! [ -d $framework_scripts_path ]; then
   git clone https://github.com/FawcettJohnW/Framework-Scripts.git $framework_scripts_path
 #fi;
@@ -197,8 +199,8 @@ NEW_SOURCES
    
     #
     #  Set up runonce and copy in the right script
-    if ! [ -d "/root/runonce.d" ]; then
-        mkdir /root/runonce.d /root/runonce.d/ran
+    if ! [ -d "/HIPPEE/runonce.d" ]; then
+        mkdir /HIPPEE/runonce.d /HIPPEE/runonce.d/ran
     fi
 ## Unhooking the runonce.d so that we can place other things there in the future.
 ## to use, simply connect in and copy as shown below.
@@ -206,7 +208,7 @@ NEW_SOURCES
     
     #
     #  Tell cron to run the runonce at reboot
-    echo "@reboot root /root/Framework-Scripts/runonce.ps1" >> /etc/crontab
+    echo "@reboot root /HIPPEE/Framework-Scripts/runonce.ps1" >> /etc/crontab
     apt-get install -y ufw
     ufw allow 443
     ufw allow 5986
@@ -278,7 +280,7 @@ yum -y install python-paramiko
 
     #
     #  Set up runonce
-    mkdir /root/runonce.d /root/runonce.d/ran
+    mkdir /HIPPEE/runonce.d /HIPPEE/runonce.d/ran
 
 ## Unhooking the runonce.d so that we can place other things there in the future.
 ## to use, simply connect in and copy as shown below.
@@ -287,7 +289,7 @@ yum -y install python-paramiko
     #
     #
     #  Tell cron to run the runonce at reboot
-    echo "@reboot root /root/Framework-Scripts/runonce.ps1" >> /etc/crontab
+    echo "@reboot root /HIPPEE/Framework-Scripts/runonce.ps1" >> /etc/crontab
 
     #
     #  Make sure 443 is allowed through the firewall

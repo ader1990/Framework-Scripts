@@ -16,10 +16,10 @@ param (
 
     [Parameter(Mandatory=$false)] [string] $pkg_location="westus"
 )
-cd /root/Framework-Scripts
+cd /HIPPEE/Framework-Scripts
 git pull
 
-. "/root/Framework-Scripts/secrets.ps1"
+. "/HIPPEE/Framework-Scripts/secrets.ps1"
 
 #
 #  Clean up
@@ -112,7 +112,7 @@ function phoneVersionHome($m) {
 
         invoke-command -session $global:session -ScriptBlock ${function:callVersionIn} -ArgumentList $outFile,$m
     } else {
-        $output_path="/root/expected_version"
+        $output_path="/HIPPEE/expected_version"
 
         $m | out-file -Append $output_path
     }
@@ -123,12 +123,12 @@ if (Get-Item -ErrorAction SilentlyContinue -Path /opt/microsoft/borg_progress.lo
 }
 
 Stop-Transcript | out-null
-Start-Transcript -path /root/borg_install_log -append
+Start-Transcript -path /HIPPE/borg_install_log -append
 #
 #  Remove the old sentinel file and reset
 #
-Remove-Item -Force "/root/expected_version"
-write-output "System Initialization" | Out-File -Path "/root/expected_version"
+Remove-Item -Force "/HIPPEE/expected_version"
+write-output "System Initialization" | Out-File -Path "/HIPPEE/expected_version"
 $failure_point="Setup"
 
 #
@@ -166,8 +166,8 @@ $failure_point="chmod"
 
 $failure_point="cleaning old"
 phoneHome "Starting copy file scipt"
-set-location /root
-$kernFolder="/root/latest_kernel"
+set-location /HIPPEE
+$kernFolder="/HIPPEE/latest_kernel"
 If (Test-Path $kernFolder) {
     Remove-Item -Recurse -Force $kernFolder
 }
@@ -222,7 +222,7 @@ if ($global:isHyperV -eq $true) {
     #  Copy the files
     #
     phoneHome "Copying the kernel from the drop share"
-    set-location /root/latest_kernel
+    set-location /HIPPEE/latest_kernel
 
     copy-Item -Path $pkg_mount_dir/* -Destination ./
     if ($? -eq $false) {
@@ -272,7 +272,7 @@ phoneHome "Operating system version is $linuxVers"
 #
 $failure_point="PrepareForInstall"
 if (Test-Path /bin/rpm) {
-    $kernel_name_cent=Get-ChildItem -Path /root/latest_kernel/kernel-[0-9].* -Exclude "*.src*"
+    $kernel_name_cent=Get-ChildItem -Path /HIPPEE/latest_kernel/kernel-[0-9].* -Exclude "*.src*"
     $kernelNameCent = $kernel_name_cent.Name.split("-")[1]
     phoneHome "CentOS Kernel name is $kernelNameCent"
 
@@ -286,10 +286,10 @@ if (Test-Path /bin/rpm) {
     #
     $kernelVersionCent=($kernelVersionCent -replace "_","-")
     phoneHome "Expected Kernel version is $kernelVersionCent"
-    $kernelVersionCent | Out-File -Path "/root/expected_version"
+    $kernelVersionCent | Out-File -Path "/HIPPEE/expected_version"
     phoneVersionHome $kernelVersionCent
 } else {
-    $kernel_name_deb=Get-ChildItem -Path /root/latest_kernel/linux-image-[0-9].* -Exclude "*-dbg_*"
+    $kernel_name_deb=Get-ChildItem -Path /HIPPEE/latest_kernel/linux-image-[0-9].* -Exclude "*-dbg_*"
     $kernelNameDeb = $kernel_name_deb.Name.split("image-")[1]
     phoneHome "Debian Kernel name is $kernelNameDeb"
 
@@ -303,7 +303,7 @@ if (Test-Path /bin/rpm) {
     #
     $kernelVersionDeb=($kernelVersionDeb -replace "_","-")
     phoneHome "Expected Kernel version is $kernelVersionDeb"
-    $kernelVersionDeb | Out-File -Path "/root/expected_version"
+    $kernelVersionDeb | Out-File -Path "/HIPPEE/expected_version"
     phoneVersionHome $kernelVersionDeb
 }
 
@@ -316,10 +316,10 @@ if (Test-Path /bin/rpm) {
     #
     #  rpm-based system
     #
-    $kerneldevelName = Get-Childitem -Path /root/latest_kernel/kernel-devel-[0-9].*.rpm
+    $kerneldevelName = Get-Childitem -Path /HIPPEE/latest_kernel/kernel-devel-[0-9].*.rpm
     phoneHome "Kernel Devel Package name is $kerneldevelName"
 
-    $kernelPackageName = Get-ChildItem -Path /root/latest_kernel/kernel-[0-9].*.rpm
+    $kernelPackageName = Get-ChildItem -Path /HIPPEE/latest_kernel/kernel-[0-9].*.rpm
 
     phoneHome "Making sure the firewall is configured"
     @(firewall-cmd --zone=public --add-port=443/tcp --permanent)
@@ -452,7 +452,7 @@ if (Test-Path /bin/rpm) {
 #
 #  Copy the post-reboot script to RunOnce
 #
-copy-Item -Path "/root/Framework-Scripts/report_kernel_version.ps1" -Destination "/root/runonce.d"
+copy-Item -Path "/HIPPEE/Framework-Scripts/report_kernel_version.ps1" -Destination "/root/runonce.d"
 
 phoneHome "Rebooting now..."
 
