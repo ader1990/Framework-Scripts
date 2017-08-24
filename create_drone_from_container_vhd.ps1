@@ -208,6 +208,9 @@ $scriptBlockString =
     }
     $sslReply=@(Write-Output "y" | C:\azure-linux-automation\tools\pscp -pw $password -l $username C:\Framework-Scripts\README.md $ipTemp)
 
+    Remove-Item c:\temp\nix_files\make_drone.sh
+    Remove-Item c:\temp\nix_files\secrets.sh
+    Remove-Item c:\temp\nix_files\secrets.ps1
     C:\azure-linux-automation\tools\dos2unix.exe -n C:\Framework-Scripts\make_drone.sh c:\temp\nix_files\make_drone.sh
     C:\azure-linux-automation\tools\dos2unix.exe -n C:\Framework-Scripts\secrets.sh c:\temp\nix_files\secrets.sh
     C:\azure-linux-automation\tools\dos2unix.exe -n C:\Framework-Scripts\secrets.ps1 c:\temp\nix_files\secrets.ps1
