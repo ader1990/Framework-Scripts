@@ -177,6 +177,7 @@ while ($allDone -eq $false) {
     $numNeeded = $vmNameArray.Count
     $vmsFinished = 0
 
+    Write-Host "Checking status of deprovisioning jobs..." -ForegroundColor Yellow
     [int]$nameIndex = 0
     foreach ($vm_name in $machineBaseNames) {
         $machine_name = $machineFullNames[$nameIndex]
@@ -185,7 +186,7 @@ while ($allDone -eq $false) {
         $job = Get-Job -Name $jobName
         $jobState = $job.State
 
-        write-host "    Job $job_name is in state $jobState" -ForegroundColor Yellow
+        write-host "    Job $jobName is in state $jobState" -ForegroundColor Yellow
         if ($jobState -eq "Running") {
             write-verbose "job $jobName is still running..."
             $allDone = $false
@@ -237,7 +238,7 @@ $copyBlobs = @()
 Set-AzureRmCurrentStorageAccount –ResourceGroupName $sourceRG –StorageAccountName $sourceSA
 Write-Host "Copying generalized VHDs in container $sourceContainer from region $location to $destRG / $destSA / $destContainer"
 if ($makeDronesFromAll -eq $true) {
-    $blobs=get-AzureStorageBlob -Container $sourceRG  -Blob "*.vhd"
+    $blobs=get-AzureStorageBlob -Container $sourceContainer  -Blob "*.vhd"
     $blobCount = $blobs.Count
     Write-Host "Copying generalized VHDs in container / $sourceRG / $sourceSA / $sourceContainer from region $location.  There will be $blobCount VHDs :"-ForegroundColor Magenta
     foreach ($blob in $blobs) {
@@ -250,10 +251,12 @@ if ($makeDronesFromAll -eq $true) {
     foreach ($vmName in $vmNames) {
         $foundIt = $false
         foreach ($blob in $blobs) {
+            $blobName = $blob.Name
             $matchName = "*" + $vmName + "*"
-            if ( $blob.Name -match $matchName)  {
+            Write-Host "Looking for a match of $matchName in blob name $blobName"
+            if ($blobName -match $matchName)  {
                 $copyblobs += $blob
-                write-host "Added blob $theName (" $blob.Name ")"
+                write-host "Added blob $blobName"
                 $foundIt = $true
             }
         }
@@ -265,12 +268,11 @@ if ($makeDronesFromAll -eq $true) {
 }
 
 Set-AzureRmCurrentStorageAccount –ResourceGroupName $destRG –StorageAccountName $destSA
-foreach ($blob in $blobs) {
-    $blobName = $blob.Name
-    $blobPrefix = ($blobName -split "-osdisk")[0]
+foreach ($blob in $copyblobs) {
+    $longName=($blobName -split "drones/")[1]
+    $blobPrefix=($longName -split "-osdisk")[0]
 
-    Write-Host "Clearing destination container of all VHDs with prefix $blobPrefix"
-    get-AzureStorageBlob -Container $destContainer -Blob "$blobPrefix*" | ForEach-Object {Remove-AzureStorageBlob -Blob $_.Name -Container $destContainer }
+    
 }
 
 [int] $index = 0
@@ -280,13 +282,14 @@ foreach ($blob in $copyblobs) {
     $baseName=($longName -split "-osdisk")[0]
     $targetName = $baseName + "-generalized.vhd"
     
-    Write-Host "Copying source blob $sourceBlobName"
-
-    Write-Host "Initiating job to copy VHD $sourceName from $sourceRG and $sourceContainer to $targetName in $destRG and $destSA, container $destContainer" -ForegroundColor Yellow
+    Write-Host "Initiating job to copy VHD $blobName from $sourceRG and $sourceContainer to $targetName in $destRG and $destSA, container $destContainer" -ForegroundColor Yellow
     if ($overwriteVHDs -eq $true) {
-        $blob = Start-AzureStorageBlobCopy -SrcBlob $sourceBlob.Name -DestContainer $destContainer -SrcContainer $sourceContainer -DestBlob $targetName -Context $sourceContext -DestContext $destContext -Force
+        Write-Host "Clearing destination container of all VHDs with prefix $baseName"
+        get-AzureStorageBlob -Container $destContainer -Blob "$baseName*" | ForEach-Object {Remove-AzureStorageBlob -Blob $_.Name -Container $destContainer }
+
+        $blob = Start-AzureStorageBlobCopy -SrcBlob $blobName -DestContainer $destContainer -SrcContainer $sourceContainer -DestBlob $targetName -Context $sourceContext -DestContext $destContext -Force
     } else {
-        $blob = Start-AzureStorageBlobCopy -SrcBlob $sourceBlob.Name -DestContainer $destContainer -SrcContainer $sourceContainer -DestBlob $targetName -Context $sourceContext -DestContext $destContext
+        $blob = Start-AzureStorageBlobCopy -SrcBlob $blobName -DestContainer $destContainer -SrcContainer $sourceContainer -DestBlob $targetName -Context $sourceContext -DestContext $destContext
     }
 
     if ($? -eq $false) {
@@ -307,9 +310,10 @@ while ($stillCopying -eq $true) {
     write-host "Checking blob copy status..." -ForegroundColor yellow
 
     foreach ($blob in $copyblobs) {
-        $sourceBlobName = $blob.Name
-        $bar=$sourceBlobName.Replace("---","{")
-        $targetName = $bar.split("{")[0] + "-generalized.vhd"
+        $blobName = $blob.Name
+        $longName=($blobName -split "drones/")[1]
+        $baseName=($longName -split "-osdisk")[0]
+        $targetName = $baseName + "-generalized.vhd"
 
         $copyStatus = Get-AzureStorageBlobCopyState -Blob $targetName -Container $destContainer -ErrorAction SilentlyContinue
         $status = $copyStatus.Status
