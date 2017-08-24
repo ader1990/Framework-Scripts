@@ -14,8 +14,8 @@ param (
     [Parameter(Mandatory=$false)] [string] $destContainer="generalized-images",
 
 
-    [Parameter(Mandatory=$false)] [string] $requestedNames,
-    [Parameter(Mandatory=$false)] [string] $generalizeAll,
+    [Parameter(Mandatory=$false)] [string] $requestedNames="",
+    [Parameter(Mandatory=$false)] [string] $generalizeAll="True",
 
     [Parameter(Mandatory=$false)] [string] $location="",
 
@@ -40,10 +40,16 @@ Start-Transcript C:\temp\transcripts\generalize_vhds.log
 [System.Collections.ArrayList]$vmNames_array
 $vmNameArray = {$vmNames_array}.Invoke()
 $vmNameArray.Clear()
-if ($requestedNames -ne "Unset" -and $requestedNames -like "*,*") {
+if ($requestedNames.ToLower() -eq "unset") {
+    $requestedNames = ""
+}
+
+if ($requestedNames -like "*,*") {
     $vmNameArray = $requestedNames.Split(',')
-} elseif ($requestedNames -ne "unset") {
+} elseif ($requestedNames -ne "") {
     $vmNameArray = $requestedNames.Split(' ')
+} else {
+    $vmNameArray.clear()
 }
 
 [System.Collections.ArrayList]$base_names_array
@@ -57,7 +63,7 @@ $machineFullNames.Clear()
 login_azure $sourceRG $sourceSA $location
 
 $vmName = $vmNameArray[0]
-if ($generalizeAll -eq $false -and ($vmNameArray.Count -eq 1  -and $vmName -eq "Unset")) {
+if ($generalizeAll -eq $false -and $vmNameArray.Count -eq 0) {
     Write-Host "Must specify either a list of VMs in RequestedNames, or use generalizeAll.  Unable to process this request."
     Stop-Transcript
     exit 1
@@ -237,7 +243,7 @@ $copyBlobs = @()
 
 Set-AzureRmCurrentStorageAccount –ResourceGroupName $sourceRG –StorageAccountName $sourceSA
 Write-Host "Copying generalized VHDs in container $sourceContainer from region $location to $destRG / $destSA / $destContainer"
-if ($makeDronesFromAll -eq $true) {
+if ($generalizeAll -eq $true) {
     $blobs=get-AzureStorageBlob -Container $sourceContainer  -Blob "*.vhd"
     $blobCount = $blobs.Count
     Write-Host "Copying generalized VHDs in container / $sourceRG / $sourceSA / $sourceContainer from region $location.  There will be $blobCount VHDs :"-ForegroundColor Magenta
