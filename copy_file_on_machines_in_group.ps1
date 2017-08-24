@@ -58,7 +58,7 @@ foreach ($baseName in $vmNameArray) {
             [System.Management.Automation.Runspaces.PSSession]$session = create_psrp_session $vm_name $destRG $destSA $location $cred $o
             if ($? -eq $true -and $session -ne $null) {
                 invoke-command -session $session -ScriptBlock $commandBLock -ArgumentList $runCommand
-                Exit-PSSession
+                Remove-PSSession
             } else {
                 Write-Error "    FAILED to establish PSRP connection to machine $vm_name."
             }

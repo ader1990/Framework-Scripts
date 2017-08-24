@@ -80,7 +80,7 @@ $commandString =
         [System.Management.Automation.Runspaces.PSSession]$session = create_psrp_session $vm_name $destRG $destSA $location $cred $o
         if ($? -eq $true -and $session -ne $null) {
             invoke-command -session $session -ScriptBlock $commandBLock -ArgumentList $command
-            Exit-PSSession
+            Remove-PSSession
             $success = $true
             break
         } else {
