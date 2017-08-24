@@ -80,17 +80,21 @@ $commandString =
         [System.Management.Automation.Runspaces.PSSession]$session = create_psrp_session $vm_name $destRG $destSA $location $cred $o
         if ($? -eq $true -and $session -ne $null) {
             invoke-command -session $session -ScriptBlock $commandBLock -ArgumentList $command
-            Remove-PSSession
             $success = $true
             break
         } else {
             if ($timesTried -lt $retryCount) {
+                Remove-PSSession -Session $session
                 Write-Error "    Try $timesTried of $retryCount -- FAILED to establish PSRP connection to machine $vm_name."
             }
         }
         start-sleep -Seconds 10
     }
 
+    if ($session -ne $null) {
+        Remove-PSSession -Session $session
+    }
+    
     Stop-Transcript > $null
 }
 
@@ -135,10 +139,12 @@ while ($allDone -eq $false) {
             Write-Error "**********************  JOB ON HOST MACHINE $vm_name HAS FAILED."
             $jobFailed = $true
             $vmsFinished = $vmsFinished + 1
+            receive-job -name job_name -Keep
         } elseif ($jobState -eq "Blocked") {
             Write-Error "**********************  HOST MACHINE $vm_name IS BLOCKED WAITING INPUT.  COMMAND WILL NEVER COMPLETE!!"
             $jobBlocked = $true
             $vmsFinished = $vmsFinished + 1
+            receive-job -name job_name -Keep
         } else {
             $vmsFinished = $vmsFinished + 1
         }
