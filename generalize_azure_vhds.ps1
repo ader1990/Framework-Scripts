@@ -35,6 +35,8 @@ $suffix = $suffix -replace "_","-"
 . C:\Framework-Scripts\common_functions.ps1
 . C:\Framework-Scripts\secrets.ps1
 
+Start-Transcript C:\temp\transcripts\generalize_vhds.log
+
 [System.Collections.ArrayList]$vmNames_array
 $vmNameArray = {$vmNames_array}.Invoke()
 $vmNameArray.Clear()
@@ -93,7 +95,7 @@ if ($generalizeAll -eq $false -and ($vmNameArray.Count -eq 1  -and $vmName -eq "
 
 Write-Host "Making sure we're up to date"
 C:\Framework-Scripts\run_command_on_machines_in_group.ps1 -requestedNames $requestedNames -destSA $sourceSA -destRG $sourceRG `
-                                                          -suffix $suffix -asRoot "True" -location $location -command "git pull /HIPPEE/Framework-Scripts"
+                                                          -suffix $suffix -asRoot "True" -location $location -command "cd /HIPPEE/Framework-Scripts; git pull"
 Write-Host "Replacing cloud-init..."
 C:\Framework-Scripts\run_command_on_machines_in_group.ps1 -requestedNames $requestedNames -destSA $sourceSA -destRG $sourceRG `
                                                           -suffix $suffix -asRoot "True" -location $location -command "/bin/mv /usr/bin/cloud-init.DO_NOT_RUN_THIS_POS /usr/bin/cloud-init"
@@ -103,6 +105,7 @@ C:\Framework-Scripts\run_command_on_machines_in_group.ps1 -requestedNames $reque
                                                           -suffix $suffix -asRoot "True" -location $location -command "waagent -deprovision -force"
  if ($? -eq $false) {
     Write-Host "FAILED to deprovision machines" -ForegroundColor Red
+    Stop-Transcript
     exit 1
 }
 
@@ -111,6 +114,7 @@ C:\Framework-Scripts\run_command_on_machines_in_group.ps1 -requestedNames $reque
                                                           -suffix $suffix -asRoot "True" -location $location -command "bash -c shutdown"
 if ($? -eq $false) {
     Write-Host "FAILED to stop machines" -ForegroundColor Red
+    Stop-Transcript
     exit 1
 }
 
@@ -165,6 +169,8 @@ foreach ($vm_name in $machineBaseNames) {
     Start-Job -Name $jobName -ScriptBlock $scriptBlock -ArgumentList $machine_name, $sourceRG, $sourceContainer, $vm_name
 }
 
+start-sleep -seconds 10
+
 $allDone = $false
 while ($allDone -eq $false) {
     $allDone = $true
@@ -179,7 +185,7 @@ while ($allDone -eq $false) {
         $job = Get-Job -Name $jobName
         $jobState = $job.State
 
-        # write-host "    Job $job_name is in state $jobState" -ForegroundColor Yellow
+        write-host "    Job $job_name is in state $jobState" -ForegroundColor Yellow
         if ($jobState -eq "Running") {
             write-verbose "job $jobName is still running..."
             $allDone = $false
@@ -209,6 +215,7 @@ while ($allDone -eq $false) {
 
 if ($Failed -eq $true) {
     Write-Host "Machine generalization failed.  Please check the logs." -ForegroundColor Red
+    Stop-Transcript
     exit 1
 } 
 
@@ -258,9 +265,12 @@ if ($makeDronesFromAll -eq $true) {
 }
 
 Set-AzureRmCurrentStorageAccount –ResourceGroupName $destRG –StorageAccountName $destSA
-if ($clearDestContainer -eq $true) {
-    Write-Host "Clearing destination container of all jobs with extension $destExtension"
-    get-AzureStorageBlob -Container $destContainer -Blob "*$destExtension" | ForEach-Object {Remove-AzureStorageBlob -Blob $_.Name -Container $destContainer }
+foreach ($blob in $blobs) {
+    $blobName = $blob.Name
+    $blobPrefix = ($blobName -split "-osdisk")[0]
+
+    Write-Host "Clearing destination container of all VHDs with prefix $blobPrefix"
+    get-AzureStorageBlob -Container $destContainer -Blob "$blobPrefix*" | ForEach-Object {Remove-AzureStorageBlob -Blob $_.Name -Container $destContainer }
 }
 
 [int] $index = 0
@@ -331,6 +341,6 @@ while ($stillCopying -eq $true) {
         Write-Host "All copy jobs have completed.  Rock on." -ForegroundColor Green
     }
 }
-# Stop-Transcript
+Stop-Transcript
 
 exit 0

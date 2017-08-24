@@ -73,28 +73,25 @@ $commandString =
 
     [int]$timesTried = 0
     [bool]$success = $false
-    $result = ""
     while ($timesTried -lt $retryCount) {
-        # write-host "Executing remote command on machine $vm_name, resource group $destRG"
+        Write-Debug "Executing remote command on machine $vm_name, resource group $destRG"
         $timesTried = $timesTried + 1
         
         [System.Management.Automation.Runspaces.PSSession]$session = create_psrp_session $vm_name $destRG $destSA $location $cred $o
         if ($? -eq $true -and $session -ne $null) {
-            $result = invoke-command -session $session -ScriptBlock $commandBLock -ArgumentList $command
+            invoke-command -session $session -ScriptBlock $commandBLock -ArgumentList $command
             Exit-PSSession
             $success = $true
             break
         } else {
             if ($timesTried -lt $retryCount) {
-                Write-Host "    Try $timesTried of $retryCount -- FAILED to establish PSRP connection to machine $vm_name."
+                Write-Error "    Try $timesTried of $retryCount -- FAILED to establish PSRP connection to machine $vm_name."
             }
         }
         start-sleep -Seconds 10
     }
 
     Stop-Transcript > $null
-
-    return $result
 }
 
 $commandBLock = [scriptblock]::Create($commandString)
@@ -107,7 +104,7 @@ foreach ($baseName in $vmNameArray) {
     $vm_name = $vm_name -replace ".vhd", ""
     $job_name = "run_command_" + $vm_name
 
-    write-host "Executing remote command on machine $vm_name, resource gropu $destRG"
+    write-verbose "Executing command on machine $vm_name, resource group $destRG"
 
     start-job -Name $job_name -ScriptBlock $commandBLock -ArgumentList $DestRG, $DestSA, $location, $suffix, $command, $asRoot, $vm_name, $retryCount > $null
 }
@@ -135,11 +132,11 @@ while ($allDone -eq $false) {
         if ($jobState -eq "Running") {
             $allDone = $false
         } elseif ($jobState -eq "Failed") {
-            write-host "**********************  JOB ON HOST MACHINE $vm_name HAS FAILED." -ForegroundColor Red
+            Write-Error "**********************  JOB ON HOST MACHINE $vm_name HAS FAILED."
             $jobFailed = $true
             $vmsFinished = $vmsFinished + 1
         } elseif ($jobState -eq "Blocked") {
-            write-host "**********************  HOST MACHINE $vm_name IS BLOCKED WAITING INPUT.  COMMAND WILL NEVER COMPLETE!!" -ForegroundColor Red
+            Write-Error "**********************  HOST MACHINE $vm_name IS BLOCKED WAITING INPUT.  COMMAND WILL NEVER COMPLETE!!"
             $jobBlocked = $true
             $vmsFinished = $vmsFinished + 1
         } else {
