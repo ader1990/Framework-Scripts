@@ -56,7 +56,7 @@ $commandString =
     #
     #  Session stuff
     #
-    $o = New-PSSessionOption -SkipCACheck -SkipRevocationCheck -SkipCNCheck
+    $o = New-PSSessionOption -SkipCACheck -SkipRevocationCheck -SkipCNCheck > $null
     $cred = make_cred
 
     $suffix = $suffix.Replace(".vhd","")
@@ -73,13 +73,14 @@ $commandString =
 
     [int]$timesTried = 0
     [bool]$success = $false
+    $result = ""
     while ($timesTried -lt $retryCount) {
         # write-host "Executing remote command on machine $vm_name, resource gropu $destRG"
         $timesTried = $timesTried + 1
         
         [System.Management.Automation.Runspaces.PSSession]$session = create_psrp_session $vm_name $destRG $destSA $location $cred $o
         if ($? -eq $true -and $session -ne $null) {
-            invoke-command -session $session -ScriptBlock $commandBLock -ArgumentList $command
+            $result = invoke-command -session $session -ScriptBlock $commandBLock -ArgumentList $command
             Exit-PSSession
             $success = $true
             break
@@ -88,10 +89,12 @@ $commandString =
                 Write-Host "    Try $timesTried of $retryCount -- FAILED to establish PSRP connection to machine $vm_name."
             }
         }
-        sleep 10
+        start-sleep -Seconds 10
     }
 
     Stop-Transcript > $null
+
+    return $result
 }
 
 $commandBLock = [scriptblock]::Create($commandString)
@@ -157,7 +160,7 @@ foreach ($baseName in $vmNameArray) {
     $job_name = "run_command_" + $vm_name
 
     Write-Host $vm_name :
-    Get-Job $job_name | Receive-Job -ErrorAction SilentlyContinue
+    Get-Job $job_name | Receive-Job
 }
 
 if ($jobFailed -eq $true -or $jobBlocked -eq $true)

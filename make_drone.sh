@@ -76,11 +76,14 @@ fi
 # Retrieve our depot.
 #
 mkdir /HIPPEE
-chmod -R 755 /HIPPEE
+
 framework_scripts_path="/HIPPEE/Framework-Scripts"
 #if ! [ -d $framework_scripts_path ]; then
   git clone https://github.com/FawcettJohnW/Framework-Scripts.git $framework_scripts_path
 #fi;
+
+chown -R mstest /HIPPEE
+
 #
 # REVISED: I don't believe the following line is really necessary.
 #   The check above determines if we have already pulled the depot, if this is the case, we don't get new code
