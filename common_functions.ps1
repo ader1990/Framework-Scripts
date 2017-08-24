@@ -372,33 +372,34 @@ function try_pscp([string] $file,
 {
     . C:\Framework-Scripts\secrets.ps1
     
-    $try_again = $true
+    [int]$num_tries = 0
     $result = $false
     $plink_err = $null
-    while ($try_again -eq $true) {
-        $try_again = $false
+    while ($num_tries -lt 10) {
+        $num_tries = $num_tries + 1
         try {
             C:\azure-linux-automation\tools\pscp -pw $TEST_USER_ACCOUNT_PAS2 -l $TEST_USER_ACCOUNT_NAME $file $ipTemp
             $result = $?
         }
         catch {
                 Write-Host "pscp Exception caught -- trying again"
-                $try_again = $true
         }
 
         if ($plink_err -ne $null -and $plink_err -match "*connection timed out*")
         {
             Write-Host "Timeout on pscp of $file to $ipTemp"
-            $try_again = $true
         } elseif ($results -eq $false) {
             write-host "General error copying file $file to $ipTemp..."
             Write-Output $out
-            return 1
         } else {
             Write-Host "$file Successfully copied to $ipTemp"
             return 0
         }
+
+        start-sleep 12
     }
+
+    write-host "FAILURE copying file $file to $ipTemp.  Gave up after 2 minutes"
 }
 
 function try_plink([string] $ip,
@@ -408,26 +409,24 @@ function try_plink([string] $ip,
 
     $port=22
     
-    $try_again = $true
+    [int]$num_tries = 0
     $result = $false
     $plink_err = $null
-    while ($try_again -eq $true) {
-        $try_again = $false
+    while ($num_tries -lt 10) {
+        $num_tries = $num_tries + 1
         try {
             C:\azure-linux-automation\tools\plink.exe -C -v -pw $TEST_USER_ACCOUNT_PAS2 -P $port -l $TEST_USER_ACCOUNT_NAME $ip $command
             $results = $?
         }
         catch {
                 Write-Host "plink Exception caught -- trying again"
-                $try_again = $true
         }
 
         if ($plink_err -ne $null -and $plink_err -match "*connection timed out*")
         {
             Write-Host "Timeout on plink of $command"
-            $try_again = $true
         } elseif ($results -eq $false) {
-            write-host "General error executing command..."
+            write-host "General error executing command.  Returning anyway, because this usually means it ran properly."
             return 1
         } else {
             Write-Host "Successful command execution"
