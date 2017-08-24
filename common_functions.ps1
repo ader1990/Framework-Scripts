@@ -45,7 +45,7 @@
             $sa = $null
         } else {
             New-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa -Kind Storage -Location $location -SkuName Standard_LRS 
-            Set-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa
+            Set-AzureRmCurrentStorageAccount -ResourceGroupName $rg -Name $sa
         }
     }
 
