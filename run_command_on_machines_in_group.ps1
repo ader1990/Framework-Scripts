@@ -71,6 +71,7 @@ $commandString =
 
     $commandBLock=[scriptblock]::Create($runCommand)
 
+    $result = ""
     [int]$timesTried = 0
     [bool]$success = $false
     while ($timesTried -lt $retryCount) {
@@ -79,7 +80,7 @@ $commandString =
         
         [System.Management.Automation.Runspaces.PSSession]$session = create_psrp_session $vm_name $destRG $destSA $location $cred $o
         if ($? -eq $true -and $session -ne $null) {
-            invoke-command -session $session -ScriptBlock $commandBLock -ArgumentList $command
+            $result = invoke-command -session $session -ScriptBlock $commandBLock -ArgumentList $command
             $success = $true
             break
         } else {
@@ -96,6 +97,8 @@ $commandString =
     }
     
     Stop-Transcript > $null
+
+    return $result
 }
 
 $commandBLock = [scriptblock]::Create($commandString)
@@ -117,6 +120,7 @@ $jobFailed = $false
 $jobBlocked = $false
 
 Start-Sleep -Seconds 10
+$blockedTime = 0
 
 $allDone = $false
 while ($allDone -eq $false) {
@@ -141,10 +145,13 @@ while ($allDone -eq $false) {
             $vmsFinished = $vmsFinished + 1
             receive-job -name job_name -Keep
         } elseif ($jobState -eq "Blocked") {
-            Write-Error "**********************  HOST MACHINE $vm_name IS BLOCKED WAITING INPUT.  COMMAND WILL NEVER COMPLETE!!"
+            #
+            #  Kind of hokey, but "blocked" in this case apparently includes time
+            #  spent waiting for the remote machine to do something.  We need to add a timeout
+            #  to the command, but for now let's just pass on the 'Blocked' thing until we see
+            #  them for at least 5 minutes
+            Write-verbose "**********************  HOST MACHINE $vm_name IS BLOCKED WAITING INPUT.  COMMAND WILL NEVER COMPLETE!!"
             $jobBlocked = $true
-            $vmsFinished = $vmsFinished + 1
-            receive-job -name job_name -Keep
         } else {
             $vmsFinished = $vmsFinished + 1
         }
@@ -152,6 +159,14 @@ while ($allDone -eq $false) {
 
     if ($allDone -eq $false) {
         Start-Sleep -Seconds 10
+
+        if ($jobBlocked -eq $true) {
+            $blockedTime = $blockedTime + 10
+            if ($blockedTime -gt 600) {
+                Write-Error "**********************  JOB ON HOST MACHINE $vm_name HAS BEEN BLOCKED FOR 5 MINUTES.  ABORTING EXECUTION"
+
+            }
+        }
     } elseif ($vmsFinished -eq $numNeeded) {
         break
     }
