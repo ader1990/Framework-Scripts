@@ -202,9 +202,7 @@ $scriptBlockString =
         $ipOfDrone=Get-AzureRmPublicIpAddress -ResourceGroupName $destRG -Name $pipName
         
         if ($? -ne $true) {
-            Write-Host "Error getting IP address for VM $newVMName.  This VM must be manually examined!!" -ForegroundColor red
-            Stop-Transcript
-            exit 1
+            Write-Host "Error getting IP address for VM $newVMName.  Trying again in a few seconds..." -ForegroundColor red
         }
         if ($ipOfDrone.ProvisioningState -eq "Succeeded")
         {
