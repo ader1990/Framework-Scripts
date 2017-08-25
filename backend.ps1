@@ -10,7 +10,7 @@ class Instance {
 
     Instance ($Backend, $Name) {
         $transcriptPath = $this.LogPath -f @($Name)
-        Start-Transcript -Path $transcriptPath -Force  -Append
+        Start-Transcript -Path $transcriptPath -Force
         $this.Backend = $Backend
         $this.Name = $Name
         Write-Host ("Initialized instance wrapper" + $this.Name) -ForegroundColor Magenta
@@ -198,7 +198,7 @@ class AzureBackend : Backend {
             $imageName = $imageName.substring(0, 62)
             Write-Warning "NOTE:  Image name is now $imageName"
             if ($imageName.EndsWith("-") -eq $true) {                
-                $imageName = $imageName.Replace(".$","X")
+                $imageName = $imageName -Replace ".$","X"
                 Write-Warning "NOTE:  Image name is ended in an illegal character.  Image name is now $imageName"
             }
             Write-Warning "NOTE:  Image name $imageName was truncated to 62 characters"
