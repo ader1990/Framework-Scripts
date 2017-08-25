@@ -240,18 +240,12 @@ $scriptBlockString =
     }
 
     $password=$TEST_USER_ACCOUNT_PAS2
-    $username="$TEST_USER_ACCOUNT_NAME"
+    $username=$TEST_USER_ACCOUNT_NAME
 
     #
     # Disable cloud-init
     $disableCommand0="mv /usr/bin/cloud-init /usr/bin/cloud-init.DO_NOT_RUN_THIS"
-    $disableCommand0="mv /etc/cloud /etc/cloud.DO_NOT_USE_THIS"
-    $disableCommand0="mv /var/lib/cloud /var/lib/cloud.DO_NOT_USE_THIS"
-    $disableCommand0="mv /etc/cloud/cloud.cfg.d/90_dpkg.cfg /var/lib/cloud.DO_NOT_USE_THIS/90_dpkg.cfg"
-    
     $runDisableCommand0="`"echo `'$password`' | sudo -S bash -c `'$disableCommand0`'`""
-    $runDisableCommand1="`"echo `'$password`' | sudo -S bash -c `'$disableCommand1`'`""
-    $runDisableCommand2="`"echo `'$password`' | sudo -S bash -c `'$disableCommand2`'`""
 
     #
     #  Eat the prompt and get the host into .known_hosts
@@ -280,9 +274,6 @@ $scriptBlockString =
 
     Write-Host "Setting SELinux into permissive mode" -ForegroundColor Green
     try_plink $ip $runDisableCommand0
-    try_plink $ip $runDisableCommand1
-    try_plink $ip $runDisableCommand2
-    try_plink $ip $runDisableCommand3
 
     Write-Host "Deleting the VM so we can harvest the VHD..." -ForegroundColor Green
     $azureInstance.RemoveInstance()

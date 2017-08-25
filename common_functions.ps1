@@ -415,23 +415,21 @@ function try_plink([string] $ip,
     while ($num_tries -lt 10) {
         $num_tries = $num_tries + 1
         try {
-            $plink_err = C:\azure-linux-automation\tools\plink.exe -C -v -pw $TEST_USER_ACCOUNT_PAS2 -P $port -l $TEST_USER_ACCOUNT_NAME $ip $command 2>&1
+            C:\azure-linux-automation\tools\plink.exe -C -v -pw $TEST_USER_ACCOUNT_PAS2 -P $port -l $TEST_USER_ACCOUNT_NAME $ip $command
             $result = $?
         }
         catch {
                 Write-Host "plink Exception caught -- trying again"
-                write-host $plink_err
         }
 
-        if ($plink_err -ne $null -and $plink_err -match ".*connection timed out*")
-        {
-            Write-Host "Timeout on plink of $command"
-        } elseif ($result -eq $false) {
+        if ($result -eq $false -and $num_tries -eq 10) {
             write-host "General error executing command.  Returning anyway, because this usually means it ran properly."
-            return $plink_err
-        } else {
+            return
+        } elseif ($result -eq $false) {
+            Write-Verbose "Error on plink call.  Trying again"
+        } elseif ($result -eq $true) {
             Write-Host "Successful command execution"
-            return $plink_err
+            return
         }
     }
 }

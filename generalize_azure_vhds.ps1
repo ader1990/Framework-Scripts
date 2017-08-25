@@ -111,12 +111,6 @@ C:\Framework-Scripts\run_command_on_machines_in_group.ps1 -requestedNames $reque
 Write-Host "Replacing cloud-init..."
 C:\Framework-Scripts\run_command_on_machines_in_group.ps1 -requestedNames $requestedNames -destSA $sourceSA -destRG $sourceRG `
                                                           -suffix $suffix -asRoot "True" -location $location -command "/bin/mv /usr/bin/cloud-init.DO_NOT_RUN_THIS /usr/bin/cloud-init"
-C:\Framework-Scripts\run_command_on_machines_in_group.ps1 -requestedNames $requestedNames -destSA $sourceSA -destRG $sourceRG `
-                                                          -suffix $suffix -asRoot "True" -location $location -command "/bin/mv /etc/cloud.DO_NOT_USE_THIS /etc/cloud"
-C:\Framework-Scripts\run_command_on_machines_in_group.ps1 -requestedNames $requestedNames -destSA $sourceSA -destRG $sourceRG `
-                                                          -suffix $suffix -asRoot "True" -location $location -command "/bin/mv /var/lib/cloud.DO_NOT_USE_THIS/90_dpkg.cfg /etc/cloud/cloud.cfg.d/90_dpkg.cfg"
-C:\Framework-Scripts\run_command_on_machines_in_group.ps1 -requestedNames $requestedNames -destSA $sourceSA -destRG $sourceRG `
-                                                          -suffix $suffix -asRoot "True" -location $location -command "/bin/mv /var/lib/cloud.DO_NOT_USE_THIS /var/lib/cloud"
 
 Write-Host "Deprovisioning..."
 C:\Framework-Scripts\run_command_on_machines_in_group.ps1 -requestedNames $requestedNames -destSA $sourceSA -destRG $sourceRG `
