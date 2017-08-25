@@ -196,8 +196,10 @@ class AzureBackend : Backend {
         if ($imageName.Length -gt 62) {
             Write-Warning "NOTE:  Image name $imageName is too long"
             $imageName = $imageName.substring(0, 62)
-            if ($imageName.EndsWith("-") ) {
-                $imageName.Replace(".$","X")
+            Write-Warning "NOTE:  Image name is now $imageName"
+            if ($imageName.EndsWith("-") -eq $true) {                
+                $imageName = $imageName.Replace(".$","X")
+                Write-Warning "NOTE:  Image name is ended in an illegal character.  Image name is now $imageName"
             }
             Write-Warning "NOTE:  Image name $imageName was truncated to 62 characters"
         }
