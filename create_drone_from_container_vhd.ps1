@@ -59,7 +59,9 @@ $regionSuffix = ("---" + $location + "-" + $vmFlavor.ToLower()) -replace " ","-"
 $regionSuffix = $regionSuffix -replace "_","-"
 
 $fullSuffix = $regionSuffix + $currentSuffix
+$fullSuffix = $fullSuffix -replace ".vhd",""
 $fullDestSuffix = $regionSuffix + $newSuffix
+$fullDestSuffix = $fullDestSuffix -replace ".vhd",""
 
 [System.Collections.ArrayList]$copyblobs_array
 $copyblobs = {$copyblobs_array}.Invoke()
@@ -96,6 +98,7 @@ if ($makeDronesFromAll -eq $true) {
             $fullName = $fullName.substring(0, 62)
             Write-Warning "NOTE:  Image name $fullName was truncated to 62 characters"
         }
+        $fullName = $fullName + ".vhd"
         Write-Host "Looking for image $fullName in container $sourceContainer"
         
         $singleBlob=get-AzureStorageBlob -Container $sourceContainer -Blob $fullName -ErrorAction SilentlyContinue
@@ -123,9 +126,11 @@ C:\azure-linux-automation\tools\dos2unix.exe -n C:\Framework-Scripts\secrets.sh 
 C:\azure-linux-automation\tools\dos2unix.exe -n C:\Framework-Scripts\secrets.ps1 c:\temp\nix_files\secrets.ps1
 
 write-host "Copying blobs..."
+$completeSuffix = $fullSuffix + ".vhd"
+$completeDestSuffix = $fullDestSuffix + ".vhd"
 C:\Framework-Scripts\copy_single_image_container_to_container.ps1 -sourceSA $sourceSA -sourceRG $sourceRG -sourceContainer $sourceContainer `
                                        -destSA $destSA -destRG $destRG -destContainer $destContainer `
-                                       -sourceExtension $fullSuffix -destExtension $fullDestSuffix -location $location `
+                                       -sourceExtension $completeSuffix -destExtension $completeDestSuffix -location $location `
                                        -overwriteVHDs $overwriteVHDs -makeDronesFromAll $makeDronesFromAll -vmNames $vmNameArray
 
 
@@ -331,13 +336,6 @@ Write-Host "All jobs have completed.  Checking results (this will take a moment.
 $regionSuffix = ("---" + $location + "-" + $vmFlavor.ToLower()) -replace " ","-"
 $regionSuffix = $regionSuffix -replace "_","-"
 $fullDestSuffix = $regionSuffix + $newSuffix
-
-[string]$fullNameList
-foreach ($name in $requestedNames) {
-    $newName = $name + $fullDestSuffix
-    $fullNameList = $fullNameList + $newName + ","
-}
-$fullNameList = $fullNameList -replace ",$"
 
 $status = c:\Framework-Scripts\run_command_on_machines_in_group.ps1 -requestedNames $requestedNames -destSA $destSA -destRG $destRG `
                                                                     -suffix $newSuffix -location $location -command "/bin/uname -a" `
