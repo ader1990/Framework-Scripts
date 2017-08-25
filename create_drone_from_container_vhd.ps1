@@ -80,7 +80,7 @@ login_azure $sourceRG $sourceSA $location
 
 if ($makeDronesFromAll -eq $true) {
     
-    $blobSearch = "*" + $vmFlavor.ToLower() + $currentSuffix + ".vhd"
+    $blobSearch = "*.vhd"
     Write-Host "Looking at all images in container $sourceContainer"
     $copyblob_new=get-AzureStorageBlob -Container $sourceContainer -Blob $blobSearch
     foreach ($blob in $copyblob_new) {
@@ -91,6 +91,11 @@ if ($makeDronesFromAll -eq $true) {
 } else {
     foreach ($vmName in $vmNameArray) {
         $fullName = $vmName + $fullSuffix
+        if ($fullName.Length -gt 62) {
+            Write-Warning "NOTE:  Image name $fullName is too long"
+            $fullName = $fullName.substring(0, 62)
+            Write-Warning "NOTE:  Image name $fullName was truncated to 62 characters"
+        }
         Write-Host "Looking for image $fullName in container $sourceContainer"
         
         $singleBlob=get-AzureStorageBlob -Container $sourceContainer -Blob $fullName -ErrorAction SilentlyContinue
