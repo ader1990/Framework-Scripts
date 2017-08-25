@@ -80,6 +80,7 @@ get-job | Remove-Job
 
 login_azure $sourceRG $sourceSA $location
 
+Set-AzureRmCurrentStorageAccount –ResourceGroupName $sourceRG –StorageAccountName $sourceSA
 if ($makeDronesFromAll -eq $true) {
     
     $blobSearch = "*.vhd"
