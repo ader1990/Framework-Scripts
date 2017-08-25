@@ -124,9 +124,22 @@ if ($? -eq $false -or $existingContainer -eq $null) {
 
 foreach ($oneblob in $blobs) {
     $fullName=$oneblob.Name
-    $bar=$fullName.Replace($removeTag,$fullSuffix)
-   
-    $targetName = $bar
+    if ($removeTag -ne "") {
+        $targetName=$fullName.Replace($removeTag,$fullSuffix)
+    } else {
+        $targetName=$fullName + $fullSuffix
+    }
+
+    if ($targetName.Length -gt 62) {
+        Write-Warning "NOTE:  Image name $targetName is too long"
+        $targetName = $targetName.substring(0, 62)
+        Write-Warning "NOTE:  Image name is now $targetName"
+        if ($targetName.EndsWith("-") -eq $true) {                
+            $targetName = $targetName -Replace ".$","X"
+            Write-Warning "NOTE:  Image name is ended in an illegal character.  Image name is now $targetName"
+        }
+        Write-Warning "NOTE:  Image name $targetName was truncated to 62 characters"
+    }
 
     $blobIsInDest = $false
     if ($existingBlobs.Name -contains $targetName) {
