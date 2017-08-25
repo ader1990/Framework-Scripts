@@ -385,7 +385,7 @@ function try_pscp([string] $file,
                 Write-Host "pscp Exception caught -- trying again"
         }
 
-        if ($plink_err -ne $null -and $plink_err -match "*connection timed out*")
+        if ($plink_err -ne $null -and $plink_err -match ".*connection timed out*")
         {
             Write-Host "Timeout on pscp of $file to $ipTemp"
         } elseif ($result -eq $false) {
@@ -423,7 +423,7 @@ function try_plink([string] $ip,
                 write-host $plink_err
         }
 
-        if ($plink_err -ne $null -and $plink_err -match "*connection timed out*")
+        if ($plink_err -ne $null -and $plink_err -match ".*connection timed out*")
         {
             Write-Host "Timeout on plink of $command"
         } elseif ($result -eq $false) {
