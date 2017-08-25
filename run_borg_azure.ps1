@@ -229,7 +229,7 @@ function copy_azure_machines {
 
             $global:neededVMs.Add($sourceName)
 
-            Write-Host "Initiating job to copy VHD $vmName from cache to working directory..." -ForegroundColor Yellow
+            Write-Host "Initiating job to copy VHD $vmName from  $global:sourceContainerName to working $global:workingContainerName..." -ForegroundColor Yellow
             $blob = Start-AzureStorageBlobCopy -SrcBlob $singleURI -DestContainer $global:workingContainerName -SrcContainer $global:sourceContainerName -DestBlob $targetName -Context $sourceContext -DestContext $destContext
 
             $global:copyblobs += $targetName
@@ -740,7 +740,6 @@ if ($? -eq $false -or $global:CleanRG -eq $true) {
     
 }
 Set-AzureRmCurrentStorageAccount –ResourceGroupName $global:workingResourceGroupName –StorageAccountName $global:workingStorageAccountName 
-Get-AzureStorageContainer | Remove-AzureStorageContainer -Force
 Write-Host "Rebuilt..."
 
 Get-AzureStorageContainer -Name $global:workingContainerName
@@ -751,6 +750,8 @@ if ($? -eq $false) {
 
     New-AzureStorageContainer -name $global:workingContainerName -Permission Blob -Context $destContext
     Write-Host "And populated."
+} else {
+    Get-AzureStorageBlob -Blob "*" -Container $global:workingContainerName | Remove-AzureStorageBlob -Force
 }
 Set-AzureRmCurrentStorageAccount –ResourceGroupName $global:workingResourceGroupName –StorageAccountName $global:workingStorageAccountName
 
