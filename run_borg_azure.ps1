@@ -161,6 +161,7 @@ function copy_azure_machines {
         Write-Host "Stopping and deleting any currently running machines in  target storage $global:workingResourceGroupName / $global:workingStorageAccountName / $global:workingContainerName..."  -ForegroundColor green
         $runningVMs = Get-AzureRmVm -ResourceGroupName $global:workingResourceGroupName
         deallocate_machines_in_group $runningVMs $global:workingResourceGroupName $global:workingStorageAccountName $global:location
+        Get-AzureStorageBlob -Blob "*" -Container $global:workingContainerName | Remove-AzureStorageBlob -Force
 
         Write-Host "Getting the storage account access keys.."
         $destKey=Get-AzureRmStorageAccountKey -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName
@@ -750,9 +751,7 @@ if ($? -eq $false) {
 
     New-AzureStorageContainer -name $global:workingContainerName -Permission Blob -Context $destContext
     Write-Host "And populated."
-} else {
-    Get-AzureStorageBlob -Blob "*" -Container $global:workingContainerName | Remove-AzureStorageBlob -Force
-}
+} 
 
 #
 #
