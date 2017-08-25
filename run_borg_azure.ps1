@@ -381,17 +381,21 @@ $action={
     . C:\Framework-Scripts\common_functions.ps1
     . C:\Framework-Scripts\secrets.ps1
 
+    Start-Transcript C:\temp\transcripts\borg_timer.log
+
     function checkMachine ([MonitoredMachine]$machine) {
         $machineName=$machine.name
         $machineStatus=$machine.status
 
         if ($machineStatus -eq "Completed" -or $global:num_remaining -eq 0) {
             Write-Host "    **** Machine $machineName is in state $machineStatus, which is complete, or there are no remaining machines" -ForegroundColor green
+            Stop-Transcript
             return 0
         }
 
         if ($machineStatus -ne "Booting") {
             Write-Host "    **** ??? Machine $machineName was not in state Booting.  Cannot process" -ForegroundColor red
+            Stop-Transcript
             return 1
         }        
 
@@ -494,11 +498,13 @@ $action={
     }
 
     if ($global:timer_is_running -eq 0) {
+        Write-Host "Timer is not running"
+        Stop-Transcript
         return
     }
 
     $global:elapsed=$global:elapsed+$global:interval
-    # Write-Host "Checking elapsed = $global:elapsed against interval limit of $global:boot_timeout_intervals" -ForegroundColor Yellow
+    Write-Host "Checking elapsed = $global:elapsed against interval limit of $global:boot_timeout_intervals" -ForegroundColor Yellow
 
     if ($global:elapsed -ge $global:boot_timeout_intervals) {
         Write-Host "Elapsed is $global:elapsed"
@@ -645,6 +651,7 @@ $action={
         }
     }
     [Console]::Out.Flush() 
+    Stop-Transcript
 }
 
 Get-EventSubscriber -SourceIdentifier "AzureBORGTimer" | Unregister-Event
@@ -701,15 +708,19 @@ if ($? -eq $true -and $existingGroup -ne $null -and $global:CleanRG -eq $true) {
 #  Change the name of the SA to include the region, then Now see if the SA exists
 Get-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName  -Name $global:workingStorageAccountName
 if ($? -eq $false -or $global:CleanRG -eq $true) {
-    Write-Host "Deleting storage account $global:workingStorageAccountName just to create it again..."  -ForegroundColor green
-    Remove-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName -Force
-    Write-Host "Deleted..."
+    if ($? -eq $false) {
+        New-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName `
+                                  -Kind Storage -Location $global:location -SkuName Standard_LRS 
+        # Remove-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName -Force
+        Write-Host "created..."
+    }
+    # New-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName `
+    #                           -Kind Storage -Location $global:location -SkuName Standard_LRS 
     
-    New-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName `
-                              -Kind Storage -Location $global:location -SkuName Standard_LRS 
-    Write-Host "Rebuilt..."
 }
 Set-AzureRmCurrentStorageAccount –ResourceGroupName $global:workingResourceGroupName –StorageAccountName $global:workingStorageAccountName 
+Get-AzureStorageContainer | Remove-AzureStorageContainer -Force
+Write-Host "Rebuilt..."
 
 Get-AzureStorageContainer -Name $global:workingContainerName
 if ($? -eq $false) {
@@ -757,7 +768,9 @@ write-host "$global:num_remaining machines have been launched.  Waiting for comp
 #  Wait for the machines to report back
 #    
 Get-EventSubscriber -SourceIdentifier $timerName | Unregister-Event     
+
 Write-Host "                          Initiating temporal evaluation loop (Starting the timer)" -ForegroundColor yellow
+
 Register-ObjectEvent -InputObject $timer -EventName elapsed –SourceIdentifier $timerName -Action $action
 $global:timer_is_running=1
 $timer.Interval = 1000

@@ -78,13 +78,14 @@ deallocate_machines_in_group $runningVMs $sourceRG $sourceSA $location
 $sourceKey=Get-AzureRmStorageAccountKey -ResourceGroupName $sourceRG -Name $sourceSA
 $sourceContext=New-AzureStorageContext -StorageAccountName $sourceSA -StorageAccountKey $sourceKey[0].Value
 
+Set-AzureRmCurrentStorageAccount –ResourceGroupName $sourceRG –StorageAccountName $sourceSA 
 $blobs=get-AzureStorageBlob -Container $sourceContainer -Blob $blobFilter
 
 Write-Host "Deleting any existing storage account and recreating it."
 $wasThere = $false
 $currentLoc = $null
 $existingAccount = $null
-$existingAccount = Get-AzureRmStorageAccount -ResourceGroupName $destRG -Name $sa
+$existingAccount = Get-AzureRmStorageAccount -ResourceGroupName $destRG -Name $destSA
 if ($? -eq $true) {
     $wasThere = $true
 
@@ -96,7 +97,6 @@ if ($? -eq $true) {
 if (($wasThere -eq $true) -and ($overwriteVHDs -eq $true)) {
     Remove-AzureRmStorageAccount -ResourceGroupName $destRG -Name $destSA -Force
     New-AzureRmStorageAccount -ResourceGroupName $destRG -Name $destSA -Kind Storage -Location $location -SkuName Standard_LRS
-    Set-AzureRmStorageAccount -ResourceGroupName $destRG -Name $destSA
 } elseif (($wasThere -eq $true) -and ($OverwriteVHDs -eq $false)) {
     if ($currentLoc -ne $location) {
         Write-Error "The storage account exists, but it is in region $currentLoc, while the tests specify region $location.  Tests will exit."
@@ -104,9 +104,8 @@ if (($wasThere -eq $true) -and ($overwriteVHDs -eq $true)) {
     }
     Write-Host "Using existing storage account $destSA."
 } else {
-    Write-Host "Storagr account did not exist.  Creating now..."
+    Write-Host "Storage account did not exist.  Creating now..."
     New-AzureRmStorageAccount -ResourceGroupName $destRG -Name $destSA -Kind Storage -Location $location -SkuName Standard_LRS
-    Set-AzureRmStorageAccount -ResourceGroupName $destRG -Name $destSA
 }
 Set-AzureRmCurrentStorageAccount –ResourceGroupName $destRG –StorageAccountName $destSA 
 
@@ -114,15 +113,20 @@ Write-Host "Copying the test VMs packages to BVT resource group"
 $destKey=Get-AzureRmStorageAccountKey -ResourceGroupName $destRG -Name $destSA
 $destContext=New-AzureStorageContext -StorageAccountName $destSA -StorageAccountKey $destKey[0].Value
 
-$existingBlobs=get-AzureStorageBlob -Container $destContainer 
-
+$existingContainer = Get-AzureStorageContainer -name $destContainer
+if ($? -eq $false -or $existingContainer -eq $null) {
+    Write-Host "Making a new onwe..."
+    New-AzureStorageContainer -Name $destContainer -Permission Blob
+    $existingBlobs = $null
+} else {
+    $existingBlobs=get-AzureStorageBlob -Container $destContainer
+}
 
 foreach ($oneblob in $blobs) {
     $fullName=$oneblob.Name
-    $bar=$fullName.Replace("---","{")
-    $nameParts = $bar.split("{")
-
-    $targetName = $nameParts[0] + $fullSuffix
+    $bar=$fullName.Replace($removeTag,$fullSuffix)
+   
+    $targetName = $bar
 
     $blobIsInDest = $false
     if ($existingBlobs.Name -contains $targetName) {
@@ -142,7 +146,7 @@ foreach ($oneblob in $blobs) {
     
     if ($start_copy -eq $true) {
         Write-Host "Initiating job to copy VHD from $sourceSA/$sourceContainer/$fullName to $destSA/$destContainer/$targetName..." -ForegroundColor Yellow
-        $blob = Start-AzureStorageBlobCopy -SrcBlob $fullName -DestContainer $destContainer -SrcContainer $sourceContainer -DestBlob $targetName -Context $sourceContext -DestContext $destContext
+        $blob = Start-AzureStorageBlobCopy -SrcBlob $fullName -DestContainer $destContainer -SrcContainer $sourceContainer -DestBlob $targetName -Context $sourceContext -DestContext $destContext -Force
         if ($? -eq $true) {
             $copyblobs.Add($targetName)
         } else {
@@ -208,67 +212,29 @@ if ($copyblobs.Count -gt 0) {
 Set-Location C:\azure-linux-automation
 $launched_machines = 0
 
-Set-AzureRmCurrentStorageAccount –ResourceGroupName $sourceRG –StorageAccountName $sourceSA 
-$blobs=get-AzureStorageBlob -Container $sourceContainer -Blob $blobFilter
-
-$regionSuffix = ("---" + $location + "-" + $VMFlavor.ToLower()) -replace " ","-"
-$regionSuffix = $regionSuffix -replace "_","-"
-
-$fullSuffix = $regionSuffix + "-Booted-and-Verified.vhd"
-
-. C:\Framework-Scripts\backend.ps1
-# . "$scriptPath\backend.ps1"
-
- ## Storage
-$vnetAddressPrefix = "10.0.0.0/16"
-$vnetSubnetAddressPrefix = "10.0.0.0/24"
-
-$backendFactory = [BackendFactory]::new()
-$azureBackend = $backendFactory.GetBackend("AzureBackend", @(1))
-
-$azureBackend.ResourceGroupName = $destRG
-$azureBackend.StorageAccountName = $destSA
-$azureBackend.ContainerName = $destContainer
-$azureBackend.Location = $location
-$azureBackend.VMFlavor = $VMFlavor.ToLower()
-$azureBackend.NetworkName = $vnetName
-$azureBackend.SubnetName = $subnetName
-$azureBackend.NetworkSecGroupName = $NSG
-$azureBackend.addressPrefix = $vnetAddressPrefix
-$azureBackend.subnetPrefix = $vnetSubnetAddressPrefix
-$azureBackend.blobURN = $blobURN
-$azureBackend.suffix = $suffix
-
-$azureInstance = $azureBackend.GetInstanceWrapper("AzureSetup")
-$azureInstance.SetupAzureRG()
+$blobs=get-AzureStorageBlob -Container $destContainer -Blob $blobFilter
 
 foreach ($oneblob in $blobs) {
     $fullName=$oneblob.Name
-    
-    if ($fullName -like "*$removeTag") {
-        $bar=$fullName.Replace("---","{")
-        $nameParts = $bar.split("{")
-        $targetName = $nameParts[0] + $fullSuffix
-        
-        $configFileName="c:\temp\bvt_configs\bvt_exec_" + $targetName + ".xml"
-        $jobName=$targetName + "_BVT_Runner"
+            
+    $configFileName="c:\temp\bvt_configs\bvt_exec_" + $fullName + ".xml"
+    $jobName=$fullName + "_BVT_Runner"
 
-        (Get-Content .\$templateFile).Replace("SMOKE_MACHINE_NAME_HERE",$targetName) | out-file $configFileName -Force
-        (Get-Content $configFileName).Replace("STORAGE_ACCOUNT_NAME_HERE",$destSA) | out-file $configFileName -Force
-        (Get-Content $configFileName).Replace("LOCATION_HERE",$location) | out-file $configFileName -Force
+    (Get-Content .\$templateFile).Replace("SMOKE_MACHINE_NAME_HERE",$fullName) | out-file $configFileName -Force
+    (Get-Content $configFileName).Replace("STORAGE_ACCOUNT_NAME_HERE",$destSA) | out-file $configFileName -Force
+    (Get-Content $configFileName).Replace("LOCATION_HERE",$location) | out-file $configFileName -Force
 
-        #
-        # Launch the automation
-        write-host "Args are: $sourceName, $configFileName, $distro, $testCycle"
-        Start-Job -Name $jobName -ScriptBlock { C:\Framework-Scripts\run_single_bvt.ps1 -sourceName $args[0] -configFileName $args[1] -distro $args[2] -testCycle $args[3]  } `
-                                                -ArgumentList @($fullName),@($configFileName),@($distro),@($testCycle)
-        if ($? -ne $true) {
-            Write-Host "Error launching job $jobName for source $targetName.  BVT will not be run." -ForegroundColor Red
-        } else {
-            $launched_machines += 1
-            $launchTime=date
-            Write-Host "Job $jobName launched machine $targetName as BVT $launched_machines at $launchTime" -ForegroundColor Green
-        }
+    #
+    # Launch the automation
+    write-host "Args are: $sourceName, $configFileName, $distro, $testCycle"
+    Start-Job -Name $jobName -ScriptBlock { C:\Framework-Scripts\run_single_bvt.ps1 -sourceName $args[0] -configFileName $args[1] -distro $args[2] -testCycle $args[3]  } `
+                                            -ArgumentList @($fullName),@($configFileName),@($distro),@($testCycle)
+    if ($? -ne $true) {
+        Write-Host "Error launching job $jobName for source $fullName.  BVT will not be run." -ForegroundColor Red
+    } else {
+        $launched_machines += 1
+        $launchTime=date
+        Write-Host "Job $jobName launched machine $fullName as BVT $launched_machines at $launchTime" -ForegroundColor Green
     }
 }
 
@@ -292,46 +258,38 @@ while ($completed_machines -lt $launched_machines) {
     foreach ($oneblob in $blobs) {
         $fullName=$oneblob.Name
         
-        if ($fullName -like "*$removeTag") {
-            $bar=$fullName.Replace("---","{")
-            $nameParts = $bar.split("{")
-            $targetName = $nameParts[0] + $fullSuffix
-            
-            $configFileName="c:\temp\bvt_configs\bvt_exec_" + $targetName + ".xml"
-            $jobName=$targetName + "_BVT_Runner"
+        $configFileName="c:\temp\bvt_configs\bvt_exec_" + $fullName + ".xml"
+        $jobName=$fullName + "_BVT_Runner"
 
-            
-            $jobStatus=get-job -Name $jobName
-            if ($? -eq $true) {
-                $jobState = $jobStatus.State
-                if ($jobState -eq "Failed")
-                {
-                    $completed_machines += 1
-                    $failed_machines += 1
-                    Write-Host " >>>> BVT job $jobName exited with FAILED state!" -ForegroundColor red
-                }
-                elseif ($jobState -eq "Completed")
-                {
-                    $completed_machines += 1
-                    Write-Host "***** BVT job $jobName completed successfully." -ForegroundColor green
-                }
-                elseif ($jobState -eq "Running")
-                {
-                    $running_machines += 1
-                    if ($logThisOne -eq $true) {
-                        Write-Host "      BVT job $jobName is still in progress." -ForegroundColor green                
-                    }
-                }
-                else
-                {
-                    $other_machines += 1
-                    Write-Host "????? BVT job $jobName is in state $jobState." -ForegroundColor Yellow
+        $jobStatus=get-job -Name $jobName
+        if ($? -eq $true) {
+            $jobState = $jobStatus.State
+            if ($jobState -eq "Failed")
+            {
+                $completed_machines += 1
+                $failed_machines += 1
+                Write-Host " >>>> BVT job $jobName exited with FAILED state!" -ForegroundColor red
+            }
+            elseif ($jobState -eq "Completed")
+            {
+                $completed_machines += 1
+                Write-Host "***** BVT job $jobName completed successfully." -ForegroundColor green
+            }
+            elseif ($jobState -eq "Running")
+            {
+                $running_machines += 1
+                if ($logThisOne -eq $true) {
+                    Write-Host "      BVT job $jobName is still in progress." -ForegroundColor green                
                 }
             }
+            else
+            {
+                $other_machines += 1
+                Write-Host "????? BVT job $jobName is in state $jobState." -ForegroundColor Yellow
+            }
         }
-        
     }
-
+    
     if ($logThisOne -eq $true) {
        write-host "$launched_machines BVT jobs were launched.  Of those: completed = $completed_machines, Running = $running_machines, Failed = $failed_machines, and unknown = $other_machines" -ForegroundColor green
     }

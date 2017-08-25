@@ -29,15 +29,14 @@
                     #
                     #  Take it out and start over
                     Remove-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa -Force
-                    New-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa -Kind Storage -Location $location -SkuName Standard_LRS                     Set-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa
+                    New-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa -Kind Storage -Location $location -SkuName Standard_LRS
+                    # Set-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa
                 }
             } else {
                 #
                 #  Account is present and location is good.  Use this one.
                 Write-Verbose "Using existing storage account $sa in resource group $rg"
             }
-
-            Set-AzureRmCurrentStorageAccount –ResourceGroupName $rg –StorageAccountName $sa 2>&1
         } elseif ($false -eq $createOnError) {
             Write-Warning "***************************************************************************************"
             Write-Warning "Storage account $sa does not exist in location $location. and CreateOnError was not set."
@@ -45,7 +44,6 @@
             $sa = $null
         } else {
             New-AzureRmStorageAccount -ResourceGroupName $rg -Name $sa -Kind Storage -Location $location -SkuName Standard_LRS 
-            Set-AzureRmCurrentStorageAccount -ResourceGroupName $rg -Name $sa
         }
     }
 
