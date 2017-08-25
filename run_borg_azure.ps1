@@ -191,7 +191,7 @@ function copy_azure_machines {
             
             $global:neededVMs.Add($vmName)
 
-            Write-Host "     --------- Initiating job to copy VHD $fullName from cache to working directory as $targetName..." -ForegroundColor Yellow
+            Write-Host "     --------- Initiating job to copy VHD $fullName from $global:sourceContainerName to $global:workingContainerName as $targetName..." -ForegroundColor Yellow
             $blob = Start-AzureStorageBlobCopy -SrcBlob $fullName -DestContainer $global:workingContainerName `
                                                 -SrcContainer $global:sourceContainerName -DestBlob $targetName `
                                                 -Context $sourceContext -DestContext $destContext
@@ -236,6 +236,8 @@ function copy_azure_machines {
         }
     }
 
+    start-sleep 10
+
     Write-Host "All copy jobs have been launched.  Waiting for completion..." -ForegroundColor green
     Write-Host ""
     $stillCopying = $true
@@ -252,7 +254,6 @@ function copy_azure_machines {
                     Write-Host "     **** Could not get copy state for job $blob.  Job may not have started." -ForegroundColor Red
                     # $copyblobs.Remove($blob)
                     # $reset_copyblobs = $true
-                    break
                 } elseif ($status.Status -eq "Pending") {
                     $bytesCopied = $status.BytesCopied
                     $bytesTotal = $status.TotalBytes
