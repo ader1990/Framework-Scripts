@@ -231,7 +231,8 @@ if ($Failed -eq $true) {
 #  storage container, with the prefix we gave it but some random junk on the back.  We will copy those
 #  VHDs, and their associated JSON files, to the output storage container, renaming them 
 # to <user supplied>---no_loc-no_flav-generalized.vhd
-Write-Host "Copying generalized VHDs in container $sourceContainer from region $location."-ForegroundColor Magenta
+$systemContainer = "system"
+Write-Host "Copying generalized VHDs in container $systemContainer (from $sourceContainer) from region $location."-ForegroundColor Magenta
 
 $destKey=Get-AzureRmStorageAccountKey -ResourceGroupName $destRG -Name $destSA
 $destContext=New-AzureStorageContext -StorageAccountName $destSA -StorageAccountKey $destKey[0].Value
@@ -242,18 +243,18 @@ $sourceContext=New-AzureStorageContext -StorageAccountName $sourceSA -StorageAcc
 $copyBlobs = @()
 
 Set-AzureRmCurrentStorageAccount –ResourceGroupName $sourceRG –StorageAccountName $sourceSA
-Write-Host "Copying generalized VHDs in container $sourceContainer from region $location to $destRG / $destSA / $destContainer"
+Write-Host "Copying generalized VHDs in container $systemContainer from region $location to $destRG / $destSA / $destContainer"
 if ($generalizeAll -eq $true) {
-    $blobs=get-AzureStorageBlob -Container $sourceContainer  -Blob "*.vhd"
+    $blobs=get-AzureStorageBlob -Container $systemContainer  -Blob "*.vhd"
     $blobCount = $blobs.Count
-    Write-Host "Copying generalized VHDs in container / $sourceRG / $sourceSA / $sourceContainer from region $location.  There will be $blobCount VHDs :"-ForegroundColor Magenta
+    Write-Host "Copying generalized VHDs in container / $sourceRG / $sourceSA / $systemContainer from region $location.  There will be $blobCount VHDs :"-ForegroundColor Magenta
     foreach ($blob in $blobs) {
         $copyblobs += $blob
         $blobName = $blob.Name
         write-host "                       $blobName" -ForegroundColor Magenta
     }
 } else {
-    $blobs=get-AzureStorageBlob -Container $sourceContainer -Blob "*.vhd"
+    $blobs=get-AzureStorageBlob -Container $systemContainer -Blob "*.vhd"
     foreach ($blob in $blobs) {
         write-host "Blobs name :" $blob.Name
     }
@@ -273,7 +274,7 @@ if ($generalizeAll -eq $true) {
         }
             
         if ($foundIt -eq $false) {
-            Write-Host " ***** ??? Could not find source blob $theName in container $sourceContainer.  This request is skipped" -ForegroundColor Red
+            Write-Host " ***** ??? Could not find source blob $theName in container $systemContainer.  This request is skipped" -ForegroundColor Red
         }
     }
 }
@@ -292,14 +293,14 @@ foreach ($blob in $copyblobs) {
     $baseName=($longName -split "-osdisk")[0]
     $targetName = $baseName + "-generalized.vhd"
     
-    Write-Host "Initiating job to copy VHD $blobName from $sourceRG and $sourceContainer to $targetName in $destRG and $destSA, container $destContainer" -ForegroundColor Yellow
+    Write-Host "Initiating job to copy VHD $blobName from $sourceRG and $systemContainer to $targetName in $destRG and $destSA, container $destContainer" -ForegroundColor Yellow
     if ($overwriteVHDs -eq $true) {
         Write-Host "Clearing destination container of all VHDs with prefix $baseName"
         get-AzureStorageBlob -Container $destContainer -Blob "$baseName*" | ForEach-Object {Remove-AzureStorageBlob -Blob $_.Name -Container $destContainer }
 
-        $blob = Start-AzureStorageBlobCopy -SrcBlob $blobName -DestContainer $destContainer -SrcContainer $sourceContainer -DestBlob $targetName -Context $sourceContext -DestContext $destContext -Force
+        $blob = Start-AzureStorageBlobCopy -SrcBlob $blobName -DestContainer $destContainer -SrcContainer $systemContainer -DestBlob $targetName -Context $sourceContext -DestContext $destContext -Force
     } else {
-        $blob = Start-AzureStorageBlobCopy -SrcBlob $blobName -DestContainer $destContainer -SrcContainer $sourceContainer -DestBlob $targetName -Context $sourceContext -DestContext $destContext
+        $blob = Start-AzureStorageBlobCopy -SrcBlob $blobName -DestContainer $destContainer -SrcContainer $systemContainer -DestBlob $targetName -Context $sourceContext -DestContext $destContext
     }
 
     if ($? -eq $false) {
