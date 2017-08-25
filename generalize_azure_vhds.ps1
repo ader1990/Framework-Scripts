@@ -99,6 +99,12 @@ if ($generalizeAll -eq $false -and $vmNameArray.Count -eq 0) {
     $suffix = ""
 }
 
+$systemContainer = "system"
+
+foreach ($vmName in $machineBaseNames) {
+    Get-AzureStorageBlob -Container $systemContainer -Prefix $vmName | ForEach-Object {Remove-AzureStorageBlob -Blob $_.Name -Container $systemContainer}   
+}
+
 Write-Host "Making sure we're up to date"
 C:\Framework-Scripts\run_command_on_machines_in_group.ps1 -requestedNames $requestedNames -destSA $sourceSA -destRG $sourceRG `
                                                           -suffix $suffix -asRoot "True" -location $location -command "cd /HIPPEE/Framework-Scripts; git pull"
@@ -231,7 +237,7 @@ if ($Failed -eq $true) {
 #  storage container, with the prefix we gave it but some random junk on the back.  We will copy those
 #  VHDs, and their associated JSON files, to the output storage container, renaming them 
 # to <user supplied>---no_loc-no_flav-generalized.vhd
-$systemContainer = "system"
+
 Write-Host "Copying generalized VHDs in container $systemContainer (from $sourceContainer) from region $location."-ForegroundColor Magenta
 
 $destKey=Get-AzureRmStorageAccountKey -ResourceGroupName $destRG -Name $destSA
