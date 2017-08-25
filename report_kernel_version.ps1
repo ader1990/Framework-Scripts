@@ -10,7 +10,7 @@ param (
     [Parameter(Mandatory=$false)] [string] $failure_point=""
 )
 
-cd /HIPPEE/Framework-Scripts
+Set-Location /HIPPEE/Framework-Scripts
 git pull
 
 $global:isHyperV=$true
