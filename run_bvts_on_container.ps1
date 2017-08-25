@@ -122,7 +122,6 @@ if ($? -eq $false -or $existingContainer -eq $null) {
     $existingBlobs=get-AzureStorageBlob -Container $destContainer
 }
 
-Set-AzureRmCurrentStorageAccount –ResourceGroupName $sourceRG –StorageAccountName $sourceSA 
 foreach ($oneblob in $blobs) {
     $fullName=$oneblob.Name
     if ($removeTag -ne "") {
@@ -174,7 +173,7 @@ if ($copyblobs.Count -gt 0) {
     Start-Sleep -Seconds 10
     Write-Host "All jobs have been launched.  Initial check is:" -ForegroundColor Yellow
 
-    # Set-AzureRmCurrentStorageAccount –ResourceGroupName $destRG –StorageAccountName $destSA
+    Set-AzureRmCurrentStorageAccount –ResourceGroupName $destRG –StorageAccountName $destSA
     $stillCopying = $true
     while ($stillCopying -eq $true) {
         $stillCopying = $false
@@ -223,8 +222,7 @@ if ($copyblobs.Count -gt 0) {
 Set-Location C:\azure-linux-automation
 $launched_machines = 0
 
-Set-AzureRmCurrentStorageAccount –ResourceGroupName $destRG –StorageAccountName $destSA
-$blobs=get-AzureStorageBlob -Container $destContainer -Blob $blobFilter
+$blobs=get-AzureStorageBlob -Container $destContainer
 
 foreach ($oneblob in $blobs) {
     $fullName=$oneblob.Name
