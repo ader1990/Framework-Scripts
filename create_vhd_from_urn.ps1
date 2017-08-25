@@ -7,7 +7,7 @@
     [Parameter(Mandatory=$false)] [string] $destContainer="ready-for-bvt",
     [Parameter(Mandatory=$false)] [string] $location="westus",
 
-    [Parameter(Mandatory=$false)] [string] $useExistingResources = "True",
+    [Parameter(Mandatory=$false)] [string] $useExistingResources = "False",
 
     [Parameter(Mandatory=$false)] [string] $vnetName = "SmokeVNet",
     [Parameter(Mandatory=$false)] [string] $subnetName = "SmokeSubnet-1",
