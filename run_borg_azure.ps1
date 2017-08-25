@@ -136,7 +136,7 @@ class MachineLog {
 $regionSuffix = ("---" + $global:location + "-" + $global:VMFlavor) -replace " ","-"
 $regionSuffix = $regionSuffix -replace "_","-"
 
-$fullSuffix = $regionSuffix + "-BORG.vhd"
+$fullSuffix = $regionSuffix + "-BORG"
 
 function copy_azure_machines {
     if ($global:useSourceURI -eq $false)
@@ -167,6 +167,7 @@ function copy_azure_machines {
         $destContext=New-AzureStorageContext -StorageAccountName $global:workingStorageAccountName -StorageAccountKey $destKey[0].Value
 
         Write-Host "Preparing the individual machines..." -ForegroundColor green        
+        Set-AzureRmCurrentStorageAccount –ResourceGroupName $global:sourceResourceGroupName –StorageAccountName $global:sourceStorageAccountName > $null
 
         foreach ($oneblob in $blobs) {
             $fullName=$oneblob.Name
