@@ -177,6 +177,8 @@ $scriptBlockString =
 
     login_azure $destRG $destSA $location
 
+    Set-AzureRmCurrentStorageAccount –ResourceGroupName $destRG –StorageAccountName $destSA
+
     Write-Host "Deleting any existing VM" -ForegroundColor Green
     $runningVMs = Get-AzureRmVm -ResourceGroupName $destRG -status | Where-Object -Property Name -Like "$vmName*" | Remove-AzureRmVM -Force 
     if ($? -eq $true -and $runningVMs -ne $null) {
