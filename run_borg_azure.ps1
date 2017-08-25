@@ -88,10 +88,10 @@ $global:CleanRG = $CleanRG
 $global:neededVms_array=@()
 $global:neededVms = {$neededVms_array}.Invoke()
 $global:neededVms.Clear()
+
 $global:copyblobs_array=@()
 $global:copyblobs = {$copyblobs_array}.Invoke()
 $global:copyblobs.Clear()
-
 
 $global:completed=0
 $global:elapsed=0
@@ -196,7 +196,7 @@ function copy_azure_machines {
                                                 -SrcContainer $global:sourceContainerName -DestBlob $targetName `
                                                 -Context $sourceContext -DestContext $destContext
 
-            $global:copyblobs.Add($targetName)
+            $global:copyblobs += $targetName
         }
     } else {
         Write-Host "Clearing the destination container..."  -ForegroundColor green
@@ -232,7 +232,7 @@ function copy_azure_machines {
             Write-Host "Initiating job to copy VHD $vmName from cache to working directory..." -ForegroundColor Yellow
             $blob = Start-AzureStorageBlobCopy -SrcBlob $singleURI -DestContainer $global:workingContainerName -SrcContainer $global:sourceContainerName -DestBlob $targetName -Context $sourceContext -DestContext $destContext
 
-            $global:copyblobs.Add($targetName)
+            $global:copyblobs += $targetName
         }
     }
 
