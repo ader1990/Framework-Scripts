@@ -378,7 +378,7 @@ function try_pscp([string] $file,
     while ($num_tries -lt 10) {
         $num_tries = $num_tries + 1
         try {
-            C:\azure-linux-automation\tools\pscp -pw $TEST_USER_ACCOUNT_PAS2 -l $TEST_USER_ACCOUNT_NAME $file $ipTemp
+            $plink_err = C:\azure-linux-automation\tools\pscp -pw $TEST_USER_ACCOUNT_PAS2 -l $TEST_USER_ACCOUNT_NAME $file $ipTemp 2>&1
             $result = $?
         }
         catch {
@@ -388,12 +388,12 @@ function try_pscp([string] $file,
         if ($plink_err -ne $null -and $plink_err -match "*connection timed out*")
         {
             Write-Host "Timeout on pscp of $file to $ipTemp"
-        } elseif ($results -eq $false) {
+        } elseif ($result -eq $false) {
             write-host "General error copying file $file to $ipTemp..."
             Write-Output $out
         } else {
             Write-Host "$file Successfully copied to $ipTemp"
-            return 0
+            return plink_err
         }
 
         start-sleep 12
@@ -415,8 +415,8 @@ function try_plink([string] $ip,
     while ($num_tries -lt 10) {
         $num_tries = $num_tries + 1
         try {
-            C:\azure-linux-automation\tools\plink.exe -C -v -pw $TEST_USER_ACCOUNT_PAS2 -P $port -l $TEST_USER_ACCOUNT_NAME $ip $command
-            $results = $?
+            plink_err = C:\azure-linux-automation\tools\plink.exe -C -v -pw $TEST_USER_ACCOUNT_PAS2 -P $port -l $TEST_USER_ACCOUNT_NAME $ip $command 2>&1
+            $result = $?
         }
         catch {
                 Write-Host "plink Exception caught -- trying again"
@@ -425,12 +425,12 @@ function try_plink([string] $ip,
         if ($plink_err -ne $null -and $plink_err -match "*connection timed out*")
         {
             Write-Host "Timeout on plink of $command"
-        } elseif ($results -eq $false) {
+        } elseif ($result -eq $false) {
             write-host "General error executing command.  Returning anyway, because this usually means it ran properly."
-            return 1
+            return $plink_err
         } else {
             Write-Host "Successful command execution"
-            return 0
+            return $plink_err
         }
     }
 }

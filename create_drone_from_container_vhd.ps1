@@ -197,11 +197,22 @@ $scriptBlockString =
 
     write-host "This had better be right:  $pipName"
 
-    $ip=(Get-AzureRmPublicIpAddress -ResourceGroupName $destRG -Name $pipName).IpAddress
-    if ($? -ne $true) {
-        Write-Host "Error getting IP address for VM $newVMName.  This VM must be manually examined!!" -ForegroundColor red
-        Stop-Transcript
-        exit 1
+    $gotAnAddress = $false
+    while ($gotAnAddress -eq $false) {
+        $ipOfDrone=Get-AzureRmPublicIpAddress -ResourceGroupName $destRG -Name $pipName
+        
+        if ($? -ne $true) {
+            Write-Host "Error getting IP address for VM $newVMName.  This VM must be manually examined!!" -ForegroundColor red
+            Stop-Transcript
+            exit 1
+        }
+        if ($ipOfDrone.ProvisioningState -eq "Succeeded")
+        {
+            $ip = $ipOfDrone.IpAddress
+            $gotAnAddress = $true
+        } else {
+            start-sleep -Seconds 10
+        }
     }
 
     #
