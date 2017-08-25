@@ -185,8 +185,8 @@ $scriptBlockString =
     #
     #  Just because it's up doesn't mean it's accepting connections yet.  Wait 2 minutes, then try to connect.  I tried 1 minute,
     #  but kept getting timeouts on the Ubuntu machines.
-    $username="$TEST_USER_ACCOUNT_NAME"
-    $password="$TEST_USER_ACCOUNT_PAS2" # Could just be "$TEST_USER_ACCOUNT_PASS1_K6"
+    $username=$TEST_USER_ACCOUNT_NAME
+    $password=$TEST_USER_ACCOUNT_PAS2 # Could just be "$TEST_USER_ACCOUNT_PASS1_K6"
 
     $regionSuffix = ("---" + $location + "-" + $vmFlavor.ToLower()) -replace " ","-"
     $regionSuffix = $regionSuffix -replace "_","-"
