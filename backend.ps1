@@ -358,7 +358,7 @@ class AzureBackend : Backend {
     }
 
     [void] CreateInstanceFromSpecialized ($InstanceName) {        
-        Write-Host "Creating a new VM config..." -ForegroundColor Yellow
+        Write-Host "Creating a new VM config for $InstanceName..." -ForegroundColor Yellow
 
         $sg = $this.getNSG()
 
@@ -414,7 +414,7 @@ class AzureBackend : Backend {
     }
 
     [void] CreateInstanceFromURN ($InstanceName) {        
-        Write-Host "Creating a new VM config..." -ForegroundColor Yellow
+        Write-Host "Creating a new VM config for $InstanceName..." -ForegroundColor Yellow
 
         $sg = $this.getNSG()
 
@@ -467,7 +467,7 @@ class AzureBackend : Backend {
             try {
                 $NEWVM = New-AzureRmVM -ResourceGroupName $this.ResourceGroupName -Location $this.Location -VM $vm
                 if (!$NEWVM) {
-                    Write-Host "Failed to create VM" -ForegroundColor Red
+                    Write-Host "Failed to create VM $InstanceName" -ForegroundColor Red
                     Start-Sleep -Seconds 30
                     $trying = $true
                     $tries = $tries + 1
