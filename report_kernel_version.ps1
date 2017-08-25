@@ -14,7 +14,7 @@ cd /HIPPEE/Framework-Scripts
 git pull
 
 $global:isHyperV=$true
-$global:logFileName="/opt/microsoft/report_kernel_version.log"
+$global:logFileName="/HIPPEE/report_kernel_version.log"
 
 function callItIn($c, $m) {
     $output_path="c:\temp\$c"
@@ -63,12 +63,18 @@ phoneHome "Checking for successful kernel installation"
 if ($failure_point -eq "") {
     $kernel_name=uname -r
 } else {
-        $kernel_name = $failure_point
+    $kernel_name = $failure_point
 }
  
-if (Get-Item -ErrorAction SilentlyContinue -Path /HIPPEE/expected_version ) {
+if (Get-Item -Path /HIPPEE/expected_version ) {
     $expected=Get-Content /HIPPEE/expected_version
-} 
+    if ($expected.count -gt 1) {
+        $expected = $expected[0]
+    }
+}
+
+write-host "Got kernel name " $kernel_name
+write-host "Execcted kernel name " $expected
 
 if (($kernel_name.CompareTo($expected)) -ne 0) {
     write-verbose "Kernel did not boot into the desired version.  Checking to see if this is a newer version.."
@@ -81,7 +87,9 @@ if (($kernel_name.CompareTo($expected)) -ne 0) {
         #
         $kernels = rpm -qa | sls "kernel" | sls 'kernel-[0-9].*'
 
-        $kernelArray = @()
+        $kernelArray_array = @()
+        $kernelArray = {$kernelArray_array}.Invoke()
+        $kernelArray.Clear()
         
         foreach ($kernel in $kernels) {
             $KernelParts = $Kernel -split '-'
@@ -113,8 +121,11 @@ if (($kernel_name.CompareTo($expected)) -ne 0) {
             $grubLine | out-file "/tmp/y" -append -force
         }
     } else {
-        $kernels = dpkg --list | sls linux-image        
-        $kernelArray = @()
+        $kernels = dpkg --list | sls linux-image  
+              
+        $kernelArray_array = @()
+        $kernelArray = {$kernelArray_array}.Invoke()
+        $kernelArray.Clear()
         
         foreach ($kernel in $kernels) {
             $KernelParts = $Kernel -split '\s+'
@@ -148,8 +159,8 @@ if (($kernel_name.CompareTo($expected)) -ne 0) {
     }
         
     if ($boot_again = $true) {
-        copy-Item -Path "/tmp/y" -Destination "/HIPPEE/runonce.d"
-        copy-Item -Path "/HIPPEE/Framework-Scripts/report_kernel_version.ps1" -Destination "/etc/default/grub"
+        copy-Item -Path "/tmp/y" -Destination "/etc/default/grub"
+        copy-Item -Path "/HIPPEE/Framework-Scripts/report_kernel_version.ps1" -Destination "/HIPPEE/runonce.d"
         PhoneHome "Kernel did not come up with the correct version, but the correct version is listed.  "
         reboot
     } elseif ($failed -eq $true) {
@@ -168,7 +179,9 @@ if (($kernel_name.CompareTo($expected)) -ne 0) {
     $c="boot_results/" + $ourHost
     phoneHome "Failed $kernel_name $expected"
 
-    remove-pssession $s
+    if ($global:isHyperV -eq $true) {
+        remove-pssession $s
+    }
 
     exit 1
 } else {
@@ -180,7 +193,9 @@ if (($kernel_name.CompareTo($expected)) -ne 0) {
     $c="boot_results/" + $ourHost
     phoneHome "Success $kernel_name"
 
-    remove-pssession $s
+    if ($global:isHyperV -eq $true) {
+        remove-pssession $s
+    }
 
     exit 0
 }
