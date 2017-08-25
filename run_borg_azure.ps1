@@ -457,7 +457,7 @@ $action={
                       
                 #
                 #  This must be done as root
-                $command = "/usr/bin/powershell get-content /root/expected_version"
+                $command = "/usr/bin/powershell get-content /HIPPEE/expected_version"
                 $password=$TEST_USER_ACCOUNT_PASS
                 $runCommand = "echo $password | sudo -S bash -c `'$command`'"
                 $commandBLock=[scriptblock]::Create($runCommand)
@@ -525,7 +525,7 @@ $action={
     }
 
     $global:elapsed=$global:elapsed+$global:interval
-    Write-Host "Checking elapsed = $global:elapsed against interval limit of $global:boot_timeout_intervals" -ForegroundColor Yellow
+    # Write-Host "Checking elapsed = $global:elapsed against interval limit of $global:boot_timeout_intervals" -ForegroundColor Yellow
 
     if ($global:elapsed -ge $global:boot_timeout_intervals) {
         Write-Host "Elapsed is $global:elapsed"
