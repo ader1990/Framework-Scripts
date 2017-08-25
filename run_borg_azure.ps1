@@ -167,7 +167,6 @@ function copy_azure_machines {
         $destContext=New-AzureStorageContext -StorageAccountName $global:workingStorageAccountName -StorageAccountKey $destKey[0].Value
 
         Write-Host "Preparing the individual machines..." -ForegroundColor green        
-        Set-AzureRmCurrentStorageAccount –ResourceGroupName $global:sourceResourceGroupName –StorageAccountName $global:sourceStorageAccountName > $null
 
         foreach ($oneblob in $blobs) {
             $fullName=$oneblob.Name
@@ -229,7 +228,7 @@ function copy_azure_machines {
 
             $global:neededVMs.Add($sourceName)
 
-            Write-Host "Initiating job to copy VHD $vmName from  $global:sourceContainerName to working $global:workingContainerName..." -ForegroundColor Yellow
+            Write-Host "Initiating job to copy VHD $targetName from  $global:sourceContainerName to working $global:workingContainerName..." -ForegroundColor Yellow
             $blob = Start-AzureStorageBlobCopy -SrcBlob $singleURI -DestContainer $global:workingContainerName -SrcContainer $global:sourceContainerName -DestBlob $targetName -Context $sourceContext -DestContext $destContext
 
             $global:copyblobs += $targetName
@@ -754,22 +753,6 @@ if ($? -eq $false) {
 } else {
     Get-AzureStorageBlob -Blob "*" -Container $global:workingContainerName | Remove-AzureStorageBlob -Force
 }
-Set-AzureRmCurrentStorageAccount –ResourceGroupName $global:workingResourceGroupName –StorageAccountName $global:workingStorageAccountName
-
-Get-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName  -Name $global:workingStorageAccountName
-if ($? -eq $false) {
-    Write-Host "Storage account $global:workingStorageAccountName  did not exist.  Creating it and populating with the right containers..." -ForegroundColor Yellow
-    New-AzureRmStorageAccount -ResourceGroupName $global:workingResourceGroupName -Name $global:workingStorageAccountName -Location $global:location -SkuName Standard_LRS 
-
-    write-host "Selecting it as the current SA" -ForegroundColor Yellow
-    Set-AzureRmCurrentStorageAccount –ResourceGroupName $global:workingResourceGroupName  –StorageAccountName $global:workingStorageAccountName
-
-    Write-Host "creating the containers" -ForegroundColor Yellow
-    New-AzureStorageContainer -Name "last-build-packages" -Permission Blob
-    New-AzureStorageContainer -Name "vhds-under-test" -Permission Blob
-    Write-Host "Complete." -ForegroundColor Green
-}
-Set-AzureRmCurrentStorageAccount –ResourceGroupName $global:workingResourceGroupName –StorageAccountName $global:workingStorageAccountName
 
 #
 #
