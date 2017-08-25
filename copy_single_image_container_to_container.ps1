@@ -162,10 +162,10 @@ foreach ($vmName in $vmNames) {
         if ($targetName.EndsWith("-") -eq $true) {                
             $targetName = $targetName -Replace ".$","X"
             Write-Warning "NOTE:  Image name is ended in an illegal character.  Image name is now $targetName"
-        }
-        $targetName = $targetName + ".vhd"
+        }        
         Write-Warning "NOTE:  Image name $imageName was truncated to 62 characters"
     }
+    $targetName = $targetName + ".vhd"
 
     $sourceBlob = $copyBlobs[$index]
     $sourceBlobName = $sourceBlob.Name
