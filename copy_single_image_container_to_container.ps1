@@ -205,7 +205,7 @@ while ($stillCopying -eq $true) {
         $targetName = $vmName + $extNoVHD
         if ($targetName.Length -gt 62) {
             Write-Warning "NOTE:  Image name $targetName is too long"
-            $targetName = $imagtargetNameeName.substring(0, 62)
+            $targetName = $targetName.substring(0, 62)
             Write-Warning "NOTE:  Image name is now $targetName"
             if ($targetName.EndsWith("-") -eq $true) {                
                 $targetName = $targetName -Replace ".$","X"
