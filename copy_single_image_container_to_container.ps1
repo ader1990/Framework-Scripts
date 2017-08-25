@@ -121,12 +121,14 @@ if ($makeDronesFromAll -eq $true) {
         $vmNames.Add($blobName)
     }
 } else {
-    $blobs=get-AzureStorageBlob -Container $sourceContainer -Blob "*$sourceExtension"
+    $blobs=get-AzureStorageBlob -Container $sourceContainer -Blob "*.vhd"
     foreach ($vmName in $vmNames) {
         $foundIt = $false
         foreach ($blob in $blobs) {
+            $blobName = $blob.Name
             $matchName = "*" + $vmName + "*"
-            if ( $blob.Name -like $matchName)  {
+            write-host "Looking for match of $matchName in $blobName"
+            if ( $blobName -like $matchName)  {
                 $foundIt = $true
                 break
             }
