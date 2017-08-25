@@ -193,6 +193,11 @@ class AzureBackend : Backend {
         $imageName = $imageName + $regionSuffix
         $imageName = $imageName + $this.suffix
         $imageName = $imageName  -replace ".vhd", ""
+        if ($imageName.Length -gt 62) {
+            Write-Warning "NOTE:  Image name $imageName is too long"
+            $imageName = $imageName.substring(0, 62)
+            Write-Warning "NOTE:  Image name $imageName was truncated to 62 characters"
+        }
 
         $instance = [AzureInstance]::new($this, $imageName)
         return $instance

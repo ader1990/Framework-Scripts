@@ -76,7 +76,7 @@ if ($makeDronesFromAll -ne $true -and ($vmNameArray.Count -eq 1  -and $vmNameArr
 get-job | Stop-Job
 get-job | Remove-Job
 
-login_azure $destRG $destSA $location
+login_azure $sourceRG $sourceSA $location
 
 if ($makeDronesFromAll -eq $true) {
     
