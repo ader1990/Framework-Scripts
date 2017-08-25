@@ -452,7 +452,7 @@ if (Test-Path /bin/rpm) {
 #
 #  Copy the post-reboot script to RunOnce
 #
-copy-Item -Path "/HIPPEE/Framework-Scripts/report_kernel_version.ps1" -Destination "/root/runonce.d"
+copy-Item -Path "/HIPPEE/Framework-Scripts/report_kernel_version.ps1" -Destination "/HIPPEE/runonce.d"
 
 phoneHome "Rebooting now..."
 
