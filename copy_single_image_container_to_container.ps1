@@ -200,7 +200,20 @@ while ($stillCopying -eq $true) {
 
     foreach ($vmName in $vmNames) {
         $sourceName = $vmName + $sourceExtension
-        $targetName = $vmName + $destExtension
+
+        $extNoVHD = $destExtension -replace ".vhd",""
+        $targetName = $vmName + $extNoVHD
+        if ($targetName.Length -gt 62) {
+            Write-Warning "NOTE:  Image name $targetName is too long"
+            $targetName = $imagtargetNameeName.substring(0, 62)
+            Write-Warning "NOTE:  Image name is now $targetName"
+            if ($targetName.EndsWith("-") -eq $true) {                
+                $targetName = $targetName -Replace ".$","X"
+                Write-Warning "NOTE:  Image name is ended in an illegal character.  Image name is now $targetName"
+            }
+            $targetName = $targetName + ".vhd"
+            Write-Warning "NOTE:  Image name $imageName was truncated to 62 characters"
+        }
 
         $copyStatus = Get-AzureStorageBlobCopyState -Blob $targetName -Container $destContainer -ErrorAction SilentlyContinue
         $status = $copyStatus.Status
