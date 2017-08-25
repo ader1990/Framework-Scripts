@@ -118,48 +118,52 @@ if (($kernel_name.CompareTo($expected)) -ne 0) {
                 $grubLine = "GRUB_DEFAULT=" + $parts[1]
             }
         
-            $grubLine | out-file "/tmp/y" -append -force
+            $grubLine | out-file -encoding ascii "/tmp/y" -append -force
         }
+
+        copy-Item -Path "/tmp/y" -Destination "/etc/default/grub"
     } else {
         $kernels = dpkg --list | sls linux-image  
-              
-        $kernelArray_array = @()
-        $kernelArray = {$kernelArray_array}.Invoke()
-        $kernelArray.Clear()
+        $ver = get-content /HIPPEE/expected_version
+
+        $subs=sls submenu /boot/grub/grub.cfg
+        $kerns=sls gnulinux /boot/grub/grub.cfg
+        $ver = get-content /HIPPEE/expected_version
+        $ver = $ver[0]
         
-        foreach ($kernel in $kernels) {
-            $KernelParts = $Kernel -split '\s+'
-            $vers = $kernelParts[2]
-        
-            if ($kernelArray -contains $vers) {
-            } else {
-                $kernelArray += $vers
+        $p1 = ($subs -split "n '")[1]
+        $p1 = ($p1 -split "'")[0]
+
+        $gotAKernel = $false
+        foreach ($kern in $kerns) {
+            write-host "Checking kernel $kern for $vers"
+            if ($kern -match $ver) {
+                $p2 = ($kern -split "option '")[1]
+                $p2 =  ($p2 -split "'")[0]
+
+                $fullName = $p1 + ">" + $p2
+
+                $gotAKernel = $true
             }
         }
-        
-        foreach ($grubLine in $oldGrub) {
-            if ($grubLine -match "GRUB_DEFAULT") {
-                $parts = $grubLine -split("=")
-        
-                [int]$parts[1] = [int]$parts[1] + 1
-                if ($parts[1] -ge $kernelArray.count) {
-                    write-host "No more kernels to try"
-                    $failed = $true
-                    break
-                } else {
-                    write-verbose "Downgrading one level"
-                    $boot_again = $true
-                }
-        
-                $grubLine = "GRUB_DEFAULT=" + $parts[1]
-            }
-        
-            $grubLine | out-file "/tmp/y" -append -force
+
+        if ($gotAKernsl -eq $false) {
+            Write-Error "Machine did not boot to the right kernel, and the expected kernel is not listed.  Cannot process."
+            exit 1
         }
+
+        Copy-Item /etc/default/grub /etc/default/grub.orig
+        (Get-Content /etc/default/grub) -replace "GRUB_DEFAULT=.*","GRUB_DEFAULT=$fullName" | Set-Content /etc/default/grub
+
+        @(grub-mkconfig -o /boot/grub/grub.cfg)
+        if ($? -eq $false) {
+            $failure_point="GrubMkConfig"
+            ErrOut($failure_point)
+        }
+        $boot_again = $true
     }
         
     if ($boot_again = $true) {
-        copy-Item -Path "/tmp/y" -Destination "/etc/default/grub"
         copy-Item -Path "/HIPPEE/Framework-Scripts/report_kernel_version.ps1" -Destination "/HIPPEE/runonce.d"
         PhoneHome "Kernel did not come up with the correct version, but the correct version is listed.  "
         reboot
