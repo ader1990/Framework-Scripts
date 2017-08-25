@@ -415,11 +415,12 @@ function try_plink([string] $ip,
     while ($num_tries -lt 10) {
         $num_tries = $num_tries + 1
         try {
-            plink_err = C:\azure-linux-automation\tools\plink.exe -C -v -pw $TEST_USER_ACCOUNT_PAS2 -P $port -l $TEST_USER_ACCOUNT_NAME $ip $command 2>&1
+            $plink_err = C:\azure-linux-automation\tools\plink.exe -C -v -pw $TEST_USER_ACCOUNT_PAS2 -P $port -l $TEST_USER_ACCOUNT_NAME $ip $command 2>&1
             $result = $?
         }
         catch {
                 Write-Host "plink Exception caught -- trying again"
+                write-host $plink_err
         }
 
         if ($plink_err -ne $null -and $plink_err -match "*connection timed out*")
