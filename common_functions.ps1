@@ -393,7 +393,7 @@ function try_pscp([string] $file,
             Write-Output $out
         } else {
             Write-Host "$file Successfully copied to $ipTemp"
-            return plink_err
+            return $plink_err
         }
 
         start-sleep 12
