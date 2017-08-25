@@ -170,22 +170,32 @@ function copy_azure_machines {
 
         foreach ($oneblob in $blobs) {
             $fullName=$oneblob.Name
-            
-            if ($fullName -like "*-RunOnce-Primed.vhd") {
-                $bar=$fullName.Replace("---","{")
-                $nameParts = $bar.split("{")
-                $targetName = $nameParts[0] + $fullSuffix
 
-                $vmName = $targetName.Replace(".vhd","")
-                $global:neededVMs.Add($vmName)
-    
-                Write-Host "     --------- Initiating job to copy VHD $fullName from cache to working directory as $targetName..." -ForegroundColor Yellow
-                $blob = Start-AzureStorageBlobCopy -SrcBlob $fullName -DestContainer $global:workingContainerName `
-                                                   -SrcContainer $global:sourceContainerName -DestBlob $targetName `
-                                                   -Context $sourceContext -DestContext $destContext
+            $bar=$fullName.Replace("---","{")
+            $nameParts = $bar.split("{")
+            $targetName = $nameParts[0] + $fullSuffix
 
-                $global:copyblobs.Add($targetName)
+            if ($targetName.Length -gt 62) {
+                Write-Warning "NOTE:  Image name $targetName is too long"
+                $targetName = $targetName.substring(0, 62)
+                Write-Warning "NOTE:  Image name is now $targetName"
+                if ($targetName.EndsWith("-") -eq $true) {                
+                    $targetName = $targetName -Replace ".$","X"
+                    Write-Warning "NOTE:  Image name is ended in an illegal character.  Image name is now $imagtargetNameeName"
+                }
+                Write-Warning "NOTE:  Image name $targetName was truncated to 62 characters"
             }
+            $vmName = $targetName
+            $targetName = $targetName + ".vhd"
+            
+            $global:neededVMs.Add($vmName)
+
+            Write-Host "     --------- Initiating job to copy VHD $fullName from cache to working directory as $targetName..." -ForegroundColor Yellow
+            $blob = Start-AzureStorageBlobCopy -SrcBlob $fullName -DestContainer $global:workingContainerName `
+                                                -SrcContainer $global:sourceContainerName -DestBlob $targetName `
+                                                -Context $sourceContext -DestContext $destContext
+
+            $global:copyblobs.Add($targetName)
         }
     } else {
         Write-Host "Clearing the destination container..."  -ForegroundColor green
@@ -203,8 +213,18 @@ function copy_azure_machines {
             $bar=$sourceName.Replace("---","{")
             $nameParts = $bar.split("{")
             $targetName = $nameParts[0] + $fullSuffix
-
-            $vmName = $targetName.Replace(".vhd","")
+            if ($targetName.Length -gt 62) {
+                Write-Warning "NOTE:  Image name $targetName is too long"
+                $targetName = $targetName.substring(0, 62)
+                Write-Warning "NOTE:  Image name is now $targetName"
+                if ($targetName.EndsWith("-") -eq $true) {                
+                    $targetName = $targetName -Replace ".$","X"
+                    Write-Warning "NOTE:  Image name is ended in an illegal character.  Image name is now $imagtargetNameeName"
+                }
+                Write-Warning "NOTE:  Image name $targetName was truncated to 62 characters"
+            }
+            $vmName = $targetName
+            $targetName = $targetName + ".vhd"
 
             $global:neededVMs.Add($sourceName)
 

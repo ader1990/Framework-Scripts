@@ -390,7 +390,7 @@ function try_pscp([string] $file,
             Write-Host "Timeout on pscp of $file to $ipTemp"
         } elseif ($result -eq $false) {
             write-host "General error copying file $file to $ipTemp..."
-            Write-Output $out
+            Write-Output $plink_err
         } else {
             Write-Host "$file Successfully copied to $ipTemp"
             return $plink_err
