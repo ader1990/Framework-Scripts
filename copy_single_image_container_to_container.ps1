@@ -56,7 +56,7 @@ $vmNames.Clear()
 if ($vmNamesIn -like "*,*") {
     $vmNames = $vmNamesIn.Split(',')
 } else {
-    $vmNames = $vmNamesIn.Split(' ')
+    $vmNames = $vmNamesIn
 }
 
 login_azure $destRG $destSA $location

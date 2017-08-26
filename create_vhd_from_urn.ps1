@@ -40,7 +40,7 @@ $vmNameArray.Clear()
 if ($Incoming_vmNames -like "*,*") {
     $vmNameArray = $Incoming_vmNames.Split(',')
 } else {
-    $vmNameArray = $Incoming_vmNames.Split(' ')
+    $vmNameArray = $Incoming_vmNames
 }
 
 $blobURN_Array=@()
@@ -49,7 +49,7 @@ $blobURNArray.Clear()
 if ($Incoming_blobURNs -like "*,*") {
     $blobURNArray = $Incoming_blobURNs.Split(',')
 } else {
-    $blobURNArray = $Incoming_blobURNs.Split(' ')
+    $blobURNArray = $Incoming_blobURNs
 }
 
 Write-Host "Names array: " $vmNameArray -ForegroundColor Yellow

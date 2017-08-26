@@ -47,7 +47,7 @@ if ($requestedNames.ToLower() -eq "unset") {
 if ($requestedNames -like "*,*") {
     $vmNameArray = $requestedNames.Split(',')
 } elseif ($requestedNames -ne "") {
-    $vmNameArray = $requestedNames.Split(' ')
+    $vmNameArray = $requestedNames
 } else {
     $vmNameArray.clear()
 }

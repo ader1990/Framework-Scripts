@@ -29,7 +29,7 @@ $vmNameArray.Clear()
 if ($requestedNames -like "*,*") {
     $vmNameArray = $requestedNames.Split(',')
 } else {
-    $vmNameArray = $requestedNames.Split(' ')
+    $vmNameArray = $requestedNames
 }
 
 write-Verbose "Copying file $file to $vmNameArray "

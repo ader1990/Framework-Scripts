@@ -19,7 +19,7 @@ $vmNameArray.Clear()
 if ($requestedNames -like "*,*") {
     $vmNameArray = $requestedNames.Split(',')
 } else {
-    $vmNameArray = $requestedNames.Split(' ')
+    $vmNameArray = $requestedNames
 }
 
 [System.Collections.ArrayList]$all_vmNames_array
@@ -32,7 +32,7 @@ $flavorsArray.Clear()
 if ($Flavors -like "*,*") {
     $flavorsArray = $Flavors.Split(',')
 } else {
-    $flavorsArray = $Flavors.Split(' ')
+    $flavorsArray = $Flavors
 }
 
 if ($flavorsArray.Count -eq 1 -and $flavorsArray[0] -eq "" ) {

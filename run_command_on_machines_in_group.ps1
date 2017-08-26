@@ -30,7 +30,7 @@ write-host "Incoming : " $requestedNames
 if ($requestedNames -like "*,*") {
     $vmNameArray = $requestedNames.Split(',')
 } else {
-    $vmNameArray = $requestedNames.Split(' ')
+    $vmNameArray = $requestedNames
 }
 Write-Host "After : " $vmNameArray
 $suffix = $suffix -replace "_","-"
