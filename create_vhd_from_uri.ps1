@@ -101,7 +101,7 @@ if ($? -eq $false -or $existing -eq $null) {
     New-AzureRmStorageAccount -ResourceGroupName $destRG -Name $destSA -Location $location -SkuName Standard_LRS -Kind Storage
 
     write-host "Selecting it as the current SA" -ForegroundColor Yellow
-    Set-AzureRmCurrentStorageAccount –ResourceGroupName $destRG –StorageAccountName $destSA
+    Set-AzureRmCurrentStorageAccount –ResourceGroupName $destRG -StorageAccountName -$destSA
 
     Write-Host "creating the containers" -ForegroundColor Yellow
     New-AzureStorageContainer -Name "ready-for-bvt" -Permission Blob
