@@ -123,44 +123,41 @@ if (($kernel_name.CompareTo($expected)) -ne 0) {
 
         copy-Item -Path "/tmp/y" -Destination "/etc/default/grub"
     } else {
-        $kernels = dpkg --list | sls linux-image  
-        $ver = get-content /HIPPEE/expected_version
-
-        $subs=sls submenu /boot/grub/grub.cfg
-        $kerns=sls gnulinux /boot/grub/grub.cfg
         $ver = get-content /HIPPEE/expected_version
         $ver = $ver[0]
-        
+
+        $subs=sls submenu /boot/grub/grub.cfg
         $p1 = ($subs -split "n '")[1]
         $p1 = ($p1 -split "'")[0]
+        
+        $kerns=sls gnulinux /boot/grub/grub.cfg | select-string $ver | select-string -NotMatch "recovery mode" 
+        $p2 = ($kerns -split "option '")[1]
+        $p2 =  ($p2 -split "'")[0]
 
-        $gotAKernel = $false
-        foreach ($kern in $kerns) {
-            write-host "Checking kernel $kern for $vers"
-            if ($kern -match $ver) {
-                $p2 = ($kern -split "option '")[1]
-                $p2 =  ($p2 -split "'")[0]
-
-                $fullName = $p1 + ">" + $p2
-
-                $gotAKernel = $true
-            }
-        }
-
-        if ($gotAKernsl -eq $false) {
+        if ($p1 -ne "" -and $p2 -ne "") {
+            $fullName = $p1 + ">" + $p2
+        } else {
             Write-Error "Machine did not boot to the right kernel, and the expected kernel is not listed.  Cannot process."
             exit 1
         }
 
-        Copy-Item /etc/default/grub /etc/default/grub.orig
-        (Get-Content /etc/default/grub) -replace "GRUB_DEFAULT=.*","GRUB_DEFAULT=$fullName" | Set-Content /etc/default/grub
+        $alreadyDidThis = "like no, man"
+        $alreadyDidThis = sls $fullName /etc/default/grub
 
-        @(grub-mkconfig -o /boot/grub/grub.cfg)
-        if ($? -eq $false) {
-            $failure_point="GrubMkConfig"
-            ErrOut($failure_point)
+        if ($alreadyDidThis -eq "like no, man") {
+            Copy-Item /etc/default/grub /etc/default/grub.orig
+            (Get-Content /etc/default/grub) -replace "GRUB_DEFAULT=.*","GRUB_DEFAULT=$fullName" | Set-Content -Encoding Ascii /etc/default/grub
+
+            @(grub-mkconfig -o /boot/grub/grub.cfg)
+            if ($? -eq $false) {
+                $failure_point="GrubMkConfig"
+                ErrOut($failure_point)
+            }
+            $boot_again = $true
+        } else {
+            Write-Error "Machine booted, but has the same OS it had before, even though we directed version $ver.  This machine has failed the BORG"
+            $failed = $true
         }
-        $boot_again = $true
     }
         
     if ($boot_again = $true) {

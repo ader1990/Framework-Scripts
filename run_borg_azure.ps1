@@ -533,6 +533,8 @@ $action={
         Write-Host "Intervals is $global:boot_timeout_intervals"
         Write-Host "Timer has timed out." -ForegroundColor red
         $global:completed=1
+        Stop-Transcript
+        return
     }
 
     #
@@ -584,6 +586,7 @@ $action={
             }
             Write-Host "Stopping the timer" -ForegroundColor green
             $global:completed=1
+            return
         }
 
         Write-Host ""
