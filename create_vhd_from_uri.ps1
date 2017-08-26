@@ -57,6 +57,7 @@ $numNames = $vmNameArray.Count
 Write-Host "blobs array: " $blobURIArray -ForegroundColor Yellow
 $numBlobs = $blobURIArray.Count
 
+
 if ($vmNameArray.Count -ne $blobURIArray.Count) {
     Write-Host "Please provide the same number of names and URIs. You have $numNames names and $numBlobs blobs" -ForegroundColor Red
     exit 1
@@ -101,7 +102,7 @@ if ($? -eq $false -or $existing -eq $null) {
     New-AzureRmStorageAccount -ResourceGroupName $destRG -Name $destSA -Location $location -SkuName Standard_LRS -Kind Storage
 
     write-host "Selecting it as the current SA" -ForegroundColor Yellow
-    Set-AzureRmCurrentStorageAccount –ResourceGroupName $destRG -StorageAccountName -$destSA
+    Set-AzureRmCurrentStorageAccount –ResourceGroupName $destRG –StorageAccountName $destSA
 
     Write-Host "creating the containers" -ForegroundColor Yellow
     New-AzureStorageContainer -Name "ready-for-bvt" -Permission Blob
@@ -109,6 +110,7 @@ if ($? -eq $false -or $existing -eq $null) {
     Write-Host "Complete." -ForegroundColor Green
 }
 Set-AzureRmCurrentStorageAccount –ResourceGroupName $destRG –StorageAccountName $destSA
+
 
 Get-AzureStorageBlob -Container "ready-for-bvt" -Prefix $vmName 
 if ($? -eq $false) {
@@ -150,7 +152,6 @@ $azureInstance.SetupAzureRG()
 
 #
 #  If the account does not exist, create it.
-
 $scriptBlockString = 
 {
     param ( [string] $vmName,
@@ -333,7 +334,7 @@ while ($notDone -eq $true) {
         if ($? -eq $true) {
             Write-Host "         Last 5 lines from the log file:" -ForegroundColor Cyan
             foreach ($line in $logLines) {
-                write-host "        "$line -ForegroundColor Gray
+                write-host "        " $line -ForegroundColor Gray
             }
         }
     }

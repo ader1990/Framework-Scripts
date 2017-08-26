@@ -61,6 +61,7 @@ $machineFullNames = {$full_names_array}.Invoke()
 $machineFullNames.Clear()
 
 login_azure $sourceRG $sourceSA $location
+Set-AzureRmCurrentStorageAccount –ResourceGroupName $rg –StorageAccountName $s
 
 $vmName = $vmNameArray[0]
 if ($generalizeAll -eq $false -and $vmNameArray.Count -eq 0) {
@@ -135,14 +136,17 @@ $scriptBlockText = {
     param (
         [string] $machine_name,
         [string] $sourceRG,
+        [string] $sourceSA,
         [string] $sourceContainer,
+        [string] $location,
         [string] $vm_name
     )
 
     . C:\Framework-Scripts\common_functions.ps1
     . C:\Framework-Scripts\secrets.ps1
 
-    login_azure
+    login_azure $sourceRG $sourceSA $location
+    Set-AzureRmCurrentStorageAccount –ResourceGroupName $rg –StorageAccountName $s
     #
     #  This might not be the best way, but I only have 23 characters here, so we'll go with what the user entered
     $bar=$vm_name.Replace("---","{")
