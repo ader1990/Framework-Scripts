@@ -137,6 +137,7 @@ if (($kernel_name.CompareTo($expected)) -ne 0) {
         if ($p1 -ne "" -and $p2 -ne "") {
             $fullName = $p1 + ">" + $p2
         } else {
+
             Write-Error "Machine did not boot to the right kernel, and the expected kernel is not listed.  Cannot process."
             exit 1
         }
@@ -144,9 +145,9 @@ if (($kernel_name.CompareTo($expected)) -ne 0) {
         $alreadyDidThis = "like no, man"
         $alreadyDidThis = sls $fullName /etc/default/grub
 
-        if ($alreadyDidThis -eq "like no, man") {
+        if ([string]::IsNullOrEmpty($alreadyDidThis)) {
             Copy-Item /etc/default/grub /etc/default/grub.orig
-            (Get-Content /etc/default/grub) -replace "GRUB_DEFAULT=.*","GRUB_DEFAULT=$fullName" | Set-Content -Encoding Ascii /etc/default/grub
+            (Get-Content /etc/default/grub) -replace "GRUB_DEFAULT=.*","GRUB_DEFAULT=`"$fullName`"" | Set-Content -Encoding Ascii /etc/default/grub
 
             @(grub-mkconfig -o /boot/grub/grub.cfg)
             if ($? -eq $false) {
