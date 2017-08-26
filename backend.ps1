@@ -178,18 +178,18 @@ class AzureBackend : Backend {
         } else {
             throw "Secrets file does not exist."
         }
-
+write-host  "Checkpoint 1"
         $this.suffix = $this.suffix -replace "_","-"
         login_azure $this.ResourceGroupName $this.StorageAccountName $this.Location
-
+        write-host  "Checkpoint 2"
         $flavLow = $this.VMFlavor
         $flavLow = $flavLow.ToLower()
         $regionSuffix = ("---" + $this.Location + "-" + $flavLow) -replace " ","-"
         $regionSuffix = $regionSuffix -replace "_","-"
-
+        write-host  "Checkpoint 3"
         $bar=$InstanceName.Replace("---","{")
         $imageName = $bar.split("{")[0]
-
+        write-host  "Checkpoint 4"
         $imageName = $imageName + $regionSuffix
         $imageName = $imageName + $this.suffix
         $imageName = $imageName  -replace ".vhd", ""
@@ -203,7 +203,7 @@ class AzureBackend : Backend {
             }
             Write-Warning "NOTE:  Image name $imageName was truncated to 62 characters"
         }
-
+        write-host  "Checkpoint 5"
         $instance = [AzureInstance]::new($this, $imageName)
         return $instance
     }
