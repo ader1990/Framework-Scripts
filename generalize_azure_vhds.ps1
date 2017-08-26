@@ -71,7 +71,7 @@ if ($generalizeAll -eq $false -and $vmNameArray.Count -eq 0) {
     $requestedNames = ""
     $runningVMs = Get-AzureRmVm -ResourceGroupName $sourceRG
 
-    if ($generalizeAll -eq "True") {
+    if ($generalizeAll -eq $true) {
         Write-Host "Generalizing all running machines..."
         foreach ($vm in $runningVMs) {
             $vm_name=$vm.Name
