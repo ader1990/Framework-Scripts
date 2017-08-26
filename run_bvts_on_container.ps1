@@ -59,10 +59,7 @@ set-location C:\azure-linux-automation
 git pull
 
 $blobFilter = '*.vhd'
-if ($removeTag -ne "") {
-    if (-Not($removeTag -match ".*.vhd")) {
-        $removeTag = $removeTag + ".vhd"
-    }
+if ($removeTag -ne "") {    
     $blobFilter = '*' + $removeTag
 }
 Write-Host "Blob filter is $blobFilter"
@@ -70,7 +67,7 @@ Write-Host "Blob filter is $blobFilter"
 $regionSuffix = ("---" + $location+ "-" + $VMFlavor.ToLower()) -replace " ","-"
 $regionSuffix = $regionSuffix -replace "_","-"
 
-$fullSuffix = $regionSuffix + "-Booted-and-Verified.vhd"
+$fullSuffix = $regionSuffix + "-Booted-and-Verified"
 
 login_azure $sourceRG $sourceSA $location
 
@@ -127,10 +124,17 @@ if ($? -eq $false -or $existingContainer -eq $null) {
 
 foreach ($oneblob in $blobs) {
     $fullName=$oneblob.Name
+    
     if ($removeTag -ne "") {
-        $targetName=$fullName.Replace($removeTag,$fullSuffix)
+        if ($removeTag -match ".*.vhd") {
+            $targetName=$fullName.Replace($removeTag,$fullSuffix)
+        } else {
+            $targetName = $fullName -replace ".vhd",""
+            $targetName = $targetName.Replace($removeTag,$fullSuffix)
+        }
     } else {
-        $targetName=$fullName + $fullSuffix
+        $targetName = $fullName -replace ".vhd",""
+        $targetName = $targetName + $fullSuffix
     }
 
     if ($targetName.Length -gt 62) {
@@ -143,6 +147,7 @@ foreach ($oneblob in $blobs) {
         }
         Write-Warning "NOTE:  Image name $targetName was truncated to 62 characters"
     }
+    $targetName = $targetName + ".vhd"
 
     $blobIsInDest = $false
     if ($existingBlobs.Name -contains $targetName) {
