@@ -61,7 +61,7 @@ $machineFullNames = {$full_names_array}.Invoke()
 $machineFullNames.Clear()
 
 login_azure $sourceRG $sourceSA $location
-Set-AzureRmCurrentStorageAccount –ResourceGroupName $rg –StorageAccountName $s
+Set-AzureRmCurrentStorageAccount –ResourceGroupName $sourceRG –StorageAccountName $sourceSA
 
 $vmName = $vmNameArray[0]
 if ($generalizeAll -eq $false -and $vmNameArray.Count -eq 0) {
@@ -138,8 +138,7 @@ $scriptBlockText = {
         [string] $sourceRG,
         [string] $sourceSA,
         [string] $sourceContainer,
-        [string] $location,
-        [string] $vm_name
+        [string] $location
     )
 
     . C:\Framework-Scripts\common_functions.ps1
@@ -149,12 +148,12 @@ $scriptBlockText = {
     Set-AzureRmCurrentStorageAccount –ResourceGroupName $rg –StorageAccountName $s
     #
     #  This might not be the best way, but I only have 23 characters here, so we'll go with what the user entered
-    $bar=$vm_name.Replace("---","{")
+    $bar=$machine_name.Replace("---","{")
     $vhdPrefix = $bar.split("{")[0]
     if ($vhdPrefix.Length -gt 22) {
         $vhdPrefix = $vhdPrefix.substring(0,23)
     }
-    Write-Host "Set the VHD Prefix to " $vhdPrefix
+    Write-Host "Set the VHD Prefix to " $vhdPrefix        
 
     Start-Transcript -Path C:\temp\transcripts\generalize_$machine_name.transcript -Force
     write-host "Stopping machine $machine_name for VHD generalization"
@@ -169,7 +168,7 @@ $scriptBlockText = {
     write-host "Deleting machine $machine_name"
     Remove-AzureRmVM -Name $machine_name -ResourceGroupName $sourceRG -Force
 
-    Write-Host "Generalization of machine $vm_name complete."
+    Write-Host "Generalization of machine $machine_name complete."
 
     Stop-Transcript
 }
@@ -182,7 +181,9 @@ foreach ($vm_name in $machineBaseNames) {
     $nameIndex = $nameIndex + 1
     $jobName = "generalize_" + $machine_name
 
-    Start-Job -Name $jobName -ScriptBlock $scriptBlock -ArgumentList $machine_name, $sourceRG, $sourceContainer, $vm_name
+    Write-Host "Launching job to save the off-line state of machine $vm_name ($machine_name)"
+
+    Start-Job -Name $jobName -ScriptBlock $scriptBlock -ArgumentList $machine_name, $sourceRG, $sourceContainer
 }
 
 start-sleep -seconds 10

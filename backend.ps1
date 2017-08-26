@@ -531,9 +531,12 @@ class AzureBackend : Backend {
 
         $image = New-AzureRmImage -ImageName $InstanceName -ResourceGroupName $this.ResourceGroupName -Image $imageConfig
 
+        $vhdURI = ("https://{0}.blob.core.windows.net/{1}/{2}.vhd" -f `
+                       @($this.StorageAccountName, $this.ContainerName, $InstanceName))
+
         $cred = make_cred_initial
-        $vm = Set-AzureRmVMSourceImage -VM $vm -Id $image.Id
-        $vm = Set-AzureRmVMOSDisk -VM $vm -name $InstanceName -CreateOption fromImage -Caching ReadWrite
+        $vm = Set-AzureRmVMSourceImage -VM $vm -Id $image.Id 
+        $vm = Set-AzureRmVMOSDisk -VM $vm -name $InstanceName -CreateOption fromImage -Caching ReadWrite -Linux -VhdUri $vhdURI
         $vm = Set-AzureRmVMOperatingSystem -VM $vm -Linux -ComputerName $InstanceName -Credential $cred
 
         Write-Host "Adding the network interface" -ForegroundColor Yellow
