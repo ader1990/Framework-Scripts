@@ -39,6 +39,9 @@ $currentSuffix = $currentSuffix.Trim()
 $newSuffix = $newSuffix.Trim()
 
 Start-Transcript -Path C:\temp\transcripts\create_drone_from_container.transcript -Force
+$overallTimer = [Diagnostics.Stopwatch]::StartNew()
+
+$commandTimer = [Diagnostics.Stopwatch]::StartNew()
 
 . "C:\Framework-Scripts\common_functions.ps1"
 . "C:\Framework-Scripts\secrets.ps1"
@@ -126,6 +129,11 @@ C:\azure-linux-automation\tools\dos2unix.exe -n C:\Framework-Scripts\make_drone.
 C:\azure-linux-automation\tools\dos2unix.exe -n C:\Framework-Scripts\secrets.sh c:\temp\nix_files\secrets.sh
 C:\azure-linux-automation\tools\dos2unix.exe -n C:\Framework-Scripts\secrets.ps1 c:\temp\nix_files\secrets.ps1
 
+$commandTimer.Stop()
+$elapsed = $commandTimer.Elapsed
+Write-Host "It required $elapsed to set up"
+$commandTimer = [Diagnostics.Stopwatch]::StartNew()
+
 write-host "Copying blobs..."
 $completeSuffix = $fullSuffix + ".vhd"
 $completeDestSuffix = $fullDestSuffix + ".vhd"
@@ -134,7 +142,12 @@ C:\Framework-Scripts\copy_single_image_container_to_container.ps1 -sourceSA $sou
                                        -sourceExtension $completeSuffix -destExtension $completeDestSuffix -location $location `
                                        -overwriteVHDs $overwriteVHDs -makeDronesFromAll $makeDronesFromAll -vmNames $vmNameArray
 
-
+$commandTimer.Stop()
+$elapsed = $commandTimer.Elapsed
+Write-Host "It required $elapsed copy the blobs"
+$commandTimer = [Diagnostics.Stopwatch]::StartNew()
+                                       
+                                       
 $scriptBlockString = 
 {
     param ($vmName,
@@ -307,6 +320,7 @@ write-host "Setting up the drone jobs..."
 get-job | Stop-Job
 get-job | Remove-Job
 
+
 Set-AzureRmCurrentStorageAccount –ResourceGroupName $destRG –StorageAccountName $destSA
 foreach ($vmName in $vmNameArray) { 
     $jobName=$vmName + "-drone-job"
@@ -321,6 +335,11 @@ foreach ($vmName in $vmNameArray) {
 
     Write-Host "Just launched job $jobName"
 }
+
+$commandTimer.Stop()
+$elapsed = $commandTimer.Elapsed
+Write-Host "It required $elapsed get to machine launch"
+$commandTimer = [Diagnostics.Stopwatch]::StartNew()
 
 start-sleep -Seconds 10
 
@@ -349,6 +368,12 @@ while ($notDone -eq $true) {
     Start-Sleep -Seconds 10
 }
 
+$commandTimer.Stop()
+$elapsed = $commandTimer.Elapsed
+Write-Host "It required $elapsed to make the drones"
+$commandTimer = [Diagnostics.Stopwatch]::StartNew()
+
+
 Write-Host "All jobs have completed.  Checking results (this will take a moment...)"
 
 #
@@ -361,6 +386,11 @@ $status = c:\Framework-Scripts\run_command_on_machines_in_group.ps1 -requestedNa
                                                                     -suffix $newSuffix -location $location -command "/bin/uname -a" `
                                                                     -retryCount 5
 $status
+$commandTimer.Stop()
+$elapsed = $commandTimer.Elapsed
+Write-Host "It required $elapsed verify connectivity"
+$commandTimer = [Diagnostics.Stopwatch]::StartNew()
+
 
 if ($status -contains "FAILED to establish PSRP connection") {
     Write-Host "Errors found in this job, so adding the job output to the log..."
@@ -379,6 +409,10 @@ if ($status -contains "FAILED to establish PSRP connection") {
 
 get-job | stop-job
 get-job | remove-job
+
+$overallTimer.Stop()
+$elapsed = $overallTimer.Elapsed
+Write-Host "It required $elapsed to execute this script"
 
 Stop-Transcript
 

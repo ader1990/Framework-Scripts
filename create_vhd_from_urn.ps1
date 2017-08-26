@@ -33,6 +33,7 @@ get-job | Stop-Job
 get-job | remove-job
 
 Start-Transcript C:\temp\transcripts\create_vhd_from_urn.log -Force
+$overallTimer = [Diagnostics.Stopwatch]::StartNew()
 
 $vmNames_array=@()
 $vmNameArray = {$vmNames_array}.Invoke()
@@ -74,6 +75,8 @@ $location=($location.tolower()).Replace(" ","")
 #  Log in without changing to the RG or SA.  This is intentional
 login_azure
 
+$commandTimer = [Diagnostics.Stopwatch]::StartNew()
+
 $saLength = $destSA.Length
 Write-Host "Looking for storage account $destSA in resource group $destRG.  Length of name is $saLength"
 #
@@ -91,7 +94,11 @@ if ($status -eq $true -and $existingGroup -ne $null -and $useExistingResources -
 } else {
     write-host "Using existing resource group $destRG"
 }
+$commandTimer.Stop()
+$elapsed = $commandTimer.Elapsed
+Write-Host "It required $elapsed to clean or validate the resource group"
 
+$commandTimer = [Diagnostics.Stopwatch]::StartNew()
 #
 #
 #  Change the name of the SA to include the region, then Now see if the SA exists
@@ -109,7 +116,11 @@ if ($? -eq $false -or $existing -eq $null) {
     Write-Host "Complete." -ForegroundColor Green
 }
 Set-AzureRmCurrentStorageAccount –ResourceGroupName $destRG –StorageAccountName $destSA
+$commandTimer.Stop()
+$elapsed = $commandTimer.Elapsed
+Write-Host "It required $elapsed to clean or validate the storage account"
 
+$commandTimer = [Diagnostics.Stopwatch]::StartNew()
 Get-AzureStorageBlob -Container "ready-for-bvt" -Prefix $vmName 
 if ($? -eq $false) {
     Write-Host "creating the BVT ready container" -ForegroundColor Yellow
@@ -121,7 +132,11 @@ if ($? -eq $false) {
     New-AzureStorageContainer -Name "drones" -Permission Blob
     Write-Host "Complete." -ForegroundColor Green
 }
+$commandTimer.Stop()
+$elapsed = $commandTimer.Elapsed
+Write-Host "It required $elapsed to clean or validate the containers"
 
+$commandTimer = [Diagnostics.Stopwatch]::StartNew()
 . C:\Framework-Scripts\backend.ps1
 # . "$scriptPath\backend.ps1"
 
@@ -146,7 +161,12 @@ $azureBackend.blobURN = $blobURN
 $azureBackend.suffix = $suffix
 
 $azureInstance = $azureBackend.GetInstanceWrapper("AzureSetup")
+if ($azureInstance -eq $null) {write-host "Damnit"}
 $azureInstance.SetupAzureRG()
+
+$commandTimer.Stop()
+$elapsed = $commandTimer.Elapsed
+Write-Host "It required $elapsed to clean set up the NSG and Network"
 
 #
 #  If the account does not exist, create it.
@@ -167,6 +187,7 @@ $scriptBlockString =
             [string] $useExistingResources
             )    
     Start-Transcript C:\temp\transcripts\create_vhd_from_urn_$vmName.log -Force
+    $commandTimer = [Diagnostics.Stopwatch]::StartNew()
 
     . C:\Framework-Scripts\common_functions.ps1
     . C:\Framework-Scripts\secrets.ps1
@@ -214,6 +235,12 @@ $scriptBlockString =
     $azureInstance = $azureBackend.GetInstanceWrapper($vmName)
 
     $azureInstance.CreateFromURN()
+
+    $commandTimer.Stop()
+    $elapsed = $commandTimer.Elapsed
+    Write-Host "It required $elapsed to create the VM from the URN"
+
+    $commandTimer = [Diagnostics.Stopwatch]::StartNew()
     
     #
     #  Disable Cloud-Init so it doesn't try to deprovision the machine (known bug in Azure)
@@ -233,6 +260,10 @@ $scriptBlockString =
             break
         }
     }
+    $commandTimer.Stop()
+    $elapsed = $commandTimer.Elapsed
+    Write-Host "It required $elapsed to start the machine"
+    $commandTimer = [Diagnostics.Stopwatch]::StartNew()
 
     if ($false -eq $machineIsUp) {
         write-host "Could not contact machine $vmName.  Machine did not get IP address after 300 seconds"
@@ -282,6 +313,9 @@ $scriptBlockString =
     $azureInstance.Cleanup()
 
     Write-Host "Machine $vmName is ready for assimilation..." -ForegroundColor Green
+    $commandTimer.Stop()
+    $elapsed = $commandTimer.Elapsed
+    Write-Host "It required $elapsed for the script block to execute"
 
     Stop-Transcript
 }
@@ -339,6 +373,10 @@ while ($notDone -eq $true) {
     }
     Start-Sleep -Seconds 10
 }
+
+$overallTimer.Stop()
+$elapsed = $overallTimer.Elapsed
+Write-Host "It required $elapsed to complete this task"
 
 Stop-Transcript
 #

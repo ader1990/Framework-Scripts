@@ -50,6 +50,7 @@ class Instance {
 
     [String] SetupAzureRG() 
     {
+        write-host "Setting up Azure RG"
         return $this.Backend.SetupAzureRG()
     }
 
@@ -59,7 +60,8 @@ class Instance {
 }
 
 class AzureInstance : Instance {
-    AzureInstance ($Backend, $Name) : base ($Backend, $Name) {}
+    
+    AzureInstance ($Backend, $Name) : base ($Backend, $Name) {write-host "AzureInstance"}
 }
 
 class HypervInstance : Instance {
@@ -153,43 +155,49 @@ class AzureBackend : Backend {
     [String] $enableBootDiagnostics = "yes"
 
     AzureBackend ($Params) : base ($Params) {
+        Write-Debug "Starting the backend"
         if (Test-Path $this.CommonFunctionsPath) {
             . $this.CommonFunctionsPath
         } else {
+            Write-Debug "Throwing for no common functions"
             throw "??? Common Functions file file does not exist."
         }
-
+        write-Debug "Backend CP 1"
         if (Test-Path $this.SecretsPath) {
             . $this.SecretsPath
         } else {
+            Write-Debug "Throwing for no secrets functions"
             throw "Secrets file does not exist."
         }
+        write-Debug "Backend CP 2"
     }
 
     [Instance] GetInstanceWrapper ($InstanceName) {
         if (Test-Path $this.CommonFunctionsPath) {
             . $this.CommonFunctionsPath
         } else {
+            Write-Debug "Throwing (2) for no secrets functions"
             throw "??? Common Functions file file does not exist."
         }
 
         if (Test-Path $this.SecretsPath) {
             . $this.SecretsPath
         } else {
+            Write-Debug "Throwing (2) for no secrets functions"
             throw "Secrets file does not exist."
         }
-write-host  "Checkpoint 1"
+write-Debug  "Checkpoint 1"
         $this.suffix = $this.suffix -replace "_","-"
         login_azure $this.ResourceGroupName $this.StorageAccountName $this.Location
-        write-host  "Checkpoint 2"
+        write-Debug  "Checkpoint 2"
         $flavLow = $this.VMFlavor
         $flavLow = $flavLow.ToLower()
         $regionSuffix = ("---" + $this.Location + "-" + $flavLow) -replace " ","-"
         $regionSuffix = $regionSuffix -replace "_","-"
-        write-host  "Checkpoint 3"
+        write-Debug  "Checkpoint 3"
         $bar=$InstanceName.Replace("---","{")
         $imageName = $bar.split("{")[0]
-        write-host  "Checkpoint 4"
+        write-Debug  "Checkpoint 4"
         $imageName = $imageName + $regionSuffix
         $imageName = $imageName + $this.suffix
         $imageName = $imageName  -replace ".vhd", ""
@@ -205,6 +213,12 @@ write-host  "Checkpoint 1"
         }
         write-host  "Checkpoint 5"
         $instance = [AzureInstance]::new($this, $imageName)
+        if ($instance -eq $null) {
+            write-host "NULL INSTANCE"
+        } else {
+            write-host "All good"
+        }
+        
         return $instance
     }
 

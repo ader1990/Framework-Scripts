@@ -58,6 +58,8 @@ get-job | remove-job  > $null
 
 Start-Transcript C:\temp\transcripts\run_borg_azure.log -Force
 
+$overallTimer = [Diagnostics.Stopwatch]::StartNew()
+
 Set-StrictMode -Version 2.0
 
 . C:\Framework-Scripts\common_functions.ps1
@@ -728,6 +730,11 @@ if ($? -eq $true -and $existingGroup -ne $null -and $global:CleanRG -eq $true) {
     New-AzureRmResourceGroup -Name $global:workingResourceGroupName  -Location $global:location
 }
 
+$commandTimer.Stop()
+$elapsed = $commandTimer.Elapsed
+Write-Host "It required $elapsed set up the resorurce group"
+$commandTimer = [Diagnostics.Stopwatch]::StartNew()
+
 #
 #
 #  Change the name of the SA to include the region, then Now see if the SA exists
@@ -745,6 +752,10 @@ if ($? -eq $false -or $global:CleanRG -eq $true) {
 }
 Set-AzureRmCurrentStorageAccount –ResourceGroupName $global:workingResourceGroupName –StorageAccountName $global:workingStorageAccountName 
 Write-Host "Rebuilt..."
+$commandTimer.Stop()
+$elapsed = $commandTimer.Elapsed
+Write-Host "It required $elapsed to rebuild the storage acount"
+$commandTimer = [Diagnostics.Stopwatch]::StartNew()
 
 Get-AzureStorageContainer -Name $global:workingContainerName
 if ($? -eq $false) {
@@ -756,6 +767,10 @@ if ($? -eq $false) {
     Write-Host "And populated."
 } 
 
+$commandTimer.Stop()
+$elapsed = $commandTimer.Elapsed
+Write-Host "It required $elapsed populate the containers"
+$commandTimer = [Diagnostics.Stopwatch]::StartNew()
 #
 #
 #  Copy the virtual machines to the staging container
@@ -763,6 +778,10 @@ if ($? -eq $false) {
 get-job | Stop-Job
 get-job | Remove-Job          
 copy_azure_machines
+$commandTimer.Stop()
+$elapsed = $commandTimer.Elapsed
+Write-Host "It required $elapsed copy the images"
+$commandTimer = [Diagnostics.Stopwatch]::StartNew()
 
 #
 #  Launch the virtual machines
@@ -771,6 +790,10 @@ get-job | Stop-Job
 get-job | Remove-Job        
 create_azure_topology
 write-host "$global:num_remaining machines have been launched.  Waiting for completion..."
+$commandTimer.Stop()
+$elapsed = $commandTimer.Elapsed
+Write-Host "It required $elapsed create the topology"
+$commandTimer = [Diagnostics.Stopwatch]::StartNew()
 
 #
 #  Wait for the machines to report back
@@ -796,6 +819,10 @@ Write-Host ""
 $global:timer_is_running=0
 $timer.stop()
 Get-EventSubscriber -SourceIdentifier $timerName | Unregister-Event
+
+$commandTimer.Stop()
+$elapsed = $commandTimer.Elapsed
+Write-Host "It required $elapsed complete the timer loop"
 
 if ($global:num_remaining -eq 0) {
     Write-Host "                          All machines have come back up.  Checking results." -ForegroundColor green
@@ -835,6 +862,10 @@ if ($global:num_remaining -eq 0) {
     }
 
 Write-Host ""
+
+$overallTimer.Stop()
+$elapsed = $overallTimer.Elapsed
+Write-Host "It required $elapsed to set up"
 
 Stop-Transcript
 

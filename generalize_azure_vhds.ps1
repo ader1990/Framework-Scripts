@@ -36,6 +36,9 @@ $suffix = $suffix -replace "_","-"
 . C:\Framework-Scripts\secrets.ps1
 
 Start-Transcript C:\temp\transcripts\generalize_vhds.log
+$overallTimer = [Diagnostics.Stopwatch]::StartNew()
+
+$commandTimer = [Diagnostics.Stopwatch]::StartNew()
 
 [System.Collections.ArrayList]$vmNames_array
 $vmNameArray = {$vmNames_array}.Invoke()
@@ -106,7 +109,12 @@ foreach ($vmName in $machineBaseNames) {
     Get-AzureStorageBlob -Container $systemContainer -Prefix $vmName | ForEach-Object {Remove-AzureStorageBlob -Blob $_.Name -Container $systemContainer}   
 }
 
+$commandTimer.Stop()
+$elapsed = $commandTimer.Elapsed
+Write-Host "It required $elapsed to set up"
+$commandTimer = [Diagnostics.Stopwatch]::StartNew()
 Write-Host "Making sure we're up to date"
+
 C:\Framework-Scripts\run_command_on_machines_in_group.ps1 -requestedNames $requestedNames -destSA $sourceSA -destRG $sourceRG `
                                                           -suffix $suffix -asRoot "True" -location $location -command "cd /HIPPEE/Framework-Scripts; git pull"
 Write-Host "Replacing cloud-init..."
@@ -131,6 +139,11 @@ if ($? -eq $false) {
     exit 1
 }
 
+$commandTimer.Stop()
+$elapsed = $commandTimer.Elapsed
+Write-Host "It required $elapsed generalize and stop the machines"
+$commandTimer = [Diagnostics.Stopwatch]::StartNew()
+
 $scriptBlockText = {
     
     param (
@@ -143,6 +156,8 @@ $scriptBlockText = {
 
     . C:\Framework-Scripts\common_functions.ps1
     . C:\Framework-Scripts\secrets.ps1
+  
+    $commandTimer = [Diagnostics.Stopwatch]::StartNew()
 
     login_azure $sourceRG $sourceSA $location
     Set-AzureRmCurrentStorageAccount –ResourceGroupName $rg –StorageAccountName $s
@@ -170,6 +185,10 @@ $scriptBlockText = {
 
     Write-Host "Generalization of machine $machine_name complete."
 
+    $commandTimer.Stop()
+    $elapsed = $commandTimer.Elapsed
+    Write-Host "It required $elapsed deprovision in the scriptblock"
+
     Stop-Transcript
 }
 
@@ -183,7 +202,7 @@ foreach ($vm_name in $machineBaseNames) {
 
     Write-Host "Launching job to save the off-line state of machine $vm_name ($machine_name)"
 
-    Start-Job -Name $jobName -ScriptBlock $scriptBlock -ArgumentList $machine_name, $sourceRG, $sourceContainer
+    Start-Job -Name $jobName -ScriptBlock $scriptBlock -ArgumentList $machine_name, $sourceRG, $sourceSA, $sourceContainer, $location
 }
 
 start-sleep -seconds 10
@@ -236,6 +255,11 @@ if ($Failed -eq $true) {
     Stop-Transcript
     exit 1
 } 
+
+$commandTimer.Stop()
+$elapsed = $commandTimer.Elapsed
+Write-Host "It required $elapsed finish the generalization process"
+$commandTimer = [Diagnostics.Stopwatch]::StartNew()
 
 #
 #  The generalization process, if successful, placed the VHDs in a location below the current
@@ -367,6 +391,14 @@ while ($stillCopying -eq $true) {
         Write-Host "All copy jobs have completed.  Your generalized VHDs are in $destRG / $destSA / $destContainer.  It could be groovy." -ForegroundColor Green
     }
 }
+
+$commandTimer.Stop()
+$elapsed = $commandTimer.Elapsed
+Write-Host "It required $elapsed finish the generalization"
+
+$overalTimer.Stop()
+$elapsed = $overalTimer.Elapsed
+Write-Host "It required $elapsed run this script"
 Stop-Transcript
 
 exit 0
