@@ -60,6 +60,9 @@ git pull
 
 $blobFilter = '*.vhd'
 if ($removeTag -ne "") {
+    if (-Not($removeTag -match ".*.vhd")) {
+        $removeTag = $removeTag + ".vhd"
+    }
     $blobFilter = '*' + $removeTag
 }
 Write-Host "Blob filter is $blobFilter"
