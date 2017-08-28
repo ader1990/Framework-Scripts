@@ -542,10 +542,11 @@ write-Debug  "Checkpoint 1"
         # $blobURIRaw = ("https://{0}.blob.core.windows.net/{1}/{2}.vhd" -f `
         #               @($this.StorageAccountName, $this.ContainerName, $InstanceName))
 
-        # $imageConfig = New-AzureRmImageConfig -Location $this.Location
-        # $imageConfig = Set-AzureRmImageOsDisk -Image $imageConfig -OsState Generalized -BlobUri $blobURIRaw
+        $imageConfig = New-AzureRmImageConfig -Location $this.Location
+        $imageConfig = Set-AzureRmImageOsDisk -Image $imageConfig -OsState Generalized -BlobUri $blobURIRaw
 
-        # $image = New-AzureRmImage -ImageName $InstanceName -ResourceGroupName $this.ResourceGroupName -Image $imageConfig
+        $image = New-AzureRmImage -ImageName $InstanceName -ResourceGroupName $this.ResourceGroupName -Image $imageConfig
+        $vm = Set-AzureRmVMSourceImage -VM $vm -Id $image.Id
 
         $vhdURI = ("https://{0}.blob.core.windows.net/{1}/{2}.vhd" -f `
                        @($this.StorageAccountName, $this.ContainerName, $InstanceName))
@@ -559,8 +560,9 @@ write-Debug  "Checkpoint 1"
         Add-AzureRmVMNetworkInterface -VM $vm -Id $VNIC.Id
         
         Write-Host "Setting up the OS disk" -ForegroundColor Yellow
-        $vm = Set-AzureRmVMOSDisk -VM $vm -name $InstanceName -CreateOption fromImage -SourceImageUri $blobURIRaw `
-                                  -Caching ReadWrite -Linux -VhdUri $vhdURI
+        # $vm = Set-AzureRmVMOSDisk -VM $vm -name $InstanceName -CreateOption fromImage -SourceImageUri $blobURIRaw `
+        #                          -Caching ReadWrite -Linux -VhdUri $vhdURI
+        $vm = Set-AzureRmVMOSDisk -VM $vm -name $InstanceName -CreateOption fromImage -Caching ReadWrite -Linux -VhdUri $vhdURI
                                   
         if ($this.enableBootDiagnostics -ne "Yes") {
             Write-Host "Disabling boot diagnostics" -ForegroundColor Yellow
