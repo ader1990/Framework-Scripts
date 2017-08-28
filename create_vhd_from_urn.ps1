@@ -337,7 +337,7 @@ foreach ($vmName in $vmNameArray) {
     $jobName=$vmName + "-intake-job"
     Start-Job -Name $jobName -ScriptBlock $scriptBlock -ArgumentList $vmName,$VMFlavor,$blobURN,$destRG,$destSA,`
                                                                       $destContainer,$location,$suffix,$NSG,`
-                                                                      $vnetName,$subnetName,$useExistingResources
+                                                                      $vnetName,$subnetName,$useExistingResources,$timeStarted
     if ($? -ne $true) {
         Write-Host "Error starting intake_machine job ($jobName) for $vmName.  This VM must be manually examined!!" -ForegroundColor red
         Stop-Transcript
@@ -368,7 +368,7 @@ while ($notDone -eq $true) {
             $useColor = "Magenta"
         }
         write-host "    Job $jobName is in state $jobState" -ForegroundColor $useColor
-        $logName = "C:\temp\transcripts\create_vhd_from_URN_scriptblock-" + $vmName + "-" + $timeStarted
+        $logFileName = "C:\temp\transcripts\create_vhd_from_URN_scriptblock-" + $vmName + "-" + $timeStarted
         $logLines = Get-Content -Path $logFileName -Tail 5
         if ($? -eq $true) {
             Write-Host "         Last 5 lines from the log file:" -ForegroundColor Cyan

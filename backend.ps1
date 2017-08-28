@@ -538,21 +538,24 @@ write-Debug  "Checkpoint 1"
         #  Set up the OS disk
         $blobURIRaw = $this.blobURI        
         Write-Host "Setting up the OS disk.  Image name is $InstanceName, from URI $blobURIRaw"
+
         # $blobURIRaw = ("https://{0}.blob.core.windows.net/{1}/{2}.vhd" -f `
         #               @($this.StorageAccountName, $this.ContainerName, $InstanceName))
 
-        $imageConfig = New-AzureRmImageConfig -Location $this.Location
-        $imageConfig = Set-AzureRmImageOsDisk -Image $imageConfig -OsState Generalized -BlobUri $blobURIRaw
+        # $imageConfig = New-AzureRmImageConfig -Location $this.Location
+        # $imageConfig = Set-AzureRmImageOsDisk -Image $imageConfig -OsState Generalized -BlobUri $blobURIRaw
 
-        $image = New-AzureRmImage -ImageName $InstanceName -ResourceGroupName $this.ResourceGroupName -Image $imageConfig
+        # $image = New-AzureRmImage -ImageName $InstanceName -ResourceGroupName $this.ResourceGroupName -Image $imageConfig
 
         $vhdURI = ("https://{0}.blob.core.windows.net/{1}/{2}.vhd" -f `
                        @($this.StorageAccountName, $this.ContainerName, $InstanceName))
 
         $cred = make_cred_initial
-        $vm = Set-AzureRmVMSourceImage -VM $vm -Id $image.Id 
-        $vm = Set-AzureRmVMOSDisk -VM $vm -name $InstanceName -CreateOption fromImage -Caching ReadWrite -Linux -VhdUri $vhdURI
+        # $vm = Set-AzureRmVMSourceImage -VM $vm -Id $image.Id 
         $vm = Set-AzureRmVMOperatingSystem -VM $vm -Linux -ComputerName $InstanceName -Credential $cred
+        
+        $vm = Set-AzureRmVMOSDisk -VM $vm -name $InstanceName -CreateOption fromImage -SourceImageUri $blobURIRaw `
+                                  -Caching ReadWrite -Linux -VhdUri $vhdURI
 
         Write-Host "Adding the network interface" -ForegroundColor Yellow
         Add-AzureRmVMNetworkInterface -VM $vm -Id $VNIC.Id
