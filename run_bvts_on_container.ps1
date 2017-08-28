@@ -95,8 +95,16 @@ if ($? -eq $true) {
 }
 
 if (($wasThere -eq $true) -and ($overwriteVHDs -eq $true)) {
-    Remove-AzureRmStorageAccount -ResourceGroupName $destRG -Name $destSA -Force
-    New-AzureRmStorageAccount -ResourceGroupName $destRG -Name $destSA -Kind Storage -Location $location -SkuName Standard_LRS
+    #
+    #  Was the container there?
+    Set-AzureRmCurrentStorageAccount –ResourceGroupName $destRG –StorageAccountName $destSA 
+    
+    $containerWasThere = Get-AzureStorageContainer -Name $destContainer
+    if ($? -eq $true -and $containerWasThere -ne $null) {
+        Remove-AzureStorageContainer -Name $destContainer -Force
+    }
+    # Remove-AzureRmStorageAccount -ResourceGroupName $destRG -Name $destSA -Force
+    # New-AzureRmStorageAccount -ResourceGroupName $destRG -Name $destSA -Kind Storage -Location $location -SkuName Standard_LRS
 } elseif (($wasThere -eq $true) -and ($OverwriteVHDs -eq $false)) {
     if ($currentLoc -ne $location) {
         Write-Error "The storage account exists, but it is in region $currentLoc, while the tests specify region $location.  Tests will exit."
