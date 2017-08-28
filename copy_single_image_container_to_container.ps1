@@ -35,7 +35,7 @@ $location = $location.Trim()
 $sourceExtension = $sourceExtension.Trim()
 $destExtension = $destExtension.Trim()
 
-$logName= "C:\temp\transcripts\copy_single_image_container_to_container-" + $VMNamesIn[0] + "-" + (get-date -format s)
+$logName= "C:\temp\transcripts\copy_single_image_container_to_container-" + $VMNamesIn[0] + "-" + (get-date -format s).replace(":","-")
 Start-Transcript -path $logName -Force
 
 . "C:\Framework-Scripts\common_functions.ps1"

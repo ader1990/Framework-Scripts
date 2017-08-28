@@ -31,7 +31,7 @@ $suffix = $suffix -replace "_","-"
 . C:\Framework-Scripts\common_functions.ps1
 . C:\Framework-Scripts\secrets.ps1
 
-$logName = "C:\temp\transcripts\create_session_to_machine-" + $requestedName + "-" + (Get-Date -Format s)
+$logName = "C:\temp\transcripts\create_session_to_machine-" + $requestedName + "-" + (Get-Date -Format s).replace(":","-")
 Start-Transcript -path $logName -force
 
 login_azure $DestRG $DestSA $location > $null

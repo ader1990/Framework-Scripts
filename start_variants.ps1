@@ -80,7 +80,7 @@ exit 1
 
 login_azure $sourceRG $sourceSA $location
 
-$timeStarted = Get-Date -Format s
+$timeStarted = (Get-Date -Format s).replace(":","-")
 
 $blobs = Get-AzureStorageBlob -Container $sourceContainer
 

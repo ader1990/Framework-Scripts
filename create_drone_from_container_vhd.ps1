@@ -38,7 +38,7 @@ $subnet = $subnet.Trim()
 $currentSuffix = $currentSuffix.Trim()
 $newSuffix = $newSuffix.Trim()
 
-$timeStarted = Get-Date -Format s
+$timeStarted = (Get-Date -Format s).replace(":","-")
 $logName = "C:\temp\transcripts\create_drone_from_container" + $timeStarted
 
 Start-Transcript -Path $logName -Force

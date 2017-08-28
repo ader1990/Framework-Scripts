@@ -35,7 +35,7 @@ $suffix = $suffix -replace "_","-"
 . C:\Framework-Scripts\common_functions.ps1
 . C:\Framework-Scripts\secrets.ps1
 
-$logName = "C:\temp\transcripts\generalize_vhds-" + (Get-Date -Format s)
+$logName = "C:\temp\transcripts\generalize_vhds-" + (Get-Date -Format s).replace(":","-")
 Start-Transcript -path $logName -force
 
 $overallTimer = [Diagnostics.Stopwatch]::StartNew()
@@ -172,7 +172,7 @@ $scriptBlockText = {
     }
     Write-Host "Set the VHD Prefix to " $vhdPrefix        
 
-    $logName = "C:\temp\transcripts\generalize_vhds_scriptblock-" + $machine_name + "-" + (Get-Date -Format s)
+    $logName = "C:\temp\transcripts\generalize_vhds_scriptblock-" + $machine_name + "-" + (Get-Date -Format s).replace(":","-")
     Start-Transcript -path $logName -force
 
     write-host "Stopping machine $machine_name for VHD generalization"

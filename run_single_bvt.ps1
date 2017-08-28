@@ -10,7 +10,7 @@ $configFileName = $configFileName.Trim()
 $distro = $distro.Trim()
 $testCycle = $testCycle.Trim()
 
-$logFileName = "c:\temp\transcripts\run_single_bvt-" + $sourceName + "-" + (get-date -format s)
+$logFileName = "c:\temp\transcripts\run_single_bvt-" + $sourceName + "-" + (get-date -format s).replace(":","-")
 Start-Transcript $logFileName -Force
 
 . "C:\Framework-Scripts\secrets.ps1"

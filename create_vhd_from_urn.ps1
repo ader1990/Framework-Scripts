@@ -32,7 +32,7 @@ $suffix = $suffix -replace "_","-"
 get-job | Stop-Job
 get-job | remove-job
 
-$timeStarted = Get-Date -Format s
+$timeStarted = (Get-Date -Format s).replace(":","-")
 $logName = "C:\temp\transcripts\create_vhd_from_URN-" + $timeStarted
 Start-Transcript -path $logName -force
 

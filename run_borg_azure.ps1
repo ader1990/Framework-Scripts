@@ -56,7 +56,7 @@ $CleanRG = $CleanRG.Trim()
 get-job | Stop-Job  > $null
 get-job | remove-job  > $null
 
-$logName = "C:\temp\transcripts\run_borg_azure-" + (Get-Date -Format s)
+$logName = "C:\temp\transcripts\run_borg_azure-" + (Get-Date -Format s).replace(":","-")
 Start-Transcript -path $logName -force
 
 $overallTimer = [Diagnostics.Stopwatch]::StartNew()
@@ -406,7 +406,7 @@ $action={
     . C:\Framework-Scripts\common_functions.ps1
     . C:\Framework-Scripts\secrets.ps1
 
-    $logName = "C:\temp\transcripts\run_borg_azure-timer_scriptblock-" + (Get-Date -Format s)
+    $logName = "C:\temp\transcripts\run_borg_azure-timer_scriptblock-" + (Get-Date -Format s).replace(":","-")
     Start-Transcript -path $logName -force
     
     function checkMachine ([MonitoredMachine]$machine) {
