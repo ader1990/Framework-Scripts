@@ -38,7 +38,9 @@ $subnet = $subnet.Trim()
 $currentSuffix = $currentSuffix.Trim()
 $newSuffix = $newSuffix.Trim()
 
-$logName = "C:\temp\transcripts\create_drone_from_container-" + (Get-Date -Format s)
+$timeStarted = Get-Date -Format s
+$logName = "C:\temp\transcripts\create_drone_from_container" + $timeStarted
+
 Start-Transcript -Path $logName -Force
 $overallTimer = [Diagnostics.Stopwatch]::StartNew()
 
@@ -164,11 +166,12 @@ $scriptBlockString =
             $NSG,
             $network,
             $subnet,
-            $vmFlavor
+            $vmFlavor,
+            $timeStarted
             )
             write-host "Checkpoint 1" -ForegroundColor Cyan
     
-    $logName = "C:\temp\transcripts\create-drone-from-container-scriptblock-" + $vmName + "-" + (Get-Date -Format s)
+    $logName = "C:\temp\transcripts\create-drone-from-container-scriptblock-" + $vmName + "-" + $timeStarted
     Start-Transcript $logName -Force
     write-host "Checkpoint 2" -ForegroundColor Cyan
     . "C:\Framework-Scripts\common_functions.ps1"
@@ -329,7 +332,7 @@ foreach ($vmName in $vmNameArray) {
     $jobName=$vmName + "-drone-job"
     Start-Job -Name $jobName -ScriptBlock $scriptBlock -ArgumentList $vmName,$sourceRG,$sourceSA,$sourceContainer,$destRG,$destSA,`
                                                                       $destContainer,$location,$currentSuffix,$newSuffix,$NSG,`
-                                                                      $network,$subnet,$vmFlavor
+                                                                      $network,$subnet,$vmFlavor,$timeStarted
     if ($? -ne $true) {
         Write-Host "Error starting make_drone job ($jobName) for $vmName.  This VM must be manually examined!!" -ForegroundColor red
         Stop-Transcript

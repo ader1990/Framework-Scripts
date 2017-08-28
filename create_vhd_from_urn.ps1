@@ -32,7 +32,8 @@ $suffix = $suffix -replace "_","-"
 get-job | Stop-Job
 get-job | remove-job
 
-$logName = "C:\temp\transcripts\create_vhd_from_URN-" + (Get-Date -Format s)
+$timeStarted = Get-Date -Format s
+$logName = "C:\temp\transcripts\create_vhd_from_URN-" + $timeStarted
 Start-Transcript -path $logName -force
 
 $overallTimer = [Diagnostics.Stopwatch]::StartNew()
@@ -186,10 +187,11 @@ $scriptBlockString =
             [string] $NSG,
             [string] $vnetName,
             [string] $subnetName,
-            [string] $useExistingResources
+            [string] $useExistingResources,
+            [string] $timeStarted
             )    
 
-    $logName = "C:\temp\transcripts\create_vhd_from_URN_scriptblock-" + $vmName + "-" + (Get-Date -Format s)
+    $logName = "C:\temp\transcripts\create_vhd_from_URN_scriptblock-" + $vmName + "-" + $timeStarted
     Start-Transcript -path $logName -force
     $commandTimer = [Diagnostics.Stopwatch]::StartNew()
 
@@ -366,7 +368,7 @@ while ($notDone -eq $true) {
             $useColor = "Magenta"
         }
         write-host "    Job $jobName is in state $jobState" -ForegroundColor $useColor
-        $logFileName = "C:\temp\transcripts\create_vhd_from_urn_$vmName.log"
+        $logName = "C:\temp\transcripts\create_vhd_from_URN_scriptblock-" + $vmName + "-" + $timeStarted
         $logLines = Get-Content -Path $logFileName -Tail 5
         if ($? -eq $true) {
             Write-Host "         Last 5 lines from the log file:" -ForegroundColor Cyan

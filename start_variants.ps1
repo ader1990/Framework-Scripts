@@ -80,6 +80,8 @@ exit 1
 
 login_azure $sourceRG $sourceSA $location
 
+$timeStarted = Get-Date -Format s
+
 $blobs = Get-AzureStorageBlob -Container $sourceContainer
 
 $failed = $false
@@ -98,10 +100,11 @@ $comandScript = {
             $NSG,
             $network,
             $subnet,
-            $vmFlavor
+            $vmFlavor,
+            $timeStarted
     )
 
-    $logFileName = "c:\temp\transcripts\start_variants_scriptblock-" + $vmName + "-" + $vmFlavor + "-" + (get-date -format s)
+    $logFileName = "c:\temp\transcripts\start_variants_scriptblock-" + $vmName + "-" + $vmFlavor + "-" + $timeStarted
     Start-Transcript $logFileName -Force
 
     . "C:\Framework-Scripts\common_functions.ps1"
@@ -196,7 +199,7 @@ foreach ($vmName in $vmNameArray) {
         Start-Job -Name $vmJobName -ScriptBlock $scriptBlock -ArgumentList $blobName, $sourceRG, $sourceSA, $sourceContainer,`
                                                                            $destRG, $destSA, $destContainer, $location,`
                                                                            $currentSuffix, $newSuffix, $NSG, $network, `
-                                                                           $subnet, $oneFlavor
+                                                                           $subnet, $oneFlavor, $timeStarted
     }
 }
 
@@ -222,7 +225,7 @@ while ($allDone -eq $false) {
             if ($jobState -eq "Running") {
                 write-host "    Job $vmJobName is in state $jobState" -ForegroundColor Yellow
                 $allDone = $false
-                $logFile = "C:\temp\transcripts\" + $vmName + "-" + $oneFlavor + "-Variant.log"
+                $logFileName = "c:\temp\transcripts\start_variants_scriptblock-" + $vmName + "-" + $vmFlavor + "-" + $timeStarted
                 $logLines = Get-Content -Path $logFile -Tail 5
                 if ($? -eq $true) {
                     Write-Host "         Last 5 lines from log file $logFile :" -ForegroundColor Cyan
