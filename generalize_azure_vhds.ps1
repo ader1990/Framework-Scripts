@@ -328,7 +328,7 @@ if ($? -eq $false) {
 
 foreach ($blob in $copyblobs) {
     $blobName = $blob.Name
-    $longName=($blobName -split "drones/")[1]
+    $longName=($blobName -split "$sourceContainer/")[1]
     $baseName=($longName -split "-osdisk")[0]
     $targetName = $baseName + "-generalized.vhd"
     
