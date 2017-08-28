@@ -83,7 +83,7 @@ Write-Host "Looking for storage account $destSA in resource group $destRG.  Leng
 #
 $existingGroup = Get-AzureRmResourceGroup -Name $destRG
 $status = $? 
-if ($status -eq $true -and $existingGroup -ne $null -and $useExistingResources -eq $false) {
+if ($status -eq $true -and $existingGroup -ne $null -and $useExistingResources -eq "False") {
     write-host "Resource group already existed.  Deleting resource group." -ForegroundColor Yellow
     Remove-AzureRmResourceGroup -Name $destRG -Force
 
@@ -303,7 +303,7 @@ foreach ($vmName in $vmNameArray) {
     $jobName=$vmName + "-intake-job"
     Start-Job -Name $jobName -ScriptBlock $scriptBlock -ArgumentList $vmName,$VMFlavor,$blobURI,$destRG,$destSA,`
                                                                       $destContainer,$location,$suffix,$NSG,`
-                                                                      $vnetName,$subnetName,$useExistingResources
+                                                                      $vnetName,$subnetName,$useExistingResources,$timeStarted
     if ($? -ne $true) {
         Write-Host "Error starting intake_machine job ($jobName) for $vmName.  This VM must be manually examined!!" -ForegroundColor red
         Stop-Transcript
@@ -334,7 +334,7 @@ while ($notDone -eq $true) {
             $useColor = "Magenta"
         }
         write-host "    Job $jobName is in state $jobState" -ForegroundColor $useColor
-        $logName = "C:\temp\transcripts\create_vhd_from_URI_scriptblock-" + $vmName + "-" + $timeStarted
+        $logFileName = "C:\temp\transcripts\create_vhd_from_URI_scriptblock-" + $vmName + "-" + $timeStarted
         $logLines = Get-Content -Path $logFileName -Tail 5
         if ($? -eq $true) {
             Write-Host "         Last 5 lines from the log file:" -ForegroundColor Cyan

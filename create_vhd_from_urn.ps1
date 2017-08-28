@@ -85,7 +85,7 @@ Write-Host "Looking for storage account $destSA in resource group $destRG.  Leng
 #
 $existingGroup = Get-AzureRmResourceGroup -Name $destRG
 $status = $? 
-if ($status -eq $true -and $existingGroup -ne $null -and $useExistingResources -eq $false) {
+if ($status -eq $true -and $existingGroup -ne $null -and $useExistingResources -eq "False") {
     write-host "Resource group already existed.  Deleting resource group." -ForegroundColor Yellow
     Remove-AzureRmResourceGroup -Name $destRG -Force
 

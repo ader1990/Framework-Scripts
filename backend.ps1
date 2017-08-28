@@ -552,14 +552,16 @@ write-Debug  "Checkpoint 1"
 
         $cred = make_cred_initial
         # $vm = Set-AzureRmVMSourceImage -VM $vm -Id $image.Id 
+        Write-Host "Adding the operating system" -ForegroundColor Yellow
         $vm = Set-AzureRmVMOperatingSystem -VM $vm -Linux -ComputerName $InstanceName -Credential $cred
-        
-        $vm = Set-AzureRmVMOSDisk -VM $vm -name $InstanceName -CreateOption fromImage -SourceImageUri $blobURIRaw `
-                                  -Caching ReadWrite -Linux -VhdUri $vhdURI
 
         Write-Host "Adding the network interface" -ForegroundColor Yellow
         Add-AzureRmVMNetworkInterface -VM $vm -Id $VNIC.Id
-           
+        
+        Write-Host "Setting up the OS disk" -ForegroundColor Yellow
+        $vm = Set-AzureRmVMOSDisk -VM $vm -name $InstanceName -CreateOption fromImage -SourceImageUri $blobURIRaw `
+                                  -Caching ReadWrite -Linux -VhdUri $vhdURI
+                                  
         if ($this.enableBootDiagnostics -ne "Yes") {
             Write-Host "Disabling boot diagnostics" -ForegroundColor Yellow
             Set-AzureRmVMBootDiagnostics -VM $vm -Disable
