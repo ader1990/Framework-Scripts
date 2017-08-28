@@ -10,6 +10,7 @@ class Instance {
 
     Instance ($Backend, $Name) {
         $transcriptPath = $this.LogPath -f @($Name)
+        $transcriptPath = $transcriptPath + "-" + (get-date -Format s)
         Start-Transcript -Path $transcriptPath -Force
         $this.Backend = $Backend
         $this.Name = $Name

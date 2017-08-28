@@ -38,7 +38,8 @@ $subnet = $subnet.Trim()
 $currentSuffix = $currentSuffix.Trim()
 $newSuffix = $newSuffix.Trim()
 
-Start-Transcript -Path C:\temp\transcripts\create_drone_from_container.transcript -Force
+$logName = "C:\temp\transcripts\create_drone_from_container-" + (Get-Date -Format s)
+Start-Transcript -Path $logName -Force
 $overallTimer = [Diagnostics.Stopwatch]::StartNew()
 
 $commandTimer = [Diagnostics.Stopwatch]::StartNew()
@@ -166,7 +167,9 @@ $scriptBlockString =
             $vmFlavor
             )
             write-host "Checkpoint 1" -ForegroundColor Cyan
-    Start-Transcript C:\temp\transcripts\$vmName-scriptblock.log -Force
+    
+    $logName = "C:\temp\transcripts\create-drone-from-container-scriptblock-" + $vmName + "-" + (Get-Date -Format s)
+    Start-Transcript $logName -Force
     write-host "Checkpoint 2" -ForegroundColor Cyan
     . "C:\Framework-Scripts\common_functions.ps1"
     . "C:\Framework-Scripts\secrets.ps1"

@@ -56,7 +56,9 @@ $comandScript = {
         $NSG,
         $location)
 
-    Start-Transcript C:\temp\transcripts\run_command_on_container_$blobName.log -Force
+    $logName = "C:\temp\transcripts\run_command_on_container_scriptblock-" +$blobName + "-" + (Get-Date -Format s)
+    Start-Transcript -path $logName -force
+
     . C:\Framework-Scripts\common_functions.ps1
     . C:\Framework-Scripts\secrets.ps1
 

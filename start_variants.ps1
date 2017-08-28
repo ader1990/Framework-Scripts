@@ -100,7 +100,9 @@ $comandScript = {
             $subnet,
             $vmFlavor
     )
-    Start-Transcript C:\temp\transcripts\$vmName-$vmFlavor-Variant.log -Force
+
+    $logFileName = "c:\temp\transcripts\start_variants_scriptblock-" + $vmName + "-" + $vmFlavor + "-" + (get-date -format s)
+    Start-Transcript $logFileName -Force
 
     . "C:\Framework-Scripts\common_functions.ps1"
     . "C:\Framework-Scripts\secrets.ps1"

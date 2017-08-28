@@ -8,10 +8,10 @@ param (
 
 . "C:\Framework-Scripts\secrets.ps1"
 
-$logFileName="c:/temp/"+$j +"_download.log"
+$logFileName="c:/temp/transcripts/download_single_vm-"+$j + "-" + (get-date -Format s)
 $localFileName=$n
 
-Start-Transcript -Path $logFileName
+Start-Transcript -Path $logFileName -Force
 
 remove-item -path $logFileName -Force
 Write-Host "DownloadSingleVM called for RG $g, URI $u, path $n"

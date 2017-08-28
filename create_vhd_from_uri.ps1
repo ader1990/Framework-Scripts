@@ -32,7 +32,8 @@ $suffix = $suffix -replace "_","-"
 get-job | Stop-Job
 get-job | remove-job
 
-Start-Transcript C:\temp\transcripts\create_vhd_from_uri.log -Force
+$logName = "C:\temp\transcripts\create_vhd_from_URI_-" + (Get-Date -Format s)
+Start-Transcript -path $logName -force
 
 $vmNames_array=@()
 $vmNameArray = {$vmNames_array}.Invoke()
@@ -166,7 +167,9 @@ $scriptBlockString =
             [string] $subnetName,
             [string] $useExistingResources
             )    
-    Start-Transcript C:\temp\transcripts\create_vhd_from_URI_$vmName.log -Force
+    
+    $logName = "C:\temp\transcripts\create_vhd_from_URI_scriptblock-" + $vmName + "-" + (Get-Date -Format s)
+    Start-Transcript -path $logName -force
 
     . C:\Framework-Scripts\common_functions.ps1
     . C:\Framework-Scripts\secrets.ps1

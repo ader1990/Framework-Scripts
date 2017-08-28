@@ -50,7 +50,8 @@ $commandString =
     . C:\Framework-Scripts\common_functions.ps1
     . C:\Framework-Scripts\secrets.ps1
 
-    Start-Transcript C:\temp\transcripts\run_command_on_machines_in_group_$vm_name.log > $null
+    $logName = "C:\temp\transcripts\run_command_on_machines_in_group__scriptblock-" +$vm_name + "-" + (Get-Date -Format s)
+    Start-Transcript -path $logName -force
 
     login_azure $DestRG $DestSA $location > $null
     #

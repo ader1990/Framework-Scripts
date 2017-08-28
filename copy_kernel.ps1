@@ -122,8 +122,7 @@ if (Get-Item -ErrorAction SilentlyContinue -Path /opt/microsoft/borg_progress.lo
     Remove-Item /opt/microsoft/borg_progress.log
 }
 
-Stop-Transcript | out-null
-Start-Transcript -path /HIPPEE/borg_install_log -append
+Start-Transcript -path /HIPPEE/borg_install_log -force
 #
 #  Remove the old sentinel file and reset
 #
