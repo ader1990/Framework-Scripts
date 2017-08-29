@@ -361,10 +361,10 @@ while ($notDone -eq $true) {
         write-host "    Job $jobName is in state $jobState" -ForegroundColor Yellow
         if ($jobState -eq "Running") {
             $notDone = $true
-            $logFile = "C:\temp\transcripts\" + $vmName + "-scriptblock.log"
-            $logLines = Get-Content -Path $logFile -Tail 5
+            $logName = "C:\temp\transcripts\create-drone-from-container-scriptblock-" + $vmName + "-" + $timeStarted            
+            $logLines = Get-Content -Path $logName -Tail 5
             if ($? -eq $true) {
-                Write-Host "         Last 5 lines from the log file:" -ForegroundColor Cyan
+                Write-Host "         Last 5 lines from the script log file:" -ForegroundColor Cyan
                 foreach ($line in $logLines) {
                     write-host "        "$line -ForegroundColor Gray
                 }

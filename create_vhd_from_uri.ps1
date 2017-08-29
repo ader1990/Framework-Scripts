@@ -29,8 +29,8 @@ $suffix = $suffix.Trim()
 $VMFlavor = $VMFlavor.Trim()
 $suffix = $suffix -replace "_","-"
 
-# $overallTimer = [Diagnostics.Stopwatch]::StartNew()
-# $commandTimer = [Diagnostics.Stopwatch]::StartNew()
+$overallTimer = [Diagnostics.Stopwatch]::StartNew()
+$commandTimer = [Diagnostics.Stopwatch]::StartNew()
 
 get-job | Stop-Job
 get-job | remove-job
@@ -130,10 +130,10 @@ if ($? -eq $false) {
     Write-Host "Complete." -ForegroundColor Green
 }
 
-# $commandTimer.Stop()
-# $elapsed = $commandTimer.Elapsed
-# Write-Host "It required $elapsed to create validate the resource group, storage account, and container"
-# $commandTimer = [Diagnostics.Stopwatch]::StartNew()
+$commandTimer.Stop()
+$elapsed = $commandTimer.Elapsed
+Write-Host "It required $elapsed to create validate the resource group, storage account, and container"
+$commandTimer = [Diagnostics.Stopwatch]::StartNew()
 
 . C:\Framework-Scripts\backend.ps1
 # . "$scriptPath\backend.ps1"
@@ -327,10 +327,10 @@ foreach ($vmName in $vmNameArray) {
     Write-Host "Just launched job $jobName" -ForegroundColor Green
 }
 
-# $commandTimer.Stop()
-# $elapsed = $commandTimer.Elapsed
-# Write-Host "It required $elapsed launch all the machine intake jobs"
-# $commandTimer = [Diagnostics.Stopwatch]::StartNew()
+$commandTimer.Stop()
+$elapsed = $commandTimer.Elapsed
+Write-Host "It required $elapsed launch all the machine intake jobs"
+$commandTimer = [Diagnostics.Stopwatch]::StartNew()
 
 Start-Sleep -Seconds 10
 
@@ -364,9 +364,9 @@ while ($notDone -eq $true) {
     }
     Start-Sleep -Seconds 10
 }
-# $commandTimer.Stop()
-# $elapsed = $commandTimer.Elapsed
-# Write-Host "It required $elapsed for all the machines to complete"
+$commandTimer.Stop()
+$elapsed = $commandTimer.Elapsed
+Write-Host "It required $elapsed for all the machines to complete"
 
 $commandTimer.Stop()
 $elapsed = $commandTimer.Elapsed

@@ -564,17 +564,17 @@ write-verbose  "Checkpoint 1"
         $blobSA = $this.StorageAccountName
         $blobContainer = $this.ContainerName
         $osDiskVhdUri = "https://$blobSA.blob.core.windows.net/$blobContainer/"+$InstanceName+".vhd"
+        Write-Host "OSDIskVHD URI set to $osDiskVhdUri"
 
         $diskName = $InstanceName + ".vhd"
         $imageConfig = New-AzureRmImageConfig -Location $this.Location
-        $imageConfig = Set-AzureRmImageOsDisk -Image $imageConfig -OsState Generalized -BlobUri $blobURIRaw -OsType Linux
+        $imageConfig = Set-AzureRmImageOsDisk -Image $imageConfig -OsState Generalized -BlobUri $blobURIRaw -OsType Linux 
 
         $image = New-AzureRmImage -ImageName $diskName -ResourceGroupName $this.ResourceGroupName -Image $imageConfig
 
-        # $vm = Set-AzureRmVMSourceImage -VM $vm -Id $image.Id
+        $vm = Set-AzureRmVMSourceImage -VM $vm -Id $image.Id
 
         $cred = make_cred_initial
-        $vm = Set-AzureRmVMSourceImage -VM $vm -Id $image.Id
         Write-Host "Adding the operating system" -ForegroundColor Yellow
         $vm = Set-AzureRmVMOperatingSystem -VM $vm -Linux -ComputerName $InstanceName -Credential $cred
 
@@ -583,7 +583,7 @@ write-verbose  "Checkpoint 1"
    
         Write-Host "Setting up the OS disk" -ForegroundColor Yellow
         # $vm = Set-AzureRmVMOSDisk -VM $vm -name $InstanceName -CreateOption fromImage -SourceImageUri $blobURIRaw `
-         #                         -Caching ReadWrite -Linux
+        #                         -Caching ReadWrite -Linux
  
         if ($this.enableBootDiagnostics -ne "Yes") {
             Write-Host "Disabling boot diagnostics" -ForegroundColor Yellow
