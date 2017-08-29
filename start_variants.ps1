@@ -71,8 +71,8 @@ if ($makeDronesFromAll -ne $true -and ($vmNameArray.Count -eq 1  -and $vmName -e
 }
 
 if ($flavorsArray.Count -eq 1 -and $flavorsArray[0] -eq "" ) {
-Write-Host "Must specify at least one VM Flavor to build..  Unable to process this request."
-exit 1
+    Write-Host "Must specify at least one VM Flavor to build..  Unable to process this request."
+    exit 1
 }
 
 . "C:\Framework-Scripts\common_functions.ps1"

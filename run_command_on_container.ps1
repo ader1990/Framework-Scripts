@@ -146,4 +146,11 @@ if ($Failed -eq $true) {
     exit 1
 } 
 
-C:\Framework-Scripts\run_command_on_machines_in_group.ps1 -requestedNames $copyBlobs -destSA $sourceSA -destRG $sourceRG -suffix $suffix -command $command -asRoot $asRoot
+$name_list = ""
+foreach ($blob in $blobs) {
+    $blobName = ($blob.Name).replace(".vhd","")
+    $name_list = $name_list + $blobName + ","
+}
+
+$name_list = $name_list -replace ".$"
+C:\Framework-Scripts\run_command_on_machines_in_group.ps1 -requestedNames $name_list -destSA $sourceSA -destRG $sourceRG -suffix $suffix -command $command -asRoot $asRoot

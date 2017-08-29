@@ -29,6 +29,9 @@ $suffix = $suffix.Trim()
 $VMFlavor = $VMFlavor.Trim()
 $suffix = $suffix -replace "_","-"
 
+# $overallTimer = [Diagnostics.Stopwatch]::StartNew()
+# $commandTimer = [Diagnostics.Stopwatch]::StartNew()
+
 get-job | Stop-Job
 get-job | remove-job
 
@@ -100,6 +103,7 @@ if ($status -eq $true -and $existingGroup -ne $null -and $useExistingResources -
 #
 #  Change the name of the SA to include the region, then Now see if the SA exists
 $existing = Get-AzureRmStorageAccount -ResourceGroupName $destRG -Name $destSA 
+
 if ($? -eq $false -or $existing -eq $null) {
     Write-Host "Storage account $destSA did not exist.  Creating it and populating with the right containers..." -ForegroundColor Yellow
     New-AzureRmStorageAccount -ResourceGroupName $destRG -Name $destSA -Location $location -SkuName Standard_LRS -Kind Storage
@@ -126,6 +130,11 @@ if ($? -eq $false) {
     Write-Host "Complete." -ForegroundColor Green
 }
 
+# $commandTimer.Stop()
+# $elapsed = $commandTimer.Elapsed
+# Write-Host "It required $elapsed to create validate the resource group, storage account, and container"
+# $commandTimer = [Diagnostics.Stopwatch]::StartNew()
+
 . C:\Framework-Scripts\backend.ps1
 # . "$scriptPath\backend.ps1"
 
@@ -133,21 +142,23 @@ if ($? -eq $false) {
 $vnetAddressPrefix = "10.0.0.0/16"
 $vnetSubnetAddressPrefix = "10.0.0.0/24"
 
+Write-Host "Initializing the back-end"
 $backendFactory = [BackendFactory]::new()
 $azureBackend = $backendFactory.GetBackend("AzureBackend", @(1))
+Write-Host "Done Initializing the back-end"
 
 $azureBackend.ResourceGroupName = $destRG
 $azureBackend.StorageAccountName = $destSA
 $azureBackend.ContainerName = $destContainer
 $azureBackend.Location = $location
-$azureBackend.VMFlavor = $VMFlavor
+$azureBackend.VMFlavor = "No-Flavor"
 $azureBackend.NetworkName = $vnetName
 $azureBackend.SubnetName = $subnetName
 $azureBackend.NetworkSecGroupName = $NSG
 $azureBackend.addressPrefix = $vnetAddressPrefix
 $azureBackend.subnetPrefix = $vnetSubnetAddressPrefix
-$azureBackend.blobURI = $blobURI
-$azureBackend.suffix = $suffix
+$azureBackend.blobURI = ""
+$azureBackend.suffix = ""
 
 $azureInstance = $azureBackend.GetInstanceWrapper("AzureSetup")
 $azureInstance.SetupAzureRG()
@@ -170,7 +181,7 @@ $scriptBlockString =
             [string] $useExistingResources,
             [string] $timeStarted
             )    
-    
+    write-host "RG = $destRG"
     $logName = "C:\temp\transcripts\create_vhd_from_URI_scriptblock-" + $vmName + "-" + $timeStarted
     Start-Transcript -path $logName -force
 
@@ -183,7 +194,10 @@ $scriptBlockString =
 
     login_azure $destRG $destSA $location
 
-    Set-AzureRmCurrentStorageAccount –ResourceGroupName $destRG –StorageAccountName $destSA
+    write-host "************* destRG is $destRG"
+    write-host "************* destSA is $destSA"
+
+    Set-AzureRmCurrentStorageAccount -ResourceGroupName $destRG -StorageAccountName $destSA
 
     Write-Host "Deleting any existing VM" -ForegroundColor Green
     $runningVMs = Get-AzureRmVm -ResourceGroupName $destRG -status | Where-Object -Property Name -Like "$vmName*" | Remove-AzureRmVM -Force 
@@ -313,6 +327,11 @@ foreach ($vmName in $vmNameArray) {
     Write-Host "Just launched job $jobName" -ForegroundColor Green
 }
 
+# $commandTimer.Stop()
+# $elapsed = $commandTimer.Elapsed
+# Write-Host "It required $elapsed launch all the machine intake jobs"
+# $commandTimer = [Diagnostics.Stopwatch]::StartNew()
+
 Start-Sleep -Seconds 10
 
 $notDone = $true
@@ -345,6 +364,13 @@ while ($notDone -eq $true) {
     }
     Start-Sleep -Seconds 10
 }
+# $commandTimer.Stop()
+# $elapsed = $commandTimer.Elapsed
+# Write-Host "It required $elapsed for all the machines to complete"
+
+$commandTimer.Stop()
+$elapsed = $commandTimer.Elapsed
+Write-Host "It required $elapsed for script create_vhd_from_uri to to complete"
 
 Stop-Transcript
 #

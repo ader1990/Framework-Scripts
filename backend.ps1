@@ -61,7 +61,6 @@ class Instance {
 }
 
 class AzureInstance : Instance {
-    
     AzureInstance ($Backend, $Name) : base ($Backend, $Name) {write-host "AzureInstance"}
 }
 
@@ -156,49 +155,49 @@ class AzureBackend : Backend {
     [String] $enableBootDiagnostics = "yes"
 
     AzureBackend ($Params) : base ($Params) {
-        Write-Debug "Starting the backend"
+        Write-Verbose "Starting the backend"
         if (Test-Path $this.CommonFunctionsPath) {
             . $this.CommonFunctionsPath
         } else {
-            Write-Debug "Throwing for no common functions"
+            Write-Verbose "Throwing for no common functions"
             throw "??? Common Functions file file does not exist."
         }
-        write-Debug "Backend CP 1"
+        write-Verbose "Backend CP 1"
         if (Test-Path $this.SecretsPath) {
             . $this.SecretsPath
         } else {
-            Write-Debug "Throwing for no secrets functions"
+            Write-Verbose "Throwing for no secrets functions"
             throw "Secrets file does not exist."
         }
-        write-Debug "Backend CP 2"
+        write-Verbose "Backend CP 2"
     }
 
     [Instance] GetInstanceWrapper ($InstanceName) {
         if (Test-Path $this.CommonFunctionsPath) {
             . $this.CommonFunctionsPath
         } else {
-            Write-Debug "Throwing (2) for no secrets functions"
+            Write-Verbose "Throwing (2) for no secrets functions"
             throw "??? Common Functions file file does not exist."
         }
 
         if (Test-Path $this.SecretsPath) {
             . $this.SecretsPath
         } else {
-            Write-Debug "Throwing (2) for no secrets functions"
+            Write-Verbose "Throwing (2) for no secrets functions"
             throw "Secrets file does not exist."
         }
-write-Debug  "Checkpoint 1"
+write-verbose  "Checkpoint 1"
         $this.suffix = $this.suffix -replace "_","-"
         login_azure $this.ResourceGroupName $this.StorageAccountName $this.Location
-        write-Debug  "Checkpoint 2"
+        write-verbose  "Checkpoint 2"
         $flavLow = $this.VMFlavor
         $flavLow = $flavLow.ToLower()
         $regionSuffix = ("---" + $this.Location + "-" + $flavLow) -replace " ","-"
         $regionSuffix = $regionSuffix -replace "_","-"
-        write-Debug  "Checkpoint 3"
+        write-verbose  "Checkpoint 3"
         $bar=$InstanceName.Replace("---","{")
         $imageName = $bar.split("{")[0]
-        write-Debug  "Checkpoint 4"
+        write-verbose  "Checkpoint 4"
         $imageName = $imageName + $regionSuffix
         $imageName = $imageName + $this.suffix
         $imageName = $imageName  -replace ".vhd", ""
@@ -367,18 +366,24 @@ write-Debug  "Checkpoint 1"
                     [object] $VMSubnetObject, 
                     [object] $pip)
     {
+        Write-Verbose "GetNIC CP 1"
         $VNIC = Get-AzureRmNetworkInterface -Name $nicName -ResourceGroupName $this.ResourceGroupName 
+        Write-Verbose "GetNIC CP 2"
         if (!$VNIC) {
             # Write-Host "Creating new network interface" -ForegroundColor Yellow
             #
             #  Get the PIP
             $pip2 = Get-AzureRmPublicIpAddress -ResourceGroupName $this.ResourceGroupName -Name $nicName
+            Write-Verbose "GetNIC CP 3"
 
             New-AzureRmNetworkInterface -Name $nicName -ResourceGroupName $this.ResourceGroupName `
                 -Location $this.Location -SubnetId $VMSubnetObject.Id -publicipaddressid $pip2.Id
-            $VNIC = Get-AzureRmNetworkInterface -Name $nicName -ResourceGroupName $this.ResourceGroupName
-        }
 
+                Write-Verbose "GetNIC CP 4"
+            $VNIC = Get-AzureRmNetworkInterface -Name $nicName -ResourceGroupName $this.ResourceGroupName
+            Write-Verbose "GetNIC CP 5"
+        }
+        Write-Verbose "GetNIC CP 6"
         return $VNIC
     }
 
@@ -512,10 +517,19 @@ write-Debug  "Checkpoint 1"
         Write-Host "Creating a new VM config..." -ForegroundColor Yellow
 
         $sg = $this.getNSG()
+        if ($? -eq $false -or $sg -eq $null) {
+            Write-Host "FAILED to get NSG"
+        }
 
         $VMVNETObject = $this.getNetwork($sg)
+        if ($? -eq $false -or $VMVNETObject -eq $null) {
+            Write-Host "FAILED to get network"
+        }
 
         $VMSubnetObject = $this.getSubnet($sg, $VMVNETObject)
+        if ($? -eq $false -or $VMSubnetObject -eq $null) {
+            Write-Host "FAILED to get getSubnet"
+        }
 
         $vm = New-AzureRmVMConfig -VMName $InstanceName -VMSize $this.VMFlavor
         Write-Host "Assigning network $($this.NetworkName) and subnet config $($this.SubnetName) with NSG $($this.NetworkSecGroupName) to new machine" -ForegroundColor Yellow
@@ -527,8 +541,10 @@ write-Debug  "Checkpoint 1"
 
         Write-Host "Assigning the network interface" -ForegroundColor Yellow
         $nicName = $InstanceName
-        $VNIC = $this.getNIC($nicName, $VMSubnetObject, $pip)
+        Write-Host "Getting network for $nicName"
 
+        $VNIC = $this.getNIC($nicName, $VMSubnetObject, $pip)
+       
         Get-AzureRmNetworkInterface -Name $nicName -ResourceGroupName $this.ResourceGroupName 
         $VNIC.NetworkSecurityGroup = $sg
         
@@ -542,33 +558,53 @@ write-Debug  "Checkpoint 1"
         # $blobURIRaw = ("https://{0}.blob.core.windows.net/{1}/{2}.vhd" -f `
         #               @($this.StorageAccountName, $this.ContainerName, $InstanceName))
 
-        $imageConfig = New-AzureRmImageConfig -Location $this.Location
-        $imageConfig = Set-AzureRmImageOsDisk -Image $imageConfig -OsState Generalized -BlobUri $blobURIRaw
-
-        $image = New-AzureRmImage -ImageName $InstanceName -ResourceGroupName $this.ResourceGroupName -Image $imageConfig
-        $vm = Set-AzureRmVMSourceImage -VM $vm -Id $image.Id
-
         $vhdURI = ("https://{0}.blob.core.windows.net/{1}/{2}.vhd" -f `
-                       @($this.StorageAccountName, $this.ContainerName, $InstanceName))
+                            @($this.StorageAccountName, $this.ContainerName, $InstanceName))
+
+        $blobSA = $this.StorageAccountName
+        $blobContainer = $this.ContainerName
+        $osDiskVhdUri = "https://$blobSA.blob.core.windows.net/$blobContainer/"+$InstanceName+".vhd"
+
+        $diskName = $InstanceName + ".vhd"
+        $imageConfig = New-AzureRmImageConfig -Location $this.Location
+        $imageConfig = Set-AzureRmImageOsDisk -Image $imageConfig -OsState Generalized -BlobUri $blobURIRaw -OsType Linux
+
+        $image = New-AzureRmImage -ImageName $diskName -ResourceGroupName $this.ResourceGroupName -Image $imageConfig
+
+        # $vm = Set-AzureRmVMSourceImage -VM $vm -Id $image.Id
 
         $cred = make_cred_initial
-        # $vm = Set-AzureRmVMSourceImage -VM $vm -Id $image.Id 
+        $vm = Set-AzureRmVMSourceImage -VM $vm -Id $image.Id
         Write-Host "Adding the operating system" -ForegroundColor Yellow
         $vm = Set-AzureRmVMOperatingSystem -VM $vm -Linux -ComputerName $InstanceName -Credential $cred
 
         Write-Host "Adding the network interface" -ForegroundColor Yellow
         Add-AzureRmVMNetworkInterface -VM $vm -Id $VNIC.Id
-        
+   
         Write-Host "Setting up the OS disk" -ForegroundColor Yellow
         # $vm = Set-AzureRmVMOSDisk -VM $vm -name $InstanceName -CreateOption fromImage -SourceImageUri $blobURIRaw `
-        #                          -Caching ReadWrite -Linux -VhdUri $vhdURI
-        $vm = Set-AzureRmVMOSDisk -VM $vm -name $InstanceName -CreateOption fromImage -Caching ReadWrite -Linux -VhdUri $vhdURI
-                                  
+         #                         -Caching ReadWrite -Linux
+ 
         if ($this.enableBootDiagnostics -ne "Yes") {
             Write-Host "Disabling boot diagnostics" -ForegroundColor Yellow
             Set-AzureRmVMBootDiagnostics -VM $vm -Disable
         }
-            
+  
+        try {
+            Write-Host "Starting the VM" -ForegroundColor Yellow
+            $NEWVM = New-AzureRmVM -ResourceGroupName $this.ResourceGroupName -Location $this.Location -VM $vm
+            if (!$NEWVM) {
+                Write-Host "Failed to create VM" -ForegroundColor Red
+            } else {
+                Write-Host "VM $InstanceName started successfully..." -ForegroundColor Green
+            }
+        } catch {
+            Write-Host "Caught exception attempting to start the new VM.  Aborting..."
+            Stop-Transcript
+            return
+        }
+        
+       <#
         try {
             Write-Host "Starting the VM" -ForegroundColor Yellow
                 
@@ -581,6 +617,7 @@ write-Debug  "Checkpoint 1"
         } catch {
             Write-Host "Caught exception attempting to start the VM $InstanceName.  Aborting..." -ForegroundColor Red
         }
+        #>
     }
 
     [String] GetPublicIP ($InstanceName) {
