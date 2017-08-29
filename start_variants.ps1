@@ -24,7 +24,9 @@ param (
     [Parameter(Mandatory=$false)] [string] $network="smokeVNet",
     [Parameter(Mandatory=$false)] [string] $subnet="SmokeSubnet-1",
     [Parameter(Mandatory=$false)] [string] $NSG="SmokeNSG",
-    [Parameter(Mandatory=$false)] [string] $location="westus"
+    [Parameter(Mandatory=$false)] [string] $location="westus",
+
+    [Parameter(Mandatory=$false)] [string] $useExistingResources="True"
 )
 
 $sourceSA = $sourceSA.Trim()
@@ -82,8 +84,70 @@ login_azure $sourceRG $sourceSA $location
 
 $timeStarted = (Get-Date -Format s).replace(":","-")
 
-$blobs = Get-AzureStorageBlob -Container $sourceContainer
+$existingGroup = Get-AzureRmResourceGroup -Name $destRG
+$status = $? 
+if ($status -eq $true -and $existingGroup -ne $null -and $useExistingResources -eq "False") {
+    write-host "Resource group already existed.  Deleting resource group." -ForegroundColor Yellow
+    Remove-AzureRmResourceGroup -Name $destRG -Force
 
+    write-host "Creating new resource group $destRG in loction $location"
+    New-AzureRmResourceGroup -Name $destRG -Location $location
+} elseif ($status -eq $false -and $existingGroup -eq $null) {
+    write-host "Creating new resource group $destRG in loction $location"
+    New-AzureRmResourceGroup -Name $destRG -Location $location
+} else {
+    write-host "Using existing resource group $destRG"
+}
+
+#
+#  Make sure the target exists.  Create if necessary.
+$existingRG=Get-AzureRmStorageAccount -ResourceGroupName $destRG -Name $destSA 
+if ($? -eq $false -or $existingRG -eq $null) {
+    Write-Host "Storage account $destSA did not exist.  Creating it and populating with the right containers..." -ForegroundColor Yellow
+    New-AzureRmStorageAccount -ResourceGroupName $destRG -Name $destSA -Location $location -SkuName Standard_LRS -Kind Storage
+
+    write-host "Selecting it as the current SA" -ForegroundColor Yellow
+    Set-AzureRmCurrentStorageAccount –ResourceGroupName $destRG –StorageAccountName $destSA
+
+    Write-Host "creating the containers" -ForegroundColor Yellow
+    New-AzureStorageContainer -Name $destContainer -Permission Blob
+    Write-Host "Complete." -ForegroundColor Green
+}
+Set-AzureRmCurrentStorageAccount –ResourceGroupName $destRG -Name $destSA
+
+$existingContainer = Get-AzureStorageContainer -Name $destContainer
+if ($? -eq $false -or $existingContainer -eq $null) {
+    Write-Host "creating the container" -ForegroundColor Yellow
+    New-AzureStorageContainer -Name $destContainer -Permission Blob
+}
+
+Set-AzureRmCurrentStorageAccount –ResourceGroupName $sourceRG -Name $sourceSA
+
+. C:\Framework-Scripts\backend.ps1
+
+$vnetAddressPrefix = "10.0.0.0/16"
+$vnetSubnetAddressPrefix = "10.0.0.0/24"
+
+$backendFactory = [BackendFactory]::new()
+$azureBackend = $backendFactory.GetBackend("AzureBackend", @(1))
+
+$azureBackend.ResourceGroupName = $destRG
+$azureBackend.StorageAccountName = $destSA
+$azureBackend.ContainerName = $destContainer
+$azureBackend.Location = $location
+$azureBackend.VMFlavor = "Unset"
+$azureBackend.NetworkName = "SmokeVNet"
+$azureBackend.SubnetName = "SmokeSubnet-1"
+$azureBackend.NetworkSecGroupName = "SmokeNSG"
+$azureBackend.addressPrefix = $vnetAddressPrefix
+$azureBackend.subnetPrefix = $vnetSubnetAddressPrefix
+$azureBackend.blobURN = "None"
+$azureBackend.suffix = "-Smoke-1"
+
+$azureInstance = $azureBackend.GetInstanceWrapper("AzureSetup")
+$azureInstance.SetupAzureRG()
+
+$blobs = Get-AzureStorageBlob -Container $sourceContainer
 $failed = $false
 
 $comandScript = {
@@ -110,53 +174,64 @@ $comandScript = {
     . "C:\Framework-Scripts\common_functions.ps1"
     . "C:\Framework-Scripts\secrets.ps1"
 
-    login_azure $destRG $destSA $location
+    login_azure $sourceRG $sourceSA $location
+
+    Set-AzureRmCurrentStorageAccount –ResourceGroupName $sourceRG –StorageAccountName $sourceSA
 
     $blobs = Get-AzureStorageBlob -Container $sourceContainer
 
     $blobName = "Unset"
     foreach ($blob in $blobs) {
         $blobName = $blob.Name
+        Write-Verbose "Blob named $blobName was found in source container.  Seeing if it is a match..."
         if ($blobName.contains($vmName)) {
+            Write-Verbose "Found blob $blobName for VM $vmName"
             break
         }
     }
 
-    if ($startMachines -eq $true) {
-        Write-verbose "Deallocating machine $vmName, if it is up"
-        $runningMachines = Get-AzureRmVm -ResourceGroupName $destRG -status | Where-Object -Property Name -Like "$vmName*"
-        deallocate_machines_in_group $runningMachines $destRG $destSA $location
+    if ($blobName -eq "unset") {
+        write-error "Blob for machine $vmName was not found in the container.  Cannot process."
+        exit 1
+    }
 
-        foreach ($blob in $blobs) {
-            $blobName = $blob.Name
-            $vmSearch = "^" + $vmName + "*"
-            if ($blob.Name -like $vmName) {
-                $sourceVhdName = $blobName
-            }
-        }
+    Set-AzureRmCurrentStorageAccount -ResourceGroupName $destRG -Name $destSA
 
-        $sourceURI = ("https://{0}.blob.core.windows.net/{1}/{2}" -f @($sourceSA, $sourceContainer, $blobName))
+    Write-verbose "Deallocating machine $vmName, if it is up"
+    $runningMachines = Get-AzureRmVm -ResourceGroupName $destRG -status | Where-Object -Property Name -Like "$vmName*"
+    deallocate_machines_in_group $runningMachines $destRG $destSA $location
 
-        $vmFlavLow = $vmFlavor.ToLower()
-        Write-verbose "Attempting to create virtual machine $newVMName from source URI $sourceURI.  This may take some time."
-        C:\Framework-Scripts\launch_single_azure_vm.ps1 -vmName $newVMName -resourceGroup $destRG -storageAccount $destSA -containerName $destContainer `
-                                                    -network $network -subnet $subnet -NSG $NSG -Location $location -VMFlavor $vmFlavLow -suffix $newSuffix `
-                                                    -imageIsGeneralized -generalizedBlobURI $sourceURI
-        if ($? -ne $true) {
-            Write-error "Error creating VM $newVMName.  This VM must be manually examined!!"
-            Stop-Transcript
-            exit 1
+    foreach ($blob in $blobs) {
+        $blobName = $blob.Name
+        $vmSearch = "^" + $vmName + "*"
+        if ($blob.Name -like $vmName) {
+            $sourceVhdName = $blobName
         }
     }
+
+    $sourceURI = ("https://{0}.blob.core.windows.net/{1}/{2}" -f @($sourceSA, $sourceContainer, $blobName))
+
+    $vmFlavLow = $vmFlavor.ToLower()
 
     #
     #  Just because it's up doesn't mean it's accepting connections yet.  Wait 2 minutes, then try to connect.  I tried 1 minute,
     #  but kept getting timeouts on the Ubuntu machines.
     $regionSuffix = ("-" + $location + "-" + $vmFlavor.ToLower()) -replace " ","-"
     $regionSuffix = $regionSuffix -replace "_","-"
-    $imageName = $newVMName + $regionSuffix
+    $imageName = $vmName + $regionSuffix
     $imageName = $imageName + $newSuffix
     $imageName = $imageName -replace ".vhd", ""
+
+    Write-verbose "Attempting to create virtual machine $vmName from source URI $sourceURI.  This may take some time."
+    C:\Framework-Scripts\launch_single_azure_vm.ps1 -vmName $vmName -resourceGroup $destRG -storageAccount $destSA -containerName $destContainer `
+                                                -network $network -subnet $subnet -NSG $NSG -Location $location -VMFlavor $vmFlavLow -suffix $newSuffix `
+                                                -imageIsGeneralized -generalizedBlobURI $sourceURI
+    if ($? -ne $true) {
+        Write-error "Error creating VM $vmName.  This VM must be manually examined!!"
+        Stop-Transcript
+        exit 1
+    }
+
 
     $machineIsUp = $false
     [int]$sleepCount = 0
@@ -175,7 +250,7 @@ $comandScript = {
     }
 
     if ($true -ne $machineIsUp) {
-        Write-errpr "Error getting IP address for VM $newVMName.  This VM must be manually examined!!"
+        Write-errpr "Error getting IP address for VM $imageName.  This VM must be manually examined!!"
         Stop-Transcript
         exit 1
     }
@@ -208,7 +283,7 @@ Start-Sleep -Seconds 10
 $allDone = $false
 while ($allDone -eq $false) {
     $allDone = $true
-    $numNeeded = $vmNameArray.Count
+    $numNeeded = $vmNameArray.Count + $flavors_array.Count
     $vmsFinished = 0
 
     foreach ($vmName in $vmNameArray) {
@@ -225,10 +300,10 @@ while ($allDone -eq $false) {
             if ($jobState -eq "Running") {
                 write-host "    Job $vmJobName is in state $jobState" -ForegroundColor Yellow
                 $allDone = $false
-                $logFileName = "c:\temp\transcripts\start_variants_scriptblock-" + $vmName + "-" + $vmFlavor + "-" + $timeStarted
-                $logLines = Get-Content -Path $logFile -Tail 5
+                $logFileName = "c:\temp\transcripts\start_variants_scriptblock-" + $vmName + "-" + $oneFlavor + "-" + $timeStarted
+                $logLines = Get-Content -Path $logFileName -Tail 5
                 if ($? -eq $true) {
-                    Write-Host "         Last 5 lines from log file $logFile :" -ForegroundColor Cyan
+                    Write-Host "         Last 5 lines from log file $logFileName :" -ForegroundColor Cyan
                     foreach ($line in $logLines) {
                         write-host "        "$line -ForegroundColor Gray
                     }
@@ -261,4 +336,7 @@ while ($allDone -eq $false) {
 if ($Failed -eq $true) {
     Write-Host "We expected $numNeeded machies, but only $vmsFinished completed.  Command has failed." -ForegroundColor Red
     exit 1
-} 
+} else {
+    Write-Host "Successfully created variant machines."
+    exit 0
+}

@@ -171,7 +171,7 @@ $scriptBlockString =
             )
             write-host "Checkpoint 1" -ForegroundColor Cyan
     
-    $logName = "C:\temp\transcripts\create-drone-from-container-scriptblock-" + $vmName + "-" + $timeStarted
+    $logName = "C:\temp\transcripts\create_drone_from_container-scriptblock-" + $vmName + "-" + $timeStarted
     Start-Transcript $logName -Force
     write-host "Checkpoint 2" -ForegroundColor Cyan
     . "C:\Framework-Scripts\common_functions.ps1"

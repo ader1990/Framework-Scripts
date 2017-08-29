@@ -82,9 +82,10 @@ function create_psrp_session([string] $vmName, [string] $rg, [string] $SA, [stri
     [int]$attempts = 0
     while ($attempts -lt 5) {
         $attempts = $attempts + 1
-        Write-Host "Attempting to locate host by search string $vm_search_string"
+        write-verbose "Attempting to locate host by search string $vm_search_string"
         $ipAddress = Get-AzureRmPublicIpAddress -ResourceGroupName $rg | Where-Object -Property Name -Like $vm_search_string
-        Write-Host "Got IP Address $($ipAddress.Name), with IP Address $($ipAddress.IpAddress)"
+
+        write-verbose "Got IP Address $($ipAddress.Name), with IP Address $($ipAddress.IpAddress)"
 
         if ($ipAddress -ne $null) {
             $theAddress = $ipAddress.IpAddress            
@@ -94,23 +95,23 @@ function create_psrp_session([string] $vmName, [string] $rg, [string] $SA, [stri
             }
 
             $remoteIP = $ipAddress.IpAddress
-            Write-Host "Attempting contact at $remoteIP"
-            $existingSession = Get-PSSession -Name $remoteIP
+            write-verbose "Attempting contact at $remoteIP"
+            $existingSession = Get-PSSession -Name $remoteIP -ErrorAction SilentlyContinue
             if ($? -eq $false -or $existingSession -eq $null) {
                 $thisSession = new-PSSession -computername $remoteIP -credential $cred -authentication Basic -UseSSL -Port 443 -SessionOption $o -name $remoteIP
                 if ($? -eq $false -or $thisSession -eq $null) {
-                    Write-Host "Contact failed.  This is attempt $attempts of 5.  Will retry in 15 seconds."
+                    Write-error "Contact failed.  This is attempt $attempts of 5.  Will retry in 15 seconds."
                     start-sleep -Seconds 15
                 } else {
-                    Write-Host "Contact was successful"
+                    write-verbose "Contact was successful"
                     return $thisSession
                 }
             } else {
-                Write-Host "Re-using session for $remoteIP"
+                write-verbose "Re-using session for $remoteIP"
                 return $existingSession
             }
         } else {
-            Write-host "The public IP for machnine $vmName does appear to exist, but the Magic modules are not loaded.  Cannot process this iteration.."
+            Write-Warning "The public IP for machnine $vmName does appear to exist, but the Magic modules are not loaded.  Cannot process this iteration.."
             start-sleep -Seconds 15
         }
     }
@@ -150,7 +151,7 @@ function stop_machines_in_group([Microsoft.Azure.Commands.Compute.Models.PSVirtu
     foreach ($singleVM in $runningVMs) {
         $vm_name = $singleVM.Name
         $vmJobName = $vm_name + "-Src"
-        write-host "Starting job to stop VM $vm_name"
+        write-verbose "Starting job to stop VM $vm_name"
         Start-Job -Name $vmJobName -ScriptBlock $scriptBlock -ArgumentList $vm_name,$destRG,$destSA,$location
     }
 
@@ -162,7 +163,7 @@ function stop_machines_in_group([Microsoft.Azure.Commands.Compute.Models.PSVirtu
             $vmJobName = $vm_name + "-Src"
             $job = Get-Job -Name $vmJobName
             $jobState = $job.State
-            write-host "    Job $vmJobName is in state $jobState" -ForegroundColor Yellow
+            write-verbose "    Job $vmJobName is in state $jobState" -ForegroundColor Yellow
             if ($jobState -eq "Running") {
                 $allDone = $false
             }
@@ -198,7 +199,7 @@ function deallocate_machines_in_list([string[]] $requestedNames,
         . C:\Framework-Scripts\secrets.ps1
 
         login_azure $destRG $destSA $location
-        Write-Host "Deallocating machine $vm_name in RG $destRG"
+        write-verbose "Deallocating machine $vm_name in RG $destRG"
         Remove-AzureRmVM -Name $vm_name -ResourceGroupName $destRG -Force
 
         Get-AzureRmNetworkInterface -ResourceGroupName $destRG | Where-Object -Property Name -Like $vm_name | Remove-AzureRmNetworkInterface -Force
@@ -213,7 +214,7 @@ function deallocate_machines_in_list([string[]] $requestedNames,
     $scriptBlock = [scriptblock]::Create($scriptBlockString)
     foreach ($vm_name in $requestedNames) {
         $vmJobName = $vm_name + "-Deprov"
-        write-host "Starting job to deprovision VM by list $vm_name"
+        write-verbose "Starting job to deprovision VM by list $vm_name"
         Start-Job -Name $vmJobName -ScriptBlock $scriptBlock -ArgumentList $vm_name,$destRG,$destSA
     }
 
@@ -221,7 +222,7 @@ function deallocate_machines_in_list([string[]] $requestedNames,
     while ($allDone -eq $false) {
         $allDone = $true
         $timeNow = get-date
-        write-host "Checking jobs at time $timeNow :" -ForegroundColor Yellow
+        write-verbose "Checking jobs at time $timeNow :" -ForegroundColor Yellow
         foreach ($vm_name in $requestedNames) {
             $vmJobName = $vm_name + "-Deprov"
             $job = Get-Job -Name $vmJobName
@@ -234,7 +235,7 @@ function deallocate_machines_in_list([string[]] $requestedNames,
             } elseif ($jobState -eq "Blocked") {
                 $useColor = "Magenta"
             }
-            write-host "    Job $vmJobName is in state $jobState" -ForegroundColor $useColor
+            write-verbose "    Job $vmJobName is in state $jobState" -ForegroundColor $useColor
             if ($jobState -eq "Running") {
                 $allDone = $false
             }
@@ -275,7 +276,7 @@ function stop_machines_in_list([stringe[]] $requestedNames,
 
     foreach ($vm_name in $requestedNames) {
         $vmJobName = $vm_name + "-Src"
-        write-host "Starting job to stop VM $vm_name"
+        write-verbose "Starting job to stop VM $vm_name"
         Start-Job -Name $vmJobName -ScriptBlock $scriptBlock -ArgumentList $vm_name,$destRG,$destSA,$location
     }
 
@@ -287,7 +288,7 @@ function stop_machines_in_list([stringe[]] $requestedNames,
             $vmJobName = $vm_name + "-Src"
             $job = Get-Job -Name $vmJobName
             $jobState = $job.State
-            write-host "    Job $vmJobName is in state $jobState" -ForegroundColor Yellow
+            write-verbose "    Job $vmJobName is in state $jobState" -ForegroundColor Yellow
             if ($jobState -eq "Running") {
                 $allDone = $false
             }
@@ -327,7 +328,7 @@ function deallocate_machines_in_group([Microsoft.Azure.Commands.Compute.Models.P
     $scriptBlock = [scriptblock]::Create($scriptBlockString)
     foreach ($singleVM in $runningVMs) {
         $vm_name = $singleVM.Name
-        write-host "Starting job to deprovision VM $vm_name"
+        write-verbose "Starting job to deprovision VM $vm_name"
         $vmJobName = $vm_name + "-Deprov"
         Start-Job -Name $vmJobName -ScriptBlock $scriptBlock -ArgumentList $vm_name,$destRG,$destSA
     }
@@ -336,7 +337,7 @@ function deallocate_machines_in_group([Microsoft.Azure.Commands.Compute.Models.P
     while ($allDone -eq $false) {
         $allDone = $true
         $timeNow = get-date
-        write-host "Checking jobs at time $timeNow :" -ForegroundColor Yellow
+        write-verbose "Checking jobs at time $timeNow :" -ForegroundColor Yellow
         foreach ($singleVM in $runningVMs) {
             $vm_name = $singleVM.Name
             $vmJobName = $vm_name + "-Deprov"
@@ -350,7 +351,7 @@ function deallocate_machines_in_group([Microsoft.Azure.Commands.Compute.Models.P
             } elseif ($jobState -eq "Blocked") {
                 $useColor = "Magenta"
             }
-            write-host "    Job $vmJobName is in state $jobState" -ForegroundColor $useColor
+            write-verbose "    Job $vmJobName is in state $jobState" -ForegroundColor $useColor
             if ($jobState -eq "Running") {
                 $allDone = $false
             }
@@ -382,24 +383,24 @@ function try_pscp([string] $file,
             $result = $?
         }
         catch {
-                Write-Host "pscp Exception caught -- trying again"
+                Write-error "pscp Exception caught -- trying again"
         }
 
         if ($plink_err -ne $null -and $plink_err -match ".*connection timed out*")
         {
-            Write-Host "Timeout on pscp of $file to $ipTemp"
+            Write-error "Timeout on pscp of $file to $ipTemp"
         } elseif ($result -eq $false) {
-            write-host "General error copying file $file to $ipTemp..."
+            write-error "General error copying file $file to $ipTemp..."
             Write-Output $plink_err
         } else {
-            Write-Host "$file Successfully copied to $ipTemp"
+            write-verbose "$file Successfully copied to $ipTemp"
             return $plink_err
         }
 
         start-sleep 12
     }
 
-    write-host "FAILURE copying file $file to $ipTemp.  Gave up after 2 minutes"
+    Write-Error "FAILURE copying file $file to $ipTemp.  Gave up after 2 minutes"
 }
 
 function try_plink([string] $ip,
@@ -419,16 +420,16 @@ function try_plink([string] $ip,
             $result = $?
         }
         catch {
-                Write-Host "plink Exception caught -- trying again"
+                Write-error "plink Exception caught -- trying again"
         }
 
         if ($result -eq $false -and $num_tries -eq 10) {
-            write-host "General error executing command.  Returning anyway, because this usually means it ran properly."
+            write-verbose "General error executing command.  Returning anyway, because this usually means it ran properly."
             return
         } elseif ($result -eq $false) {
             Write-Verbose "Error on plink call.  Trying again"
         } elseif ($result -eq $true) {
-            Write-Host "Successful command execution"
+            write-verbose "Successful command execution"
             return
         }
     }

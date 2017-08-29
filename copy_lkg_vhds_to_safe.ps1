@@ -36,12 +36,12 @@ $excludeVHDs = $excludeVHDs.Trim()
 $copyblobs_array=@()
 $copyblobs = {$copyblobs_array}.Invoke()
 
-Write-Host "Switch excludePackages is $excludePackages and switch excludeVHDs is $excludeVHDs"
+write-verbose "Switch excludePackages is $excludePackages and switch excludeVHDs is $excludeVHDs"
 
-Write-Host "Importing the context...." -ForegroundColor Green
+write-verbose "Importing the context...." -ForegroundColor Green
 Import-AzureRmContext -Path 'C:\Azure\ProfileContext.ctx' > $null
 
-Write-Host "Selecting the Azure subscription..." -ForegroundColor Green
+write-verbose "Selecting the Azure subscription..." -ForegroundColor Green
 Select-AzureRmSubscription -SubscriptionId "$AZURE_SUBSCRIPTION_ID" > $null
 Set-AzureRmCurrentStorageAccount –ResourceGroupName $destRG –StorageAccountName $destSA > $null
 
@@ -54,7 +54,7 @@ $sourceContext=New-AzureStorageContext -StorageAccountName $sourceSA -StorageAcc
 #
 #  Clear the working containers
 #
-Write-Host "Clearing any existing VHDs"
+write-verbose "Clearing any existing VHDs"
 if ($excludeVHDs -eq $false) {
     Set-AzureRmCurrentStorageAccount –ResourceGroupName $destRG –StorageAccountName $destSA > $null
     Get-AzureStorageBlob -Container $destContainer -blob * | ForEach-Object {Remove-AzureStorageBlob -Blob $_.Name -Container $destContainer}
@@ -66,7 +66,7 @@ if ($excludeVHDs -eq $false) {
 
 
 if ($excludePackages -eq $false) {
-    Write-Host "Copying the build packages to LKG"
+    write-verbose "Copying the build packages to LKG"
     Get-AzureStorageBlob -Container $destPkgContainer -blob * | ForEach-Object {Remove-AzureStorageBlob -Blob $_.Name -Container $destPkgContainer}
     if ($? -eq $false) {
         $failure_point="ClearingContainers"
@@ -77,39 +77,39 @@ if ($excludePackages -eq $false) {
     #  Now copy the packages
     Set-AzureRmCurrentStorageAccount –ResourceGroupName $sourceRG –StorageAccountName $sourceSA > $null
 
-    Write-Host "Copying the VHDs to LKG"
+    write-verbose "Copying the VHDs to LKG"
     $blobs=get-AzureStorageBlob -Container $sourcePkgContainer -Blob *
     foreach ($oneblob in $blobs) {
         $sourceName=$oneblob.Name
         $targetName = $sourceName
 
-        Write-Host "Initiating job to copy packages from $sourcePkgContainer from cache to working directory $destPkgContainer..." -ForegroundColor Yellow
+        write-verbose "Initiating job to copy packages from $sourcePkgContainer from cache to working directory $destPkgContainer..." -ForegroundColor Yellow
         $blob = Start-AzureStorageBlobCopy -SrcBlob $sourceName -SrcContainer $sourcePkgContainer  -DestContainer $destPkgContainer -DestBlob $targetName `
                                            -Context $sourceContext -DestContext $destContext
         if ($? -eq $true) {
             $copyblobs.Add($targetName)
         } else {
-            Write-Host "Job to copy package $targetName failed to start.  Cannot continue"
+            write-verbose "Job to copy package $targetName failed to start.  Cannot continue"
             exit 1
         }
     }
 
     Start-Sleep -Seconds 5
-    Write-Host "All jobs have been launched.  Initial check is:" -ForegroundColor Yellow
+    write-verbose "All jobs have been launched.  Initial check is:" -ForegroundColor Yellow
 
     $stillCopying = $true
     while ($stillCopying -eq $true) {
         $stillCopying = $false
         $reset_copyblobs = $true
 
-        Write-Host ""
-        Write-Host "Checking copy status..."
+        write-verbose ""
+        write-verbose "Checking copy status..."
         while ($reset_copyblobs -eq $true) {
             $reset_copyblobs = $false
             foreach ($blob in $copyblobs) {
                 $status = Get-AzureStorageBlobCopyState -Blob $blob -Container $destContainer -ErrorAction SilentlyContinue
                 if ($? -eq $false) {
-                    Write-Host "        Could not get copy state for job $blob.  Job may not have started." -ForegroundColor Yellow
+                    write-verbose "        Could not get copy state for job $blob.  Job may not have started." -ForegroundColor Yellow
                     $copyblobs.Remove($blob)
                     $reset_copyblobs = $true
                     break
@@ -117,14 +117,14 @@ if ($excludePackages -eq $false) {
                     $bytesCopied = $status.BytesCopied
                     $bytesTotal = $status.TotalBytes
                     $pctComplete = ($bytesCopied / $bytesTotal) * 100
-                    Write-Host "        Job $blob has copied $bytesCopied of $bytesTotal bytes (%$pctComplete)." -ForegroundColor green
+                    write-verbose "        Job $blob has copied $bytesCopied of $bytesTotal bytes (%$pctComplete)." -ForegroundColor green
                     $stillCopying = $true
                 } else {
                     $exitStatus = $status.Status
                     if ($exitStatus -eq "Completed") {
-                        Write-Host "   **** Job $blob has failed with state $exitStatus." -ForegroundColor Red
+                        write-verbose "   **** Job $blob has failed with state $exitStatus." -ForegroundColor Red
                     } else {
-                        Write-Host "   **** Job $blob has completed successfully." -ForegroundColor Green
+                        write-verbose "   **** Job $blob has completed successfully." -ForegroundColor Green
                     }
                     $copyblobs.Remove($blob)
                     $reset_copyblobs = $true
@@ -134,11 +134,11 @@ if ($excludePackages -eq $false) {
         }
 
         if ($stillCopying -eq $true) {
-            Write-Host ""
+            write-verbose ""
             Start-Sleep -Seconds 10
         } else {
-            Write-Host ""
-            Write-Host "All copy jobs have completed.  Rock on." -ForegroundColor green
+            write-verbose ""
+            write-verbose "All copy jobs have completed.  Rock on." -ForegroundColor green
         }
     }
 
@@ -148,7 +148,7 @@ if ($excludeVHDs -eq $true) {
     exit 0
 }
 
-Write-Host "Launching jobs to copy individual machines..." -ForegroundColor green
+write-verbose "Launching jobs to copy individual machines..." -ForegroundColor green
 
 Set-AzureRmCurrentStorageAccount –ResourceGroupName $sourceRG –StorageAccountName $sourceSA > $null
 $sourceContainer
@@ -159,18 +159,18 @@ foreach ($oneblob in $blobs) {
     $sourceName=$oneblob.Name
     $targetName = $sourceName -replace "-BORG.vhd", "-Booted-and-Verified.vhd"
 
-    Write-Host "Initiating job to copy VHD $targetName from final build to output cache directory..." -ForegroundColor green
+    write-verbose "Initiating job to copy VHD $targetName from final build to output cache directory..." -ForegroundColor green
     Start-AzureStorageBlobCopy -SrcBlob $sourceName -DestContainer $destContainer -SrcContainer $sourceContainer -DestBlob $targetName -Context $sourceContext -DestContext $destContext -Force > $null
     if ($? -eq $true) {
         $copyblobs.Add($targetName)
     } else {
-        Write-Host "Job to copy VHD $targetName failed to start.  Cannot continue" -ForegroundColor Red
+        Write-error "Job to copy VHD $targetName failed to start.  Cannot continue" -ForegroundColor Red
         exit 1
     }
 }
 
 Start-Sleep -Seconds 5
-Write-Host "All jobs have been launched.  Initial check is:" -ForegroundColor Yellow
+write-verbose "All jobs have been launched.  Initial check is:" -ForegroundColor Yellow
 
 Set-AzureRmCurrentStorageAccount –ResourceGroupName $destRG –StorageAccountName $destSA  > $null
 $stillCopying = $true
@@ -178,14 +178,14 @@ while ($stillCopying -eq $true) {
     $stillCopying = $false
     $reset_copyblobs = $true
 
-    Write-Host ""
-    Write-Host "Checking copy status..."
+    write-verbose ""
+    write-verbose "Checking copy status..."
     while ($reset_copyblobs -eq $true) {
         $reset_copyblobs = $false
         foreach ($blob in $copyblobs) {
             $status = Get-AzureStorageBlobCopyState -Blob $blob -Container $destContainer -ErrorAction SilentlyContinue
             if ($? -eq $false) {
-                Write-Host "        Could not get copy state for job $blob.  Job may not have started." -ForegroundColor Yellow
+                write-verbose "        Could not get copy state for job $blob.  Job may not have started." -ForegroundColor Yellow
                 $copyblobs.Remove($blob)
                 $reset_copyblobs = $true
                 break
@@ -193,14 +193,14 @@ while ($stillCopying -eq $true) {
                 $bytesCopied = $status.BytesCopied
                 $bytesTotal = $status.TotalBytes
                 $pctComplete = ($bytesCopied / $bytesTotal) * 100
-                Write-Host "        Job $blob has copied $bytesCopied of $bytesTotal bytes (%$pctComplete)." -ForegroundColor green
+                write-verbose "        Job $blob has copied $bytesCopied of $bytesTotal bytes (%$pctComplete)." -ForegroundColor green
                 $stillCopying = $true
             } else {
                 $exitStatus = $status.Status
                 if ($exitStatus -eq "Completed") {
-                    Write-Host "   **** Job $blob has failed with state $exitStatus." -ForegroundColor Red
+                    write-error "   **** Job $blob has failed with state $exitStatus." -ForegroundColor Red
                 } else {
-                    Write-Host "   **** Job $blob has completed successfully." -ForegroundColor Green
+                    write-verbose "   **** Job $blob has completed successfully." -ForegroundColor Green
                 }
                 $copyblobs.Remove($blob)
                 $reset_copyblobs = $true
@@ -210,13 +210,13 @@ while ($stillCopying -eq $true) {
     }
 
     if ($stillCopying -eq $true) {
-        Write-Host ""
+        write-verbose ""
         Start-Sleep -Seconds 10
     } else {
-        Write-Host ""
-        Write-Host "All copy jobs have completed.  Rock on." -ForegroundColor green
+        write-verbose ""
+        write-verbose "All copy jobs have completed.  Rock on." -ForegroundColor green
     }
 }
 
-write-host "All done!"
+write-verbose "All done!"
 exit 0

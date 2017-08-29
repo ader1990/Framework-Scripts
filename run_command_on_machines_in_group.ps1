@@ -26,14 +26,12 @@ $location = $location.Trim()
 [System.Collections.ArrayList]$vmNames_array
 $vmNameArray = {$vmNames_array}.Invoke()
 $vmNameArray.Clear()
-write-host "Incoming : " $requestedNames
 if ($requestedNames -like "*,*") {
     $vmNameArray = $requestedNames.Split(',')
 } else {
     $vmNameArray = $requestedNames
 }
 
-Write-Host "After : " $vmNameArray
 $suffix = $suffix -replace "_","-"
 
 $commandString = 
@@ -52,7 +50,7 @@ $commandString =
     . C:\Framework-Scripts\secrets.ps1
 
     $logName = "C:\temp\transcripts\run_command_on_machines_in_group__scriptblock-" + $vm_name + "-" + (Get-Date -Format s).replace(":","-")
-    Start-Transcript -path $logName -force
+    Start-Transcript -path $logName -force >$null
 
     login_azure $DestRG $DestSA $location > $null
     #
@@ -82,7 +80,7 @@ $commandString =
         
         [System.Management.Automation.Runspaces.PSSession]$session = create_psrp_session $vm_name $destRG $destSA $location $cred $o
         if ($? -eq $true -and $session -ne $null) {
-            $result = invoke-command -session $session -ScriptBlock $commandBLock -ArgumentList $command
+            $result = invoke-command -session $session -ScriptBlock $commandBLock -ArgumentList $command -ErrorAction SilentlyContinue
             $success = $true
             break
         } else {
@@ -94,10 +92,6 @@ $commandString =
         start-sleep -Seconds 10
     }
 
-    if ($session -ne $null) {
-        Remove-PSSession -Session $session
-    }
-    
     Stop-Transcript > $null
 
     return $result
@@ -139,7 +133,7 @@ while ($allDone -eq $false) {
         $job = Get-Job -Name $job_name
         $jobState = $job.State
 
-        # write-host "    Job $job_name is in state $jobState" -ForegroundColor Yellow
+        # write-verbose "    Job $job_name is in state $jobState" -ForegroundColor Yellow
         if ($jobState -eq "Running") {
             $allDone = $false
         } elseif ($jobState -eq "Failed") {
@@ -188,8 +182,12 @@ foreach ($baseName in $vmNameArray) {
     $vm_name = $vm_name -replace ".vhd", "" 
     $job_name = "run_command_" + $vm_name
 
-    Write-Host $vm_name :
-    Get-Job $job_name | Receive-Job
+    Write-Host "Reply from machine $vm_name :" -ForegroundColor Green
+    $output = (Get-Job $job_name | Receive-Job)
+    foreach ($line in $output) {
+        write-host "        "$line -ForegroundColor Magenta
+    }
+    write-host ""
 }
 
 if ($jobFailed -eq $true -or $jobBlocked -eq $true)
