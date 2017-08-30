@@ -80,14 +80,17 @@ $commandString =
         Write-verbose "Executing remote command on machine $vm_name, resource group $DestRG"
         $timesTried = $timesTried + 1
         
-        [System.Management.Automation.Runspaces.PSSession]$session = create_psrp_session $vm_name $DestRG $DestSA $location $cred $o
+        $session = create_psrp_session $vm_name $DestRG $DestSA $location $cred $o
         if ($? -eq $true -and $session -ne $null) {
             $result = invoke-command -session $session -ScriptBlock $commandBLock -ArgumentList $command -ErrorAction SilentlyContinue
             $success = $true
             break
         } else {
-            if ($timesTried -lt $retryCount) {
+            if ($session -ne $null) {
                 Remove-PSSession -Session $session
+            }
+            if ($timesTried -lt $retryCount) {
+                
                 Write-Error "    Try $timesTried of $retryCount -- FAILED to establish PSRP connection to machine $vm_name."
             }
         }

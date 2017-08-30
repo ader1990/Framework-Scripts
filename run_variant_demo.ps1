@@ -15,8 +15,8 @@ $SSA ="smokebvtstorageaccount"
 $SRG="smoke_bvts_resource_group"
 $SContainer="vhds"
 
-$DSA="variants1"
-$DRG="variants_test_1"
+$DSA="variants6"
+$DRG="variants_test_6"
 $DContainer="running-variants"
 
 $oldSuffix="-generalized.vhd"

@@ -326,35 +326,40 @@ function deallocate_machines_in_group([Microsoft.Azure.Commands.Compute.Models.P
     }
 
     $scriptBlock = [scriptblock]::Create($scriptBlockString)
+    $launchedAJob = $false
     foreach ($singleVM in $runningVMs) {
         $vm_name = $singleVM.Name
         write-verbose "Starting job to deprovision VM $vm_name"
         $vmJobName = $vm_name + "-Deprov"
         Start-Job -Name $vmJobName -ScriptBlock $scriptBlock -ArgumentList $vm_name,$destRG,$destSA
+        $launchedAJob = $true
     }
 
-    $allDone = $false
-    while ($allDone -eq $false) {
-        
-        $allDone = $true
-        $timeNow = get-date
-        write-verbose "Checking jobs at time $timeNow :" 
-        $vm_name = $singleVM.Name
-        $vmJobName = $vm_name + "-Deprov"
-        $job = Get-Job -Name $vmJobName
-        $jobState = $job.State        
-        write-verbose "    Job $vmJobName is in state $jobState" 
-        if ($jobState -eq "Running") {
-            $allDone = $false
-        } 
+    if ($launchedAJob -eq $true) {
+        start-sleep -Seconds 10
+
+        $allDone = $false
+        while ($allDone -eq $false) {        
+            $allDone = $true
+            $timeNow = get-date
+            write-verbose "Checking jobs at time $timeNow :" 
+            $vm_name = $singleVM.Name
+            $vmJobName = $vm_name + "-Deprov"
+            $job = Get-Job -Name $vmJobName
+            $jobState = $job.State        
+            write-verbose "    Job $vmJobName is in state $jobState" 
+            if ($jobState -eq "Running") {
+                $allDone = $false
+            } 
+
+            if ($allDone -eq $false) {
+                Start-Sleep -Seconds 10
+            }
+        }
 
         if ($allDone -eq $false) {
             Start-Sleep -Seconds 10
         }
-    }
-
-    if ($allDone -eq $false) {
-        Start-Sleep -Seconds 10
     }
 }
 
