@@ -311,7 +311,7 @@ function create_azure_topology {
     $azureBackend.subnetPrefix = $vnetSubnetAddressPrefix
     $azureBackend.blobURN = "None"
     $azureBackend.suffix = "-Smoke-1"
-    $azureBackend.useInitialCreds = $false
+    $azureBackend.useInitialCreds = "No"
     
     $azureInstance = $azureBackend.GetInstanceWrapper("AzureSetup")
     $azureInstance.SetupAzureRG()
@@ -367,7 +367,7 @@ function create_azure_topology {
 
             C:\Framework-Scripts\launch_single_azure_vm.ps1 -vmName $vm_name -resourceGroup $rg -storageAccount $sa -containerName $cn `
                                                             -network $nw -subnet $sn -NSG $nsg -location $loc -VMFlavor $flav `
-                                                            -addressPrefix $apf -subnetPrefix $spf -suffix $sfc -useInitialCreds "False"
+                                                            -addressPrefix $apf -subnetPrefix $spf -suffix $sfc -useInitialCreds "No"
         }
 
         $scriptBlock = [scriptblock]::Create($scriptText)

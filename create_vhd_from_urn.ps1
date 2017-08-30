@@ -162,7 +162,7 @@ $azureBackend.addressPrefix = $vnetAddressPrefix
 $azureBackend.subnetPrefix = $vnetSubnetAddressPrefix
 $azureBackend.blobURN = $blobURN
 $azureBackend.suffix = $suffix
-$azureBackend.useInitialCreds = $true
+$azureBackend.useInitialCreds = "Yes"
 
 $azureInstance = $azureBackend.GetInstanceWrapper("AzureSetup")
 if ($azureInstance -eq $null) {write-host "Damnit"}
@@ -236,7 +236,7 @@ $scriptBlockString =
     $azureBackend.subnetPrefix = $vnetSubnetAddressPrefix
     $azureBackend.blobURN = $blobURN
     $azureBackend.suffix = $suffix
-    $azureBackend.useInitialCreds = $true
+    $azureBackend.useInitialCreds = "Yes"
 
     $azureBackend.enableBootDiagnostics = "No"
 

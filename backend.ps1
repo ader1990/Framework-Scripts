@@ -181,7 +181,7 @@ class AzureBackend : Backend {
     [String] $suffix = "-Smoke-1"
     [String] $UseExistingResources = "yes"
     [String] $enableBootDiagnostics = "yes"
-    [switch] $useInitialCreds = $true
+    [string] $useInitialCreds = "yes"
 
     AzureBackend ($Params) : base ($Params) {
         Write-Verbose "Starting the backend"
@@ -512,7 +512,7 @@ write-verbose  "Checkpoint 1"
             $trying = $false
             
             write-verbose "Starting the VM" 
-            if ($useInitialCreds -eq $true) {
+            if ($useInitialCreds -eq "yes") {
                 $cred = make_cred_initial
             } else {
                 $cred = make_cred
@@ -606,7 +606,7 @@ write-verbose  "Checkpoint 1"
         write-verbose "OSDIskVHD URI set to $osDiskVhdUri"
         
 
-        if ($useInitialCreds -eq $true) {
+        if ($useInitialCreds -eq "yes") {
             $cred = make_cred_initial
         } else {
             $cred = make_cred

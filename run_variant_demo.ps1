@@ -15,8 +15,8 @@ $SSA ="smokebvtstorageaccount"
 $SRG="smoke_bvts_resource_group"
 $SContainer="vhds"
 
-$DSA="variants5"
-$DRG="variants_test_5"
+$DSA="variants6"
+$DRG="variants_test_6"
 $DContainer="running-variants"
 
 $oldSuffix="-generalized.vhd"
@@ -56,10 +56,10 @@ $commandTimer = [Diagnostics.Stopwatch]::StartNew()
 write-host "Executing a command against the launched machines..."
 $variantNames = .\create_variant_name_list.ps1 -Flavors $flavs -requestedNames $names -location $loc -suffix $suffix -Verbose
 
-echo "Variant names are " $variantNames
+Write-Host "Variant names are " $variantNames
 #
 #  Run a command across the group
-.\run_command_on_machines_in_group.ps1 -requestedNames $names -destSA $DSA -destRG $DRG -suffix "" -command "lscpu" -location $loc -Verbose
+.\run_command_on_machines_in_group.ps1 -requestedNames $variantNames -destSA $DSA -destRG $DRG -suffix "" -command "lscpu" -location $loc -Verbose
 write-host "Command execution complete."
 
 $commandTimer.Stop()

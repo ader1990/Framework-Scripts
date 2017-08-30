@@ -19,9 +19,12 @@ $destRG = $destRG.Trim()
 $suffix = $suffix.Trim()
 $asRoot = $asRoot.Trim()
 $location = $location.Trim()
+# $requestedNames = $requestedNames.Trim()
 
 . c:\Framework-Scripts\common_functions.ps1
 . c:\Framework-Scripts\secrets.ps1
+
+Write-host "Requested names = " $reqeustedNames
 
 [System.Collections.ArrayList]$vmNames_array
 $vmNameArray = {$vmNames_array}.Invoke()
@@ -29,7 +32,11 @@ $vmNameArray.Clear()
 if ($requestedNames -like "*,*") {
     $vmNameArray = $requestedNames.Split(',')
 } else {
-    $vmNameArray = $requestedNames
+    $vmNameArray += $requestedNames
+}
+
+foreach ($name in $vmNameArray) {
+    Write-host "Name is $name"
 }
 
 $suffix = $suffix -replace "_","-"
@@ -108,6 +115,7 @@ get-job | Stop-Job
 get-job | Remove-Job
 
 foreach ($baseName in $vmNameArray) {
+    Write-Verbose "Name is $baseName"
     $vm_name = $baseName
     $vm_name = $vm_name -replace ".vhd", ""
     $job_name = "run_command_" + $vm_name

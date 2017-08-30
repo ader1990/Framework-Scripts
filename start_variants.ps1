@@ -143,7 +143,7 @@ $azureBackend.addressPrefix = $vnetAddressPrefix
 $azureBackend.subnetPrefix = $vnetSubnetAddressPrefix
 $azureBackend.blobURN = "None"
 $azureBackend.suffix = "-Smoke-1"
-$azureBackend.useInitialCreds = $false
+$azureBackend.useInitialCreds = "No"
 
 $azureInstance = $azureBackend.GetInstanceWrapper("AzureSetup")
 $azureInstance.SetupAzureRG()

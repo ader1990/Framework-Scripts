@@ -24,7 +24,7 @@
     [Parameter(Mandatory=$false)] [string] $generalizedBlobURI = ".vhd",
 
     [Parameter(Mandatory=$false)] [string] $enableBootDiagnostics = "No",
-    [Parameter(Mandatory=$false)] [string] $useInitialCreds = $false   
+    [Parameter(Mandatory=$false)] [string] $useInitialCreds = "No"   
 )
 
 $vmName = $vmName.Trim()
@@ -67,7 +67,7 @@ $azureBackend.blobURN = $blobURN
 $azureBackend.blobURI = $generalizedBlobURI
 $azureBackend.suffix = $suffix
 
-if ($useInitialCreds -eq "True") {
+if ($useInitialCreds -eq "Yes") {
     $azureBackend.suffix = $useInitialCreds
 }
 
