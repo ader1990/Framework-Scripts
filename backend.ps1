@@ -14,11 +14,15 @@ class Instance {
         Start-Transcript -Path $transcriptPath -Force
         $this.Backend = $Backend
         $this.Name = $Name
-        write-verbose ("Initialized instance wrapper" + $this.Name) -ForegroundColor Magenta
+        Write-Host ("Initialized instance wrapper for " + $this.Name) -ForegroundColor Magenta
     }
 
     [void] Cleanup () {
         $this.Backend.CleanupInstance($this.Name)
+    }
+
+    [void] CreateInstance () {
+        $this.Backend.CreateInstance($this.Name)
     }
 
     [void] CreateFromSpecialized () {
@@ -65,7 +69,19 @@ class AzureInstance : Instance {
 }
 
 class HypervInstance : Instance {
-    HypervInstance ($Params) : base ($Params) {}
+    [String] $VHDPath
+    [String] $DvdDrive
+
+    HypervInstance ($Backend, $Name) : base ($Backend, $Name) {
+    }
+
+    [void] CreateInstance () {
+        $this.Backend.CreateInstance($this.Name, $this.VHDPath)
+    }
+
+    [void] AttachVMDvdDrive ($DvdDrive) {
+        $this.Backend.AttachVMDvdDrive($this.Name, $DvdDrive)
+    }
 }
 
 
@@ -73,12 +89,25 @@ class Backend {
     [String] $Name="BaseBackend"
 
     Backend ($Params) {
-        write-verbose ("Initialized backend " + $this.Name) -ForegroundColor Magenta
+        Write-Host ("Initialized backend " + $this.Name) -ForegroundColor Magenta
+    }
+
+    [string] Serialize() {
+        return $this | ConvertTo-Json
+    }
+
+    static [Backend] Deserialize([string] $Json) {
+        $deserialized = ConvertFrom-Json -InputObject $Json
+        $backend = [Backend]::new($deserialized.Name)
+        return $backend
     }
 
     [Instance] GetInstanceWrapper ($InstanceName) {
-        write-verbose ("Initializing instance on backend " + $this.Name) -ForegroundColor Green
+        Write-Host ("Initializing instance on backend " + $this.Name) -ForegroundColor Green
         return $null
+    }
+
+    [void] CreateInstance ($InstanceName) {
     }
 
     [void] CreateInstanceFromSpecialized ($InstanceName) {
@@ -91,44 +120,44 @@ class Backend {
     }
 
     [void] CleanupInstance ($InstanceName) {
-        write-verbose ("Cleaning instance and associated resources on backend " + $this.Name) `
+        Write-Host ("Cleaning instance and associated resources on backend " + $this.Name) `
             -ForegroundColor Red
     }
 
     [void] RebootInstance ($InstanceName) {
-        write-verbose ("Rebooting instance on backend " + $this.Name) -ForegroundColor Green
+        Write-Host ("Rebooting instance on backend " + $this.Name) -ForegroundColor Green
     }
 
     [String] GetPublicIP ($InstanceName) {
-        write-verbose ("Getting instance public IP a on backend " + $this.Name) -ForegroundColor Green
+        Write-Host ("Getting instance public IP a on backend " + $this.Name) -ForegroundColor Green
         return $null
     }
 
     [object] GetVM($instanceName) {
-       write-verbose ("Getting instance VM on backend " + $this.Name) -ForegroundColor Green
+       Write-Host ("Getting instance VM on backend " + $this.Name) -ForegroundColor Green
        return $null       
     }
 
     [void] StopInstance($instanceName) {
-       write-verbose ("StopInstance VM on backend " + $this.Name) -ForegroundColor Green
+       Write-Host ("StopInstance VM on backend " + $this.Name) -ForegroundColor Green
     }
 
     [void] RemoveInstance($instanceName) {
-       write-verbose ("RemoveInstance VM on backend " + $this.Name) -ForegroundColor Green
+       Write-Host ("RemoveInstance VM on backend " + $this.Name) -ForegroundColor Green
     }
 
     [Object] GetPSSession ($InstanceName) {
-        write-verbose ("Getting new Powershell Session on backend " + $this.Name) -ForegroundColor Green
+        Write-Host ("Getting new Powershell Session on backend " + $this.Name) -ForegroundColor Green
         return $null
     }
 
     [string] SetupAzureRG( ) {
-        write-verbose ("Setting up Azure Resource Groups " + $this.Name) -ForegroundColor Green
+        Write-Host ("Setting up Azure Resource Groups " + $this.Name) -ForegroundColor Green
         return $null
     }
 
     [string] WaitForAzureRG( ) {
-        write-verbose ("Waiting for Azure resource group setup " + $this.Name) -ForegroundColor Green
+        Write-Host ("Waiting for Azure resource group setup " + $this.Name) -ForegroundColor Green
         return $null
     }
 }
@@ -631,10 +660,199 @@ write-verbose  "Checkpoint 1"
     }
 }
 
+
 class HypervBackend : Backend {
     [String] $Name="HypervBackend"
+    [String] $ComputerName
+    [String] $SecretsPath
+    [String] $UseExistingResources = $true
+    [System.Management.Automation.PSCredential] $Credentials
 
-    HypervBackend ($Params) : base ($Params) {}
+    HypervBackend ($Params) : base ($Params) {
+        $this.ComputerName = $Params[0]
+        $this.SecretsPath = $Params[1]
+
+        if ($this.SecretsPath -and (Test-Path $this.SecretsPath)) {
+            $this.GetCredentials()
+        } else {
+            Write-Host "Credential file does not exist. Using current user context."
+        }
+    }
+
+    [void] GetCredentials() {
+        . $this.SecretsPath
+        $securePassword = ConvertTo-SecureString -AsPlainText -Force $global:password
+        $this.Credentials = New-Object System.Management.Automation.PSCredential `
+            -ArgumentList $global:username, $securePassword
+    }
+
+    [string] RunHypervCommand ($params) {
+        if ($this.Credentials) {
+            $params += (@{"Credential"=$this.Credentials})
+        }
+        if ($this.ComputerName -and ($this.ComputerName -ne "localhost") `
+                -and ($this.ComputerName -ne "127.0.0.1")) {
+            $params += @{"ComputerName"=$this.ComputerName}
+        }
+        return (Invoke-Command @params)
+    }
+
+    [void] CreateInstance ($InstanceName, $VHDPath) {
+        Write-Host ("Creating $InstanceName on backend " + $this.Name) -ForegroundColor Green
+        $scriptBlock = {
+            param($InstanceName, $VHDPath)
+
+            New-VM -Name $InstanceName -VHDPath $VHDPath `
+                   -MemoryStartupBytes 3500MB `
+                   -Generation 1 `
+                   -SwitchName "External"
+            Set-VM -Name $InstanceName `
+                   -ProcessorCount 2 `
+                   -DynamicMemory:$false
+            Set-VMMemory -VMName $InstanceName `
+                         -DynamicMemoryEnabled $false
+            Enable-VMIntegrationService -VMName $InstanceName `
+                                        -Name "*"
+            Start-VM -Name $InstanceName
+            Write-Host "VM $InstanceName has been created and started." -ForegroundColor Magenta
+
+        }
+        $params = @{
+            "ScriptBlock"=$scriptBlock;
+            "ArgumentList"=@($InstanceName, $VHDPath);
+        }
+        $this.RunHypervCommand($params)
+    }
+
+    [Instance] GetInstanceWrapper ($InstanceName) {
+        Write-Host ("Initializing $InstanceName on backend " + $this.Name) -ForegroundColor Green
+        $instance = [HypervInstance]::new($this, $InstanceName)
+        if (!$instance) {
+            throw "Failed to initialize instance $InstanceName"
+        }
+        return $instance
+    }
+
+    [void] AttachVMDvdDrive ($InstanceName, $DvdDrive) {
+        Write-Host ("Attaching DvdDrive to $InstanceName on backend " + $this.Name) -ForegroundColor Green
+        $params = @{
+            "ScriptBlock"={
+                param($InstanceName, $DvdDrive)
+                Set-VMDvdDrive -VM $InstanceName -Path $DvdDrive
+            };
+            "ArgumentList"=@($InstanceName, $DvdDrive);
+        }
+        $this.RunHypervCommand($params)
+    }
+
+    [void] StopInstance ($InstanceName) {
+        Write-Host ("Stopping $InstanceName on backend " + $this.Name) -ForegroundColor Red
+        $params = @{
+            "ScriptBlock"={
+                param($InstanceName)
+                if (Get-VM -Name $InstanceName -ErrorAction SilentlyContinue) {
+                    Stop-VM -Name $InstanceName -Force
+                }
+            };
+            "ArgumentList"=@($InstanceName);
+        }
+        $this.RunHypervCommand($params)
+    }
+
+    [void] RemoveInstance ($InstanceName) {
+        Write-Host ("Removing $InstanceName on backend " + $this.Name) -ForegroundColor Red
+        $this.StopInstance($InstanceName)
+        $params = @{
+            "ScriptBlock"={
+                param($InstanceName)
+                if (Get-VM -Name $InstanceName -ErrorAction SilentlyContinue) {
+                    Remove-VM -Name $InstanceName -Force
+                }
+            };
+            "ArgumentList"=@($InstanceName);
+        }
+        $this.RunHypervCommand($params)
+    }
+
+    [void] RebootInstance ($InstanceName) {
+        Write-Host ("Rebooting $InstanceName on backend " + $this.Name) -ForegroundColor Green
+        $params = @{
+            "ScriptBlock"={
+                param($InstanceName)
+                Restart-VM -Name $InstanceName -Force
+            };
+            "ArgumentList"=@($InstanceName);
+        }
+        $this.RunHypervCommand($params)
+    }
+
+    [string] Serialize() {
+        return $this | ConvertTo-Json
+    }
+
+    static [HypervBackend] Deserialize([string] $Json) {
+        $deserialized = ConvertFrom-Json -InputObject $Json
+        $HypervBackend = [HypervBackend]::new(@($deserialized.ComputerName))
+        return $HypervBackend
+    }
+
+    [void] CleanupInstance ($InstanceName) {
+        Write-Host ("Cleaning $InstanceName on backend " + $this.Name) -ForegroundColor Red
+        $this.RemoveInstance($InstanceName)
+        if ($this.UseExistingResources) {
+            Write-Host "Preserving existing VHD for future use."
+        } else {
+            Write-Host "Removing VHD."
+            $params = @{
+                "ScriptBlock"={
+                    param($VHDPath)
+                    Remove-Item -Force $VHDPath
+                };
+                "ArgumentList"=@($this.VHDPath);
+            }
+            $this.RunHypervCommand($params)
+        }
+    }
+
+    [String] GetPublicIP ($InstanceName) {
+        # NOTE(papagalu):LIS drivers, LIS KVP daemon should be installed on the VM
+        $scriptBlock = {
+            param($InstanceName)
+            (Get-VMNetworkAdapter -VMName $InstanceName).IPaddresses[0]
+        }
+
+        $params = @{
+            "ScriptBlock"=$scriptBlock;
+            "ArgumentList"=@($InstanceName);
+        }
+        $ip = ""
+        do {
+            Start-Sleep -s 10
+            $ip = $this.RunHypervCommand($params)
+        } while([string]::IsNullOrWhiteSpace($ip))
+
+        return $ip
+    }
+
+    [object] GetVM ($InstanceName) {
+        $params = @{
+            "ScriptBlock"={
+                param($InstanceName)
+                Get-VM -Name $InstanceName
+            };
+            "ArgumentList"=@($InstanceName);
+        }
+        return ($this.RunHypervCommand($params))
+    }
+
+    [object] GetPSSession ($InstanceName) {
+        if (!$this.Credentials) {
+            return $null
+        }
+        $ip = $this.GetPublicIP($InstanceName)
+        $session = New-PSSession -ComputerName $ip -Credential $this.Credentials
+        return $session
+    }
 }
 
 

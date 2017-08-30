@@ -41,7 +41,9 @@ param (
 
 $ErrorActionPreference = "Stop"
 $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$env:scriptPath = $scriptPath
 . "$scriptPath\common_functions.ps1"
+. "$scriptPath\backend.ps1"
 
 function CreateWait-JobFromScript {
     param(
@@ -52,14 +54,17 @@ function CreateWait-JobFromScript {
         [Parameter(Mandatory=$false)]
         [array] $ArgumentList,
         [Parameter(Mandatory=$false)]
-        [string] $JobName="Hyperv-Borg-Job-{0}"
-        
+        [string] $JobName="Hyperv-Borg-Job-{0}",
+        [Parameter(Mandatory=$false)]
+        [string]$ScriptPath=$env:scriptPath
     )
     $JobName = $JobName -f @(Get-Random 1000000)
     try {
+        $initScript = '. "{0}"' -f @("$scriptPath\backend.ps1")
         $s = [Scriptblock]::Create($ScriptBlock)
         $job = Start-Job -Name $JobName -ScriptBlock $s `
-            -ArgumentList $ArgumentList
+            -ArgumentList $ArgumentList `
+            -InitializationScript ([Scriptblock]::Create($initScript))
         $jobResult = Wait-Job $job -Timeout $Timeout -Force
         Stop-Job $JobName -ErrorAction SilentlyContinue -Confirm:$false
         $output = Receive-Job $JobName -Keep
@@ -107,23 +112,29 @@ function Get-VMNames {
     return $vmNames
 }
 
+function Get-CleanupVMSScript {
+    $scriptBlock = {
+        param($VMName, $Backend)
+        $instance = [HypervBackend]::Deserialize($Backend).GetInstanceWrapper($VMName)
+        $instance.Cleanup()
+    }
+    return $scriptBlock
+}
+
 Workflow Cleanup-VMS {
-    param($VMNames, $VMCleanTimeout)
+    param($VMNames, $VMCleanTimeout, $Backend)
+
     Write-Output "Cleaning VMs..."
     $errors = 0
     $suffix = Get-Random 1000000
     $scriptBlock = $null
     foreach -parallel ($vmName in $VMNames) {
-        $Workflow:scriptBlock = {
-            param($VMName)
-            Write-Output "Stopping and cleaning machine $VMName."
-            Stop-VM -Name $VMName -Force -ErrorAction SilentlyContinue | Out-Null
-            Remove-VM -Name $VMName -Force -ErrorAction SilentlyContinue | Out-Null
-        }
+        $Workflow:scriptBlock = Get-CleanupVMSScript
         try {
             CreateWait-JobFromScript -ScriptBlock $Workflow:scriptBlock `
-                -ArgumentList @($vmName) -Timeout $VMCleanTimeout `
-                -JobName "DeallocateVM-$vmName-$suffix-{0}"
+                -ArgumentList @($vmName,$Backend) -Timeout $VMCleanTimeout `
+                -JobName "DeallocateVM-$vmName-$suffix-{0}" `
+                -ScriptPath $env:scriptPath
         } catch {
             $Workflow:errors += 1
         }
@@ -174,7 +185,8 @@ Workflow Copy-VHDS {
         try {
             CreateWait-JobFromScript -ScriptBlock $Workflow:scriptBlock `
                 -ArgumentList @($VHDFileName, $BaseVHDsPath, $WorkingVHDsPath, $UseChildrenVHD) `
-                -Timeout $VHDCopyTimeout -JobName "CopyVHD-$VHDFileName-$suffix-{0}"
+                -Timeout $VHDCopyTimeout -JobName "CopyVHD-$VHDFileName-$suffix-{0}" `
+                -ScriptPath $env:scriptPath
         } catch {
             $Workflow:errors += 1
         }
@@ -208,7 +220,8 @@ Workflow Create-VMS {
         try {
             CreateWait-JobFromScript -ScriptBlock $Workflow:scriptBlock `
                 -ArgumentList @($vmName, $vhdFile.FullName) `
-                -Timeout $VMBootTimeout -JobName "CreateVM-$vmName-$suffix-{0}"
+                -Timeout $VMBootTimeout -JobName "CreateVM-$vmName-$suffix-{0}" `
+                -ScriptPath $env:scriptPath
             $Workflow:vmsCreated += $vmName
         } catch {
             $Workflow:errors += 1
@@ -277,7 +290,8 @@ Workflow Check-VMS {
         try {
             CreateWait-JobFromScript -ScriptBlock $Workflow:scriptBlock `
                 -ArgumentList @($vmName, $creds, $KernelVersion) `
-                -Timeout $VMCheckTimeout -JobName "CheckVM-$vmName-$suffix-{0}"
+                -Timeout $VMCheckTimeout -JobName "CheckVM-$vmName-$suffix-{0}" `
+                -ScriptPath $env:scriptPath
             $Workflow:vmsCreated += $vmName
         } catch {
             $Workflow:errors += 1
@@ -311,7 +325,8 @@ function Main {
 
     Cleanup-Environment $BootResultsPath $ProgressLogsPath
     $vmNames = Get-VMNames
-    Cleanup-VMS -VMNames $vmNames $VMCleanTimeout
+    $Backend = [HypervBackend]::new(@("localhost"))
+    Cleanup-VMS -VMNames $vmNames $VMCleanTimeout $Backend.Serialize()
 
     if (!$SkipCopy) {
         Copy-VHDS $BaseVHDsPath $WorkingVHDsPath $UseChildrenVHD $VHDCopyTimeout
