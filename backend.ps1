@@ -14,7 +14,7 @@ class Instance {
         Start-Transcript -Path $transcriptPath -Force
         $this.Backend = $Backend
         $this.Name = $Name
-        Write-Host ("Initialized instance wrapper for " + $this.Name) -ForegroundColor Magenta
+        write-verbose ("Initialized instance wrapper for " + $this.Name)
     }
 
     [void] Cleanup () {
@@ -30,11 +30,11 @@ class Instance {
     }
 
     [void] CreateFromURN () {
-        $this.Backend.CreateInstanceFromURN($this.Name)
+        $this.Backend.CreateInstanceFromURN($this.Name, $this.useInitialCreds)
     }
 
     [void] CreateFromGeneralized () {
-        $this.Backend.CreateInstanceFromGeneralized($this.Name)
+        $this.Backend.CreateInstanceFromGeneralized($this.Name, $this.useInitialCreds)
     }
 
     [void] StopInstance () {
@@ -89,7 +89,7 @@ class Backend {
     [String] $Name="BaseBackend"
 
     Backend ($Params) {
-        Write-Host ("Initialized backend " + $this.Name) -ForegroundColor Magenta
+        write-verbose ("Initialized backend " + $this.Name) 
     }
 
     [string] Serialize() {
@@ -103,7 +103,7 @@ class Backend {
     }
 
     [Instance] GetInstanceWrapper ($InstanceName) {
-        Write-Host ("Initializing instance on backend " + $this.Name) -ForegroundColor Green
+        write-verbose ("Initializing instance on backend " + $this.Name)
         return $null
     }
 
@@ -113,51 +113,50 @@ class Backend {
     [void] CreateInstanceFromSpecialized ($InstanceName) {
     }
 
-    [void] CreateInstanceFromURN ($InstanceName) {
+    [void] CreateInstanceFromURN ($InstanceName, $useInitialCreds) {
     }
 
-    [void] CreateInstanceFromGeneralized ($InstanceName) {
+    [void] CreateInstanceFromGeneralized ($InstanceName, $useInitialCreds) {
     }
 
     [void] CleanupInstance ($InstanceName) {
-        Write-Host ("Cleaning instance and associated resources on backend " + $this.Name) `
-            -ForegroundColor Red
+        write-verbose ("Cleaning instance and associated resources on backend " + $this.Name) `
     }
 
     [void] RebootInstance ($InstanceName) {
-        Write-Host ("Rebooting instance on backend " + $this.Name) -ForegroundColor Green
+        write-verbose ("Rebooting instance on backend " + $this.Name)
     }
 
     [String] GetPublicIP ($InstanceName) {
-        Write-Host ("Getting instance public IP a on backend " + $this.Name) -ForegroundColor Green
+        write-verbose ("Getting instance public IP a on backend " + $this.Name)
         return $null
     }
 
     [object] GetVM($instanceName) {
-       Write-Host ("Getting instance VM on backend " + $this.Name) -ForegroundColor Green
-       return $null       
+       write-verbose ("Getting instance VM on backend " + $this.Name)
+       return $null
     }
 
     [void] StopInstance($instanceName) {
-       Write-Host ("StopInstance VM on backend " + $this.Name) -ForegroundColor Green
+       write-verbose ("StopInstance VM on backend " + $this.Name)
     }
 
     [void] RemoveInstance($instanceName) {
-       Write-Host ("RemoveInstance VM on backend " + $this.Name) -ForegroundColor Green
+       write-verbose ("RemoveInstance VM on backend " + $this.Name)
     }
 
     [Object] GetPSSession ($InstanceName) {
-        Write-Host ("Getting new Powershell Session on backend " + $this.Name) -ForegroundColor Green
+        write-verbose ("Getting new Powershell Session on backend " + $this.Name)
         return $null
     }
 
     [string] SetupAzureRG( ) {
-        Write-Host ("Setting up Azure Resource Groups " + $this.Name) -ForegroundColor Green
+        write-verbose ("Setting up Azure Resource Groups " + $this.Name)
         return $null
     }
 
     [string] WaitForAzureRG( ) {
-        Write-Host ("Waiting for Azure resource group setup " + $this.Name) -ForegroundColor Green
+        write-verbose ("Waiting for Azure resource group setup " + $this.Name)
         return $null
     }
 }
@@ -182,6 +181,7 @@ class AzureBackend : Backend {
     [String] $suffix = "-Smoke-1"
     [String] $UseExistingResources = "yes"
     [String] $enableBootDiagnostics = "yes"
+    [switch] $useInitialCreds = $true
 
     AzureBackend ($Params) : base ($Params) {
         Write-Verbose "Starting the backend"
@@ -325,7 +325,7 @@ write-verbose  "Checkpoint 1"
     {
         $sg = Get-AzureRmNetworkSecurityGroup -Name $this.NetworkSecGroupName -ResourceGroupName $this.ResourceGroupName
         if (!$sg) {
-            # write-verbose "Network security group does not exist for this region.  Creating now..." -ForegroundColor Yellow
+            # write-verbose "Network security group does not exist for this region.  Creating now..." 
             $rule1 = New-AzureRmNetworkSecurityRuleConfig -Name "ssl-rule" -Description "Allow SSL over HTTP" `
                                                             -Access "Allow" -Protocol "Tcp" -Direction "Inbound" -Priority "100" `
                                                             -SourceAddressPrefix "Internet" -SourcePortRange "*" `
@@ -349,7 +349,7 @@ write-verbose  "Checkpoint 1"
     {
         $VMVNETObject = Get-AzureRmVirtualNetwork -Name $this.NetworkName -ResourceGroupName $this.ResourceGroupName
         if (!$VMVNETObject) {
-            # write-verbose "Network does not exist for this region.  Creating now..." -ForegroundColor Yellow
+            # write-verbose "Network does not exist for this region.  Creating now..." 
             $VMSubnetObject = New-AzureRmVirtualNetworkSubnetConfig -Name $this.SubnetName  -AddressPrefix $this.subnetPrefix -NetworkSecurityGroup $sg
             New-AzureRmVirtualNetwork   -Name $this.NetworkName -ResourceGroupName $this.ResourceGroupName -Location $this.Location -AddressPrefix $this.addressPrefix -Subnet $VMSubnetObject
             $VMVNETObject = Get-AzureRmVirtualNetwork -Name $this.NetworkName -ResourceGroupName $this.ResourceGroupName
@@ -363,7 +363,7 @@ write-verbose  "Checkpoint 1"
     {
         $VMSubnetObject = Get-AzureRmVirtualNetworkSubnetConfig -Name $this.SubnetName -VirtualNetwork $VMVNETObject 
         if (!$VMSubnetObject) {
-            # write-verbose "Subnet does not exist for this region.  Creating now..." -ForegroundColor Yellow
+            # write-verbose "Subnet does not exist for this region.  Creating now..." 
             Add-AzureRmVirtualNetworkSubnetConfig -Name $this.SubnetName -VirtualNetwork $VMVNETObject -AddressPrefix $this.subnetPrefix -NetworkSecurityGroup $sg
             Set-AzureRmVirtualNetwork -VirtualNetwork $VMVNETObject 
             $VMVNETObject = Get-AzureRmVirtualNetwork -Name $this.NetworkName -ResourceGroupName $this.ResourceGroupName
@@ -381,7 +381,7 @@ write-verbose  "Checkpoint 1"
         $pipName = $pipName.replace("_","-")
         $pip = Get-AzureRmPublicIpAddress -ResourceGroupName $this.ResourceGroupName -Name $pipName 
         if (!$pip) {
-            # write-verbose "Public IP does not exist for this region.  Creating now..." -ForegroundColor Yellow
+            # write-verbose "Public IP does not exist for this region.  Creating now..." 
             New-AzureRmPublicIpAddress -ResourceGroupName $this.ResourceGroupName -Location $this.Location `
                 -Name $pipName -AllocationMethod Dynamic -IdleTimeoutInMinutes 4
             $pip = Get-AzureRmPublicIpAddress -ResourceGroupName $this.ResourceGroupName -Name $pipName
@@ -399,7 +399,7 @@ write-verbose  "Checkpoint 1"
         $VNIC = Get-AzureRmNetworkInterface -Name $nicName -ResourceGroupName $this.ResourceGroupName 
         Write-Verbose "GetNIC CP 2"
         if (!$VNIC) {
-            # write-verbose "Creating new network interface" -ForegroundColor Yellow
+            # write-verbose "Creating new network interface" 
             #
             #  Get the PIP
             $pip2 = Get-AzureRmPublicIpAddress -ResourceGroupName $this.ResourceGroupName -Name $nicName
@@ -417,7 +417,7 @@ write-verbose  "Checkpoint 1"
     }
 
     [void] CreateInstanceFromSpecialized ($InstanceName) {        
-        write-verbose "Creating a new VM config for $InstanceName..." -ForegroundColor Yellow
+        write-verbose "Creating a new VM config for $InstanceName..." 
 
         $sg = $this.getNSG()
 
@@ -426,14 +426,14 @@ write-verbose  "Checkpoint 1"
         $VMSubnetObject = $this.getSubnet($sg, $VMVNETObject)
 
         $vm = New-AzureRmVMConfig -VMName $InstanceName -VMSize $this.VMFlavor
-        write-verbose "Assigning network $($this.NetworkName) and subnet config  $($this.SubnetName) with NSG  $($this.NetworkSecGroupName) to new machine" -ForegroundColor Yellow
+        write-verbose "Assigning network $($this.NetworkName) and subnet config  $($this.SubnetName) with NSG  $($this.NetworkSecGroupName) to new machine" 
 
-        write-verbose "Assigning the public IP address" -ForegroundColor Yellow
+        write-verbose "Assigning the public IP address" 
         $ipName = $InstanceName
         write-verbose "------------------>>>>> -------------------->>>> 1111111 CAlling GETPIP with $ipName"
         $pip = $this.getPIP($ipName)
 
-        write-verbose "Assigning the network interface" -ForegroundColor Yellow
+        write-verbose "Assigning the network interface" 
         $nicName = $InstanceName
         $VNIC = $this.getNIC($nicName, $VMSubnetObject, $pip)
 
@@ -442,7 +442,7 @@ write-verbose  "Checkpoint 1"
         
         Set-AzureRmNetworkInterface -NetworkInterface $VNIC
 
-        write-verbose "Adding the network interface" -ForegroundColor Yellow
+        write-verbose "Adding the network interface" 
         Add-AzureRmVMNetworkInterface -VM $vm -Id $VNIC.Id
         
         #
@@ -453,17 +453,17 @@ write-verbose  "Checkpoint 1"
         $vm = Set-AzureRmVMOSDisk -VM $vm -Name $InstanceName -VhdUri $blobURIRaw -CreateOption Attach -Linux
 
         if ($this.enableBootDiagnostics -ne "Yes") {
-            write-verbose "Disabling boot diagnostics" -ForegroundColor Yellow
+            write-verbose "Disabling boot diagnostics"
             Set-AzureRmVMBootDiagnostics -VM $vm -Disable
         }
 
         try {
-            write-verbose "Starting the VM" -ForegroundColor Yellow
+            write-verbose "Starting the VM" 
             $NEWVM = New-AzureRmVM -ResourceGroupName $this.ResourceGroupName -Location $this.Location -VM $vm
             if (!$NEWVM) {
-                Write-errpr "Failed to create VM" -ForegroundColor Red
+                Write-errpr "Failed to create VM"
             } else {
-                Write-Verbose "VM $InstanceName started successfully..." -ForegroundColor Green
+                Write-Verbose "VM $InstanceName started successfully..."
             }
         } catch {
             Write-Error "Caught exception attempting to start the new VM.  Aborting..."
@@ -472,8 +472,8 @@ write-verbose  "Checkpoint 1"
         }
     }
 
-    [void] CreateInstanceFromURN ($InstanceName) {        
-        write-verbose "Creating a new VM config for $InstanceName..." -ForegroundColor Yellow
+    [void] CreateInstanceFromURN ($InstanceName, $useInitialCreds) {        
+        write-verbose "Creating a new VM config for $InstanceName..." 
 
         $sg = $this.getNSG()
 
@@ -482,22 +482,22 @@ write-verbose  "Checkpoint 1"
         $VMSubnetObject = $this.getSubnet($sg, $VMVNETObject)
 
         $vm = New-AzureRmVMConfig -VMName $InstanceName -VMSize $this.VMFlavor
-        write-verbose "Assigning network $($this.NetworkName) and subnet config $($this.SubnetName) with NSG $($this.NetworkSecGroupName) to new machine" -ForegroundColor Yellow
+        write-verbose "Assigning network $($this.NetworkName) and subnet config $($this.SubnetName) with NSG $($this.NetworkSecGroupName) to new machine"
 
-        write-verbose "Assigning the public IP address" -ForegroundColor Yellow
+        write-verbose "Assigning the public IP address"
         
         $ipName = $InstanceName
         write-verbose "------------------>>>>> -------------------->>>> 2222222 CAlling GETPIP with $ipName"
         $pip = $this.getPIP($ipName)
 
-        write-verbose "Assigning the network interface" -ForegroundColor Yellow
+        write-verbose "Assigning the network interface" 
         $nicName = $InstanceName
         $VNIC = $this.getNIC($nicName, $VMSubnetObject, $pip)
         $VNIC.NetworkSecurityGroup = $sg
         
         Set-AzureRmNetworkInterface -NetworkInterface $VNIC
 
-        write-verbose "Adding the network interface" -ForegroundColor Yellow
+        write-verbose "Adding the network interface"
         Add-AzureRmVMNetworkInterface -VM $vm -Id $VNIC.Id
 
         write-verbose "Parsing the blob string " $this.blobURN
@@ -511,22 +511,26 @@ write-verbose  "Checkpoint 1"
         while ($trying -eq $true) {
             $trying = $false
             
-            write-verbose "Starting the VM" -ForegroundColor Yellow
-            $cred = make_cred_initial
+            write-verbose "Starting the VM" 
+            if ($useInitialCreds -eq $true) {
+                $cred = make_cred_initial
+            } else {
+                $cred = make_cred
+            }
             $vm = Set-AzureRmVMOperatingSystem -VM $vm -Linux -ComputerName $InstanceName -Credential $cred
             $vm = Set-AzureRmVMSourceImage -VM $vm -PublisherName $blobParts[0] -Offer $blobParts[1] `
                 -Skus $blobParts[2] -Version $blobParts[3]
             $vm = Set-AzureRmVMOSDisk -VM $vm -VhdUri $osDiskVhdUri -name $InstanceName -CreateOption fromImage -Caching ReadWrite
 
             if ($this.enableBootDiagnostics -ne "Yes") {
-                write-verbose "Disabling boot diagnostics" -ForegroundColor Yellow
+                write-verbose "Disabling boot diagnostics"
                 Set-AzureRmVMBootDiagnostics -VM $vm -Disable
             }
 
             try {
                 $NEWVM = New-AzureRmVM -ResourceGroupName $this.ResourceGroupName -Location $this.Location -VM $vm
                 if (!$NEWVM) {
-                    write-verbose "Failed to create VM $InstanceName" -ForegroundColor Red
+                    write-error "Failed to create VM $InstanceName"
                     Start-Sleep -Seconds 30
                     $trying = $true
                     $tries = $tries + 1
@@ -534,16 +538,16 @@ write-verbose  "Checkpoint 1"
                         break
                     }
                 } else {
-                    write-verbose "VM $InstanceName started successfully..." -ForegroundColor Green
+                    write-verbose "VM $InstanceName started successfully..." 
                 }
             } catch {
-                Write-errpr "Caught exception attempting to start the new VM.  Aborting..."
+                Write-error "Caught exception attempting to start the new VM.  Aborting..."
             }
         }
     }
 
-    [void] CreateInstanceFromGeneralized ($InstanceName) {        
-        write-verbose "Creating a new VM config..." -ForegroundColor Yellow
+    [void] CreateInstanceFromGeneralized ($InstanceName, $useInitialCreds) {        
+        write-verbose "Creating a new VM config..." 
 
         $sg = $this.getNSG()
         if ($? -eq $false -or $sg -eq $null) {
@@ -561,21 +565,21 @@ write-verbose  "Checkpoint 1"
         }
 
         $vm = New-AzureRmVMConfig -VMName $InstanceName -VMSize $this.VMFlavor
-        write-verbose "Assigning network $($this.NetworkName) and subnet config $($this.SubnetName) with NSG $($this.NetworkSecGroupName) to new machine" -ForegroundColor Yellow
+        write-verbose "Assigning network $($this.NetworkName) and subnet config $($this.SubnetName) with NSG $($this.NetworkSecGroupName) to new machine" 
 
-        write-verbose "Assigning the public IP address" -ForegroundColor Yellow
+        write-verbose "Assigning the public IP address" 
         $ipName = $InstanceName
         write-verbose "------------------>>>>> -------------------->>>> 33333333 CAlling GETPIP with $ipName"
         $pip = $this.getPIP($ipName)
 
-        write-verbose "Assigning the network interface" -ForegroundColor Yellow
+        write-verbose "Assigning the network interface" 
         $nicName = $InstanceName
         $VNIC = $this.getNIC($nicName, $VMSubnetObject, $pip)
         $VNIC.NetworkSecurityGroup = $sg
         
         Set-AzureRmNetworkInterface -NetworkInterface $VNIC
 
-        write-verbose "Adding the network interface" -ForegroundColor Yellow
+        write-verbose "Adding the network interface" 
         Add-AzureRmVMNetworkInterface -VM $vm -Id $VNIC.Id
 
         #
@@ -602,12 +606,16 @@ write-verbose  "Checkpoint 1"
         write-verbose "OSDIskVHD URI set to $osDiskVhdUri"
         
 
-        $cred = make_cred_initial
-        write-verbose "Adding the operating system" -ForegroundColor Yellow
+        if ($useInitialCreds -eq $true) {
+            $cred = make_cred_initial
+        } else {
+            $cred = make_cred
+        }
+        write-verbose "Adding the operating system"
         $vm = Set-AzureRmVMOperatingSystem -VM $vm -Linux -ComputerName $InstanceName -Credential $cred
         $vm = Set-AzureRmVMSourceImage -VM $vm -Id $image.Id
 
-        write-verbose "Setting up the OS disk" -ForegroundColor Yellow
+        write-verbose "Setting up the OS disk"
         $vm = Set-AzureRmVMOSDisk -VM $vm -name $InstanceName -CreateOption fromImage  `
                                                 -Caching ReadWrite -Linux
         # $vm = Set-AzureRmVMOSDisk -VM $vm -name $InstanceName -CreateOption fromImage -SourceImageUri $blobURIRaw `
@@ -615,17 +623,17 @@ write-verbose  "Checkpoint 1"
         # $vm = Set-AzureRmVMOSDisk -VM $vm -VhdUri $osDiskVhdUri -name $InstanceName -CreateOption fromImage -Caching ReadWrite
         
         if ($this.enableBootDiagnostics -ne "Yes") {
-            write-verbose "Disabling boot diagnostics" -ForegroundColor Yellow
+            write-verbose "Disabling boot diagnostics" 
             Set-AzureRmVMBootDiagnostics -VM $vm -Disable
         }
   
         try {
-            write-verbose "Starting the VM" -ForegroundColor Yellow
+            write-verbose "Starting the VM" 
             $NEWVM = New-AzureRmVM -ResourceGroupName $this.ResourceGroupName -Location $this.Location -VM $vm
             if (!$NEWVM) {
-                Write-error "Failed to create VM" -ForegroundColor Red
+                Write-error "Failed to create VM" 
             } else {
-                write-verbose "VM $InstanceName started successfully..." -ForegroundColor Green
+                write-verbose "VM $InstanceName started successfully..." 
             }
         } catch {
             Write-error "Caught exception attempting to start the new VM.  Aborting..."
@@ -640,7 +648,7 @@ write-verbose  "Checkpoint 1"
         $pipName = $InstanceName.replace("_","-")
         $pip = Get-AzureRmPublicIpAddress -ResourceGroupName $this.ResourceGroupName -Name $pipName 
         if (!$pip) {
-            write-verbose "Public IP does not exist for this region.  Creating now..." -ForegroundColor Yellow
+            write-verbose "Public IP does not exist for this region.  Creating now..."
             New-AzureRmPublicIpAddress -ResourceGroupName $this.ResourceGroupName -Location $this.Location `
                 -Name $pipName -AllocationMethod Dynamic -IdleTimeoutInMinutes 4
             $pip = Get-AzureRmPublicIpAddress -ResourceGroupName $this.ResourceGroupName -Name $pipName
@@ -675,7 +683,7 @@ class HypervBackend : Backend {
         if ($this.SecretsPath -and (Test-Path $this.SecretsPath)) {
             $this.GetCredentials()
         } else {
-            Write-Host "Credential file does not exist. Using current user context."
+            Write-warning "Credential file does not exist. Using current user context."
         }
     }
 
@@ -698,7 +706,7 @@ class HypervBackend : Backend {
     }
 
     [void] CreateInstance ($InstanceName, $VHDPath) {
-        Write-Host ("Creating $InstanceName on backend " + $this.Name) -ForegroundColor Green
+        write-verbose ("Creating $InstanceName on backend " + $this.Name)
         $scriptBlock = {
             param($InstanceName, $VHDPath)
 
@@ -714,7 +722,7 @@ class HypervBackend : Backend {
             Enable-VMIntegrationService -VMName $InstanceName `
                                         -Name "*"
             Start-VM -Name $InstanceName
-            Write-Host "VM $InstanceName has been created and started." -ForegroundColor Magenta
+            write-verbose "VM $InstanceName has been created and started."
 
         }
         $params = @{
@@ -725,7 +733,7 @@ class HypervBackend : Backend {
     }
 
     [Instance] GetInstanceWrapper ($InstanceName) {
-        Write-Host ("Initializing $InstanceName on backend " + $this.Name) -ForegroundColor Green
+        write-verbose ("Initializing $InstanceName on backend " + $this.Name)
         $instance = [HypervInstance]::new($this, $InstanceName)
         if (!$instance) {
             throw "Failed to initialize instance $InstanceName"
@@ -734,7 +742,7 @@ class HypervBackend : Backend {
     }
 
     [void] AttachVMDvdDrive ($InstanceName, $DvdDrive) {
-        Write-Host ("Attaching DvdDrive to $InstanceName on backend " + $this.Name) -ForegroundColor Green
+        write-verbose ("Attaching DvdDrive to $InstanceName on backend " + $this.Name)
         $params = @{
             "ScriptBlock"={
                 param($InstanceName, $DvdDrive)
@@ -746,7 +754,7 @@ class HypervBackend : Backend {
     }
 
     [void] StopInstance ($InstanceName) {
-        Write-Host ("Stopping $InstanceName on backend " + $this.Name) -ForegroundColor Red
+        write-verbose ("Stopping $InstanceName on backend " + $this.Name)
         $params = @{
             "ScriptBlock"={
                 param($InstanceName)
@@ -760,7 +768,7 @@ class HypervBackend : Backend {
     }
 
     [void] RemoveInstance ($InstanceName) {
-        Write-Host ("Removing $InstanceName on backend " + $this.Name) -ForegroundColor Red
+        write-verbose ("Removing $InstanceName on backend " + $this.Name)
         $this.StopInstance($InstanceName)
         $params = @{
             "ScriptBlock"={
@@ -775,7 +783,7 @@ class HypervBackend : Backend {
     }
 
     [void] RebootInstance ($InstanceName) {
-        Write-Host ("Rebooting $InstanceName on backend " + $this.Name) -ForegroundColor Green
+        write-verbose ("Rebooting $InstanceName on backend " + $this.Name)
         $params = @{
             "ScriptBlock"={
                 param($InstanceName)
@@ -797,12 +805,12 @@ class HypervBackend : Backend {
     }
 
     [void] CleanupInstance ($InstanceName) {
-        Write-Host ("Cleaning $InstanceName on backend " + $this.Name) -ForegroundColor Red
+        write-verbose ("Cleaning $InstanceName on backend " + $this.Name) 
         $this.RemoveInstance($InstanceName)
         if ($this.UseExistingResources) {
-            Write-Host "Preserving existing VHD for future use."
+            write-verbose "Preserving existing VHD for future use."
         } else {
-            Write-Host "Removing VHD."
+            write-verbose "Removing VHD."
             $params = @{
                 "ScriptBlock"={
                     param($VHDPath)

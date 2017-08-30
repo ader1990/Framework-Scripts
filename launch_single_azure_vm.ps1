@@ -23,7 +23,8 @@
     [Parameter(Mandatory=$false)] [switch] $imageIsGeneralized = $false,
     [Parameter(Mandatory=$false)] [string] $generalizedBlobURI = ".vhd",
 
-    [Parameter(Mandatory=$false)] [string] $enableBootDiagnostics = "No"    
+    [Parameter(Mandatory=$false)] [string] $enableBootDiagnostics = "No",
+    [Parameter(Mandatory=$false)] [string] $useInitialCreds = $false   
 )
 
 $vmName = $vmName.Trim()
@@ -65,6 +66,10 @@ $azureBackend.subnetPrefix = $subnetPrefix
 $azureBackend.blobURN = $blobURN
 $azureBackend.blobURI = $generalizedBlobURI
 $azureBackend.suffix = $suffix
+
+if ($useInitialCreds -eq "True") {
+    $azureBackend.suffix = $useInitialCreds
+}
 
 $azureBackend.enableBootDiagnostics = $enableBootDiagnostics
 

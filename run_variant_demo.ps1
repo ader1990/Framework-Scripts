@@ -9,45 +9,80 @@ set-location c:\Framework-Scripts
 
 #
 #  First start the machines
-$flavors = "Standard_D1_v2,Standard_D3_v2,Standard_D4_v2"
-$requestedNames = "OpenLogic-CentOS-73-LAT,Ubuntu1604-LTS-LATEST"
-$sourceSA="smokebvtstorageaccount"
-$sourceRG="smoke_bvts_resource_group"
-$sourceContainer="vhds"
+$flavs = "Standard_D1_v2,Standard_D3_v2,Standard_D4_v2"
+$Names = "OpenLogic-CentOS-73-LAT,Ubuntu1604-LTS-LATEST"
+$SSA ="smokebvtstorageaccount"
+$SRG="smoke_bvts_resource_group"
+$SContainer="vhds"
 
-$destSA="variants5"
-$destRG="variants_test_5"
-$destContainer="running_variants"
+$DSA="variants1"
+$DRG="variants_test_1"
+$DContainer="running-variants"
 
-$currentSuffix="-generalized.vhd"
-$newSuffix = "-Variant.vhd"
+$oldSuffix="-generalized.vhd"
+$Suffix = "-Variant.vhd"
 
-$network="SmokeVNet"
-$NSG="SmokeNSG"
-$subnet="SmokeSubnet-1"
-$location="westus"
+$nw="SmokeVNet"
+$nsg="SmokeNSG"
+$sn="SmokeSubnet-1"
+$log="westus"
+
+$overallTimer = [Diagnostics.Stopwatch]::StartNew()
+$commandTimer = [Diagnostics.Stopwatch]::StartNew()
+
+write-host "***************************************************************************************************"
+write-host "*              HIPPEE Variants Demonstration -- Two Distros and Three Flavors                     *"
+write-host "***************************************************************************************************"
 
 if ($startMachines -eq $true) {
     #
     #  Step 1:  Instantiate the variants
-    .\start_variants.ps1 -sourceSA "smokebvtstorageaccount" -sourceRG $sourceRG -sourceContainer $sourceContainer -sourceSA $sourceSA -destSA $destSA `
-                                                            -destRG $destRG -destContainer $destContainer -Flavors $flavors `
-                                                            -requestedNames $requestedNames -currentSuffix currentSuffix -newSuffix $newSuffix `
-                                                            -network $network -subnet $subnet -NSG $NSG -location $location -Verbose
+    write-host "Starting the variant machines..." 
+    .\start_variants.ps1  -sourceRG $SRG -sourceSA $SSA -sourceContainer $SContainer  `
+                                -destRG   $DRG   -destSA   $DSA   -destContainer $DContainer `
+                                -Flavors  $flavs  -requestedNames $Names -currentSuffix $oldSuffix `
+                                -newSuffix $Suffix -network $nw -subnet $sn -NSG $nsg `
+                                -location $log -Verbose
+    write-host "Machines are up" 
 }
+
+$commandTimer.Stop()
+$elapsed = $commandTimer.Elapsed
+Write-Host "It required $elapsed to start the variant group" -ForegroundColor Magenta
+$commandTimer = [Diagnostics.Stopwatch]::StartNew()
 
 #
 #  Now get a list of the running VMs
-$variantNames = .\create_variant_name_list.ps1 -Flavors $flavors -requestedNames $requestedNames -location $location -suffix $newSuffix -Verbose
+write-host "Executing a command against the launched machines..."
+$variantNames = .\create_variant_name_list.ps1 -Flavors $flavs -requestedNames $names -location $loc -suffix $suffix -Verbose
 
+echo "Variant names are " $variantNames
 #
 #  Run a command across the group
-.\run_command_on_machines_in_group.ps1 -requestedNames $variantNames -destSA $destSA -destRG $destRG -suffix "" -command "lscpu" -location $location
+.\run_command_on_machines_in_group.ps1 -requestedNames $names -destSA $DSA -destRG $DRG -suffix "" -command "lscpu" -location $loc -Verbose
+write-host "Command execution complete."
+
+$commandTimer.Stop()
+$elapsed = $commandTimer.Elapsed
+Write-Host "It required $elapsed run the command aginst all machines" -ForegroundColor Magenta
+$commandTimer = [Diagnostics.Stopwatch]::StartNew()
 
 #
 #  If desired, shut down the topology
 if ($stopMachines -eq $true) {
-    deallocate_machines_in_list $requestedNames $destRG $destSA $location
+    write-host "Deallocating the launched machines..."
+    deallocate_machines_in_list $variantNames $destRG $destSA $location
+    write-host "Deallocating the launched machines..."
 }
 
-write-host "Thanks for playing!" -foregroundcolor green
+$commandTimer.Stop()
+$elapsed = $commandTimer.Elapsed
+Write-Host "It required $elapsed to deallocate the remove the NIC and PIP for the variant group" -ForegroundColor Magenta
+$commandTimer = [Diagnostics.Stopwatch]::StartNew()
+
+$overallTimer.Stop()
+$elapsed = $overallTimer.Elapsed
+Write-Host "It required $elapsed to instantiate the topology, run the command, and take the topology down." -ForegroundColor Magenta
+write-host "***************************************************************************************************"
+write-host "*              HIPPEE Variants Demonstration Complete!  Thanks for playing!                       *"
+write-host "***************************************************************************************************"

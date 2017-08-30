@@ -53,6 +53,8 @@ $commandString =
     Start-Transcript -path $logName -force >$null
 
     login_azure $DestRG $DestSA $location > $null
+
+    Set-AzureRmCurrentStorageAccount –ResourceGroupName $DestRG –StorageAccountName $DestSA > $null
     #
     #  Session stuff
     #
@@ -75,10 +77,10 @@ $commandString =
     [int]$timesTried = 0
     [bool]$success = $false
     while ($timesTried -lt $retryCount) {
-        Write-Debug "Executing remote command on machine $vm_name, resource group $destRG"
+        Write-verbose "Executing remote command on machine $vm_name, resource group $DestRG"
         $timesTried = $timesTried + 1
         
-        [System.Management.Automation.Runspaces.PSSession]$session = create_psrp_session $vm_name $destRG $destSA $location $cred $o
+        [System.Management.Automation.Runspaces.PSSession]$session = create_psrp_session $vm_name $DestRG $DestSA $location $cred $o
         if ($? -eq $true -and $session -ne $null) {
             $result = invoke-command -session $session -ScriptBlock $commandBLock -ArgumentList $command -ErrorAction SilentlyContinue
             $success = $true
@@ -133,7 +135,7 @@ while ($allDone -eq $false) {
         $job = Get-Job -Name $job_name
         $jobState = $job.State
 
-        # write-verbose "    Job $job_name is in state $jobState" -ForegroundColor Yellow
+        # write-verbose "    Job $job_name is in state $jobState"
         if ($jobState -eq "Running") {
             $allDone = $false
         } elseif ($jobState -eq "Failed") {

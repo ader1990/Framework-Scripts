@@ -192,7 +192,7 @@ $scriptBlockString =
     C:\Framework-Scripts\launch_single_azure_vm.ps1 -vmName $newVMName -resourceGroup $destRG -storageAccount $destSA -containerName $destContainer `
                                                     -network $network -subnet $subnet -NSG $NSG -Location $location -VMFlavor $vmFlavor `
                                                     -suffix $newSuffix -enableBootDiagnostics "No" `
-                                                    -
+                                                    -useInitialCreds "True"
                                                     #  -addAdminUser $TEST_USER_ACCOUNT_NAME `
                                                     # -adminUser $TEST_USER_ACCOUNT_NAME -adminPW $TEST_USER_ACCOUNT_PAS2
     if ($? -ne $true) {

@@ -163,7 +163,7 @@ function stop_machines_in_group([Microsoft.Azure.Commands.Compute.Models.PSVirtu
             $vmJobName = $vm_name + "-Src"
             $job = Get-Job -Name $vmJobName
             $jobState = $job.State
-            write-verbose "    Job $vmJobName is in state $jobState" -ForegroundColor Yellow
+            write-verbose "    Job $vmJobName is in state $jobState"
             if ($jobState -eq "Running") {
                 $allDone = $false
             }
@@ -222,7 +222,7 @@ function deallocate_machines_in_list([string[]] $requestedNames,
     while ($allDone -eq $false) {
         $allDone = $true
         $timeNow = get-date
-        write-verbose "Checking jobs at time $timeNow :" -ForegroundColor Yellow
+        write-verbose "Checking jobs at time $timeNow :"
         foreach ($vm_name in $requestedNames) {
             $vmJobName = $vm_name + "-Deprov"
             $job = Get-Job -Name $vmJobName
@@ -235,7 +235,7 @@ function deallocate_machines_in_list([string[]] $requestedNames,
             } elseif ($jobState -eq "Blocked") {
                 $useColor = "Magenta"
             }
-            write-verbose "    Job $vmJobName is in state $jobState" -ForegroundColor $useColor
+            write-verbose "    Job $vmJobName is in state $jobState"
             if ($jobState -eq "Running") {
                 $allDone = $false
             }
@@ -288,7 +288,7 @@ function stop_machines_in_list([stringe[]] $requestedNames,
             $vmJobName = $vm_name + "-Src"
             $job = Get-Job -Name $vmJobName
             $jobState = $job.State
-            write-verbose "    Job $vmJobName is in state $jobState" -ForegroundColor Yellow
+            write-verbose "    Job $vmJobName is in state $jobState"
             if ($jobState -eq "Running") {
                 $allDone = $false
             }
@@ -335,27 +335,18 @@ function deallocate_machines_in_group([Microsoft.Azure.Commands.Compute.Models.P
 
     $allDone = $false
     while ($allDone -eq $false) {
+        
         $allDone = $true
         $timeNow = get-date
-        write-verbose "Checking jobs at time $timeNow :" -ForegroundColor Yellow
-        foreach ($singleVM in $runningVMs) {
-            $vm_name = $singleVM.Name
-            $vmJobName = $vm_name + "-Deprov"
-            $job = Get-Job -Name $vmJobName
-            $jobState = $job.State
-            $useColor = "Yellow"
-            if ($jobState -eq "Completed") {
-                $useColor="green"
-            } elseif ($jobState -eq "Failed") {
-                $useColor = "Red"
-            } elseif ($jobState -eq "Blocked") {
-                $useColor = "Magenta"
-            }
-            write-verbose "    Job $vmJobName is in state $jobState" -ForegroundColor $useColor
-            if ($jobState -eq "Running") {
-                $allDone = $false
-            }
-        }
+        write-verbose "Checking jobs at time $timeNow :" 
+        $vm_name = $singleVM.Name
+        $vmJobName = $vm_name + "-Deprov"
+        $job = Get-Job -Name $vmJobName
+        $jobState = $job.State        
+        write-verbose "    Job $vmJobName is in state $jobState" 
+        if ($jobState -eq "Running") {
+            $allDone = $false
+        } 
 
         if ($allDone -eq $false) {
             Start-Sleep -Seconds 10

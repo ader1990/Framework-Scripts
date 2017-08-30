@@ -143,13 +143,12 @@ $azureBackend.addressPrefix = $vnetAddressPrefix
 $azureBackend.subnetPrefix = $vnetSubnetAddressPrefix
 $azureBackend.blobURN = "None"
 $azureBackend.suffix = "-Smoke-1"
+$azureBackend.useInitialCreds = $false
 
 $azureInstance = $azureBackend.GetInstanceWrapper("AzureSetup")
 $azureInstance.SetupAzureRG()
 
-$blobs = Get-AzureStorageBlob -Container $sourceContainer
 $failed = $false
-
 $comandScript = {
     param ($vmName,
             $sourceRG,
@@ -200,14 +199,6 @@ $comandScript = {
     Write-verbose "Deallocating machine $vmName, if it is up"
     $runningMachines = Get-AzureRmVm -ResourceGroupName $destRG -status | Where-Object -Property Name -Like "$vmName*"
     deallocate_machines_in_group $runningMachines $destRG $destSA $location
-
-    foreach ($blob in $blobs) {
-        $blobName = $blob.Name
-        $vmSearch = "^" + $vmName + "*"
-        if ($blob.Name -like $vmName) {
-            $sourceVhdName = $blobName
-        }
-    }
 
     $sourceURI = ("https://{0}.blob.core.windows.net/{1}/{2}" -f @($sourceSA, $sourceContainer, $blobName))
 

@@ -159,6 +159,7 @@ $azureBackend.addressPrefix = $vnetAddressPrefix
 $azureBackend.subnetPrefix = $vnetSubnetAddressPrefix
 $azureBackend.blobURI = ""
 $azureBackend.suffix = ""
+$azureBackend.useInitialCreds = $true
 
 $azureInstance = $azureBackend.GetInstanceWrapper("AzureSetup")
 $azureInstance.SetupAzureRG()
@@ -228,6 +229,7 @@ $scriptBlockString =
     $azureBackend.subnetPrefix = $vnetSubnetAddressPrefix
     $azureBackend.blobURI = $blobURI
     $azureBackend.suffix = $suffix
+    $azureBackend.useInitialCreds = $true
 
     $azureBackend.enableBootDiagnostics = "No"
 

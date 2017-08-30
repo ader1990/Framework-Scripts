@@ -72,7 +72,9 @@ $comandScript = {
 
         if ($StartMachines -ne $false) {
             Write-Host "Starting VM for VHD $blobName..."
-            .\launch_single_azure_vm.ps1 -vmName $blobName -resourceGroup $sourceRG -storageAccount $sourceSA -containerName $sourceContainer -network $network -subnet $subnet -NSG $NSG -Location $location
+            .\launch_single_azure_vm.ps1 -vmName $blobName -resourceGroup $sourceRG -storageAccount $sourceSA `
+                                         -containerName $sourceContainer -network $network -subnet $subnet `
+                                         -NSG $NSG -Location $location -useInitialCreds "False"
         } else {
             Write-Host "StartMachine was not set.  VM $blobName will not be started or used."
             $failed = $true

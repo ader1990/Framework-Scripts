@@ -311,6 +311,7 @@ function create_azure_topology {
     $azureBackend.subnetPrefix = $vnetSubnetAddressPrefix
     $azureBackend.blobURN = "None"
     $azureBackend.suffix = "-Smoke-1"
+    $azureBackend.useInitialCreds = $false
     
     $azureInstance = $azureBackend.GetInstanceWrapper("AzureSetup")
     $azureInstance.SetupAzureRG()
@@ -366,7 +367,7 @@ function create_azure_topology {
 
             C:\Framework-Scripts\launch_single_azure_vm.ps1 -vmName $vm_name -resourceGroup $rg -storageAccount $sa -containerName $cn `
                                                             -network $nw -subnet $sn -NSG $nsg -location $loc -VMFlavor $flav `
-                                                            -addressPrefix $apf -subnetPrefix $spf -suffix $sfc 
+                                                            -addressPrefix $apf -subnetPrefix $spf -suffix $sfc -useInitialCreds "False"
         }
 
         $scriptBlock = [scriptblock]::Create($scriptText)
@@ -720,6 +721,7 @@ $timerName="AzureBORGTimer-" + $seconds
 Write-Host "Using timer name $timerName"
 
 Write-Host "Looking for storage account $global:workingStorageAccountName in resource group $global:workingResourceGroupName."
+$commandTimer = [Diagnostics.Stopwatch]::StartNew()
 
 $existingGroup = Get-AzureRmResourceGroup -Name $global:workingResourceGroupName 
 if ($? -eq $true -and $existingGroup -ne $null -and $global:CleanRG -eq $true) {
