@@ -19,12 +19,10 @@ $destRG = $destRG.Trim()
 $suffix = $suffix.Trim()
 $asRoot = $asRoot.Trim()
 $location = $location.Trim()
-# $requestedNames = $requestedNames.Trim()
+$requestedNames = $requestedNames.Trim()
 
 . c:\Framework-Scripts\common_functions.ps1
 . c:\Framework-Scripts\secrets.ps1
-
-Write-host "Requested names = " $reqeustedNames
 
 [System.Collections.ArrayList]$vmNames_array
 $vmNameArray = {$vmNames_array}.Invoke()
@@ -33,10 +31,6 @@ if ($requestedNames -like "*,*") {
     $vmNameArray = $requestedNames.Split(',')
 } else {
     $vmNameArray += $requestedNames
-}
-
-foreach ($name in $vmNameArray) {
-    Write-host "Name is $name"
 }
 
 $suffix = $suffix -replace "_","-"
@@ -115,10 +109,13 @@ get-job | Stop-Job
 get-job | Remove-Job
 
 foreach ($baseName in $vmNameArray) {
-    Write-Verbose "Name is $baseName"
     $vm_name = $baseName
     $vm_name = $vm_name -replace ".vhd", ""
     $job_name = "run_command_" + $vm_name
+
+    if ($vm_name -eq "") {
+        continue
+    }
 
     write-verbose "Executing command on machine $vm_name, resource group $destRG"
 
@@ -142,6 +139,10 @@ while ($allDone -eq $false) {
         $vm_name = $baseName
         $vm_name = $vm_name -replace ".vhd", "" 
         $job_name = "run_command_" + $vm_name
+
+        if ($vm_name -eq "") {
+            continue
+        }
 
         $job = Get-Job -Name $job_name
         $jobState = $job.State
@@ -194,6 +195,10 @@ foreach ($baseName in $vmNameArray) {
     $vm_name = $baseName
     $vm_name = $vm_name -replace ".vhd", "" 
     $job_name = "run_command_" + $vm_name
+
+    if ($vm_name -eq "") {
+        continue
+    }
 
     Write-Host "Reply from machine $vm_name :" -ForegroundColor Green
     $output = (Get-Job $job_name | Receive-Job)

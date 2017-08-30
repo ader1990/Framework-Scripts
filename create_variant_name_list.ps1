@@ -81,4 +81,4 @@ foreach ($vmName in $vmNameArray) {
 $listString = $listString -Replace ".$",""
 # write-verbose "String is now |$listString|"
 
-$listString
+$listString.Trim()

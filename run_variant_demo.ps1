@@ -25,7 +25,7 @@ $Suffix = "-Variant.vhd"
 $nw="SmokeVNet"
 $nsg="SmokeNSG"
 $sn="SmokeSubnet-1"
-$log="westus"
+$loc="westus"
 
 $overallTimer = [Diagnostics.Stopwatch]::StartNew()
 $commandTimer = [Diagnostics.Stopwatch]::StartNew()
@@ -54,9 +54,16 @@ $commandTimer = [Diagnostics.Stopwatch]::StartNew()
 #
 #  Now get a list of the running VMs
 write-host "Executing a command against the launched machines..."
-$variantNames = .\create_variant_name_list.ps1 -Flavors $flavs -requestedNames $names -location $loc -suffix $suffix -Verbose
+$variantNamesMessedUp = .\create_variant_name_list.ps1 -Flavors $flavs -requestedNames $names -location $loc -suffix $suffix -Verbose
+foreach ($baseName in $variantNamesMessedUp)
+{
+    if ($baseName -ne "")
+    {
+        $variantNames = $variantNames + $baseName + ","
+    }
+}
+$variantNames = $variantNames -Replace ".$",""
 
-Write-Host "Variant names are " $variantNames
 #
 #  Run a command across the group
 .\run_command_on_machines_in_group.ps1 -requestedNames $variantNames -destSA $DSA -destRG $DRG -suffix "" -command "lscpu" -location $loc -Verbose
