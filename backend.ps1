@@ -500,7 +500,7 @@ write-verbose  "Checkpoint 1"
         write-verbose "Adding the network interface"
         Add-AzureRmVMNetworkInterface -VM $vm -Id $VNIC.Id
 
-        write-verbose "Parsing the blob string " $this.blobURN
+        write-verbose "Parsing the blob string $this.blobURN"
         $blobParts = $this.blobURN.split(":")
         $blobSA = $this.StorageAccountName
         $blobContainer = $this.ContainerName
