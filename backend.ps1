@@ -512,7 +512,7 @@ write-verbose  "Checkpoint 1"
             $trying = $false
             
             write-verbose "Starting the VM" 
-            if ($useInitialCreds -eq "Yes") {
+            if ($this.useInitialCredsuseInitialCreds -eq "Yes") {
                 $cred = make_cred_initial
             } else {
                 $cred = make_cred
@@ -606,7 +606,7 @@ write-verbose  "Checkpoint 1"
         write-verbose "OSDIskVHD URI set to $osDiskVhdUri"
         
 
-        if ($useInitialCreds -eq "yes") {
+        if ($this.useInitialCreds -eq "yes") {
             $cred = make_cred_initial
         } else {
             $cred = make_cred
