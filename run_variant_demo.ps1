@@ -15,8 +15,8 @@ $SSA ="smokebvtstorageaccount"
 $SRG="smoke_bvts_resource_group"
 $SContainer="vhds"
 
-$DSA="variants6"
-$DRG="variants_test_6"
+$DSA="variantsdemo"
+$DRG="variants_test_demo"
 $DContainer="running-variants"
 
 $oldSuffix="-generalized.vhd"
@@ -42,7 +42,7 @@ if ($startMachines -eq $true) {
                                 -destRG   $DRG   -destSA   $DSA   -destContainer $DContainer `
                                 -Flavors  $flavs  -requestedNames $Names -currentSuffix $oldSuffix `
                                 -newSuffix $Suffix -network $nw -subnet $sn -NSG $nsg `
-                                -location $log -Verbose
+                                -location $loc -Verbose
     write-host "Machines are up" 
 }
 

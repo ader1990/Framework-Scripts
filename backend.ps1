@@ -512,7 +512,7 @@ write-verbose  "Checkpoint 1"
             $trying = $false
             
             write-verbose "Starting the VM" 
-            if ($useInitialCreds -eq "yes") {
+            if ($useInitialCreds -eq "Yes") {
                 $cred = make_cred_initial
             } else {
                 $cred = make_cred
