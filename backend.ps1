@@ -89,7 +89,7 @@ class Backend {
     [String] $Name="BaseBackend"
 
     Backend ($Params) {
-        write-verbose ("Initialized backend " + $this.Name) -ForegroundColor Magenta
+        Write-Host ("Initialized backend " + $this.Name) -ForegroundColor Magenta
     }
 
     [string] Serialize() {
@@ -103,7 +103,7 @@ class Backend {
     }
 
     [Instance] GetInstanceWrapper ($InstanceName) {
-        write-verbose ("Initializing instance on backend " + $this.Name) -ForegroundColor Green
+        Write-Host ("Initializing instance on backend " + $this.Name) -ForegroundColor Green
         return $null
     }
 
@@ -120,44 +120,44 @@ class Backend {
     }
 
     [void] CleanupInstance ($InstanceName) {
-        write-verbose ("Cleaning instance and associated resources on backend " + $this.Name) `
+        Write-Host ("Cleaning instance and associated resources on backend " + $this.Name) `
             -ForegroundColor Red
     }
 
     [void] RebootInstance ($InstanceName) {
-        write-verbose ("Rebooting instance on backend " + $this.Name) -ForegroundColor Green
+        Write-Host ("Rebooting instance on backend " + $this.Name) -ForegroundColor Green
     }
 
     [String] GetPublicIP ($InstanceName) {
-        write-verbose ("Getting instance public IP a on backend " + $this.Name) -ForegroundColor Green
+        Write-Host ("Getting instance public IP a on backend " + $this.Name) -ForegroundColor Green
         return $null
     }
 
     [object] GetVM($instanceName) {
-       write-verbose ("Getting instance VM on backend " + $this.Name) -ForegroundColor Green
+       Write-Host ("Getting instance VM on backend " + $this.Name) -ForegroundColor Green
        return $null       
     }
 
     [void] StopInstance($instanceName) {
-       write-verbose ("StopInstance VM on backend " + $this.Name) -ForegroundColor Green
+       Write-Host ("StopInstance VM on backend " + $this.Name) -ForegroundColor Green
     }
 
     [void] RemoveInstance($instanceName) {
-       write-verbose ("RemoveInstance VM on backend " + $this.Name) -ForegroundColor Green
+       Write-Host ("RemoveInstance VM on backend " + $this.Name) -ForegroundColor Green
     }
 
     [Object] GetPSSession ($InstanceName) {
-        write-verbose ("Getting new Powershell Session on backend " + $this.Name) -ForegroundColor Green
+        Write-Host ("Getting new Powershell Session on backend " + $this.Name) -ForegroundColor Green
         return $null
     }
 
     [string] SetupAzureRG( ) {
-        write-verbose ("Setting up Azure Resource Groups " + $this.Name) -ForegroundColor Green
+        Write-Host ("Setting up Azure Resource Groups " + $this.Name) -ForegroundColor Green
         return $null
     }
 
     [string] WaitForAzureRG( ) {
-        write-verbose ("Waiting for Azure resource group setup " + $this.Name) -ForegroundColor Green
+        Write-Host ("Waiting for Azure resource group setup " + $this.Name) -ForegroundColor Green
         return $null
     }
 }
