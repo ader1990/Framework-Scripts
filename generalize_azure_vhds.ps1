@@ -333,14 +333,14 @@ foreach ($blob in $copyblobs) {
     $targetName = $baseName + "-generalized.vhd"
     
     Write-Host "Initiating job to copy VHD $blobName from $sourceRG and $systemContainer to $targetName in $destRG and $destSA, container $destContainer" -ForegroundColor Yellow
-    if ($overwriteVHDs -eq $true) {
+    # if ($overwriteVHDs -eq $true) {
         Write-Host "Clearing destination container of all VHDs with prefix $baseName"
         get-AzureStorageBlob -Container $destContainer -Blob "$baseName*" | ForEach-Object {Remove-AzureStorageBlob -Blob $_.Name -Container $destContainer }
 
         $blob = Start-AzureStorageBlobCopy -SrcBlob $blobName -DestContainer $destContainer -SrcContainer $systemContainer -DestBlob $targetName -Context $sourceContext -DestContext $destContext -Force
-    } else {
-        $blob = Start-AzureStorageBlobCopy -SrcBlob $blobName -DestContainer $destContainer -SrcContainer $systemContainer -DestBlob $targetName -Context $sourceContext -DestContext $destContext
-    }
+    # } else {
+    #     $blob = Start-AzureStorageBlobCopy -SrcBlob $blobName -DestContainer $destContainer -SrcContainer $systemContainer -DestBlob $targetName -Context $sourceContext -DestContext $destContext
+    # }
 
     if ($? -eq $false) {
         Write-Host "Job to copy VHD $targetName failed to start.  Cannot continue"
