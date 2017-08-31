@@ -30,11 +30,11 @@ class Instance {
     }
 
     [void] CreateFromURN () {
-        $this.Backend.CreateInstanceFromURN($this.Name, $this.useInitialCreds)
+        $this.Backend.CreateInstanceFromURN($this.Name, $this.useInitialPW)
     }
 
     [void] CreateFromGeneralized () {
-        $this.Backend.CreateInstanceFromGeneralized($this.Name, $this.useInitialCreds)
+        $this.Backend.CreateInstanceFromGeneralized($this.Name, $this.useInitialPW)
     }
 
     [void] StopInstance () {
@@ -113,10 +113,10 @@ class Backend {
     [void] CreateInstanceFromSpecialized ($InstanceName) {
     }
 
-    [void] CreateInstanceFromURN ($InstanceName, $useInitialCreds) {
+    [void] CreateInstanceFromURN ($InstanceName, $useInitialPW) {
     }
 
-    [void] CreateInstanceFromGeneralized ($InstanceName, $useInitialCreds) {
+    [void] CreateInstanceFromGeneralized ($InstanceName, $useInitialPW) {
     }
 
     [void] CleanupInstance ($InstanceName) {
@@ -181,7 +181,7 @@ class AzureBackend : Backend {
     [String] $suffix = "-Smoke-1"
     [String] $UseExistingResources = "yes"
     [String] $enableBootDiagnostics = "yes"
-    [string] $useInitialCreds = "yes"
+    [string] $useInitialPW = "yes"
 
     AzureBackend ($Params) : base ($Params) {
         Write-Verbose "Starting the backend"
@@ -472,7 +472,7 @@ write-verbose  "Checkpoint 1"
         }
     }
 
-    [void] CreateInstanceFromURN ($InstanceName, $useInitialCreds) {        
+    [void] CreateInstanceFromURN ($InstanceName, $useInitialPW) {        
         write-verbose "Creating a new VM config for $InstanceName..." 
 
         $sg = $this.getNSG()
@@ -512,7 +512,7 @@ write-verbose  "Checkpoint 1"
             $trying = $false
             
             write-verbose "Starting the VM" 
-            if ($this.useInitialCredsuseInitialCreds -eq "Yes") {
+            if ($this.useInitialPW -eq "Yes") {
                 $cred = make_cred_initial
             } else {
                 $cred = make_cred
@@ -546,7 +546,7 @@ write-verbose  "Checkpoint 1"
         }
     }
 
-    [void] CreateInstanceFromGeneralized ($InstanceName, $useInitialCreds) {        
+    [void] CreateInstanceFromGeneralized ($InstanceName, $useInitialPW) {        
         write-verbose "Creating a new VM config..." 
 
         $sg = $this.getNSG()
@@ -606,7 +606,7 @@ write-verbose  "Checkpoint 1"
         write-verbose "OSDIskVHD URI set to $osDiskVhdUri"
         
 
-        if ($this.useInitialCreds -eq "yes") {
+        if ($this.useInitialPW -eq "Yes") {
             $cred = make_cred_initial
         } else {
             $cred = make_cred

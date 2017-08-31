@@ -107,9 +107,7 @@ if ($generalizeAll -eq $false -and $vmNameArray.Count -eq 0) {
 
 $systemContainer = "system"
 
-foreach ($vmName in $machineBaseNames) {
-    Get-AzureStorageBlob -Container $systemContainer -Prefix $vmName | ForEach-Object {Remove-AzureStorageBlob -Blob $_.Name -Container $systemContainer}   
-}
+Remove-AzureStorageContainer -Name $systemContainer -Force
 
 $commandTimer.Stop()
 $elapsed = $commandTimer.Elapsed
@@ -400,8 +398,8 @@ $commandTimer.Stop()
 $elapsed = $commandTimer.Elapsed
 Write-Host "It required $elapsed finish the generalization"
 
-$overalTimer.Stop()
-$elapsed = $overalTimer.Elapsed
+$overallTimer.Stop()
+$elapsed = $overallTimer.Elapsed
 Write-Host "It required $elapsed run this script"
 Stop-Transcript
 

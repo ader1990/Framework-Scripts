@@ -24,7 +24,7 @@
     [Parameter(Mandatory=$false)] [string] $generalizedBlobURI = ".vhd",
 
     [Parameter(Mandatory=$false)] [string] $enableBootDiagnostics = "No",
-    [Parameter(Mandatory=$false)] [string] $useInitialCreds = "No"   
+    [Parameter(Mandatory=$false)] [string] $useInitialPW = "No"   
 )
 
 $vmName = $vmName.Trim()
@@ -44,6 +44,7 @@ $subnetPrefix  = $subnetPrefix.Trim()
 $suffix  = $suffix.Trim()
 $generalizedBlobURI  = $generalizedBlobURI.Trim()
 $enableBootDiagnostics  = $enableBootDiagnostics.Trim()
+$useInitialPW = $useInitialPW.Trim()
 
 Write-Host "------------------------->>> Launching VM for $vmName"
 $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
@@ -67,9 +68,7 @@ $azureBackend.blobURN = $blobURN
 $azureBackend.blobURI = $generalizedBlobURI
 $azureBackend.suffix = $suffix
 
-if ($useInitialCreds -eq "Yes") {
-    $azureBackend.suffix = $useInitialCreds
-}
+$azureBackend.useInitialPW = $useInitialPW
 
 $azureBackend.enableBootDiagnostics = $enableBootDiagnostics
 
