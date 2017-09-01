@@ -144,8 +144,6 @@ debian/hv-vss-daemon.conf /etc/init/
 debian/hv-fcopy-daemon.conf /etc/init/
 EOF
         cp "${BASE_DIR}/dependencies/DEBIAN/postinst" .
-        cp "${BASE_DIR}/dependencies/DEBIAN/postrm" .
-        cp "${BASE_DIR}/dependencies/DEBIAN/prerm" .
     fi
     popd
     popd
@@ -211,7 +209,7 @@ function build_debs {
     fi
     if [[ ! $TARGET_OS_VERSION ]];then
         . /etc/lsb-release
-        $TARGET_OS_VERSION="${DISTRIB_RELEASE%.*}"
+        TARGET_OS_VERSION="${DISTRIB_RELEASE%.*}"
     fi
     prepare
     get_source_kernel
