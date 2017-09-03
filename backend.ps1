@@ -14,6 +14,7 @@ class Instance {
         Start-Transcript -Path $transcriptPath -Force
         $this.Backend = $Backend
         $this.Name = $Name
+
         write-verbose ("Initialized instance wrapper for " + $this.Name)
     }
 
@@ -21,7 +22,7 @@ class Instance {
         $this.Backend.CleanupInstance($this.Name)
     }
 
-    [void] CreateInstance () {
+    [void] Create () {
         $this.Backend.CreateInstance($this.Name)
     }
 
@@ -69,18 +70,26 @@ class AzureInstance : Instance {
 }
 
 class HypervInstance : Instance {
-    [String] $VHDPath
+    [String] $BootVHDPath
     [String] $DvdDrive
 
     HypervInstance ($Backend, $Name) : base ($Backend, $Name) {
     }
 
-    [void] CreateInstance () {
-        $this.Backend.CreateInstance($this.Name, $this.VHDPath)
+    [void] Create () {
+        $this.BootVHDPath = $this.Backend.CreateInstance($this.Name, $this.BootVHDPath)
+    }
+
+    [void] Cleanup () {
+        $this.Backend.CleanupInstance($this.Name, $this.BootVHDPath)
     }
 
     [void] AttachVMDvdDrive ($DvdDrive) {
         $this.Backend.AttachVMDvdDrive($this.Name, $DvdDrive)
+    }
+
+    [void] CheckInstance ($Creds, $KernelVersion) {
+        $this.Backend.CheckInstance($this.Name, $Creds, $KernelVersion)
     }
 }
 
@@ -671,30 +680,61 @@ write-verbose  "Checkpoint 1"
 
 class HypervBackend : Backend {
     [String] $Name="HypervBackend"
+    [String] $BaseVHDsPath
+    [String] $WorkingVHDsPath
     [String] $ComputerName
     [String] $SecretsPath
-    [String] $UseExistingResources = $true
+    [String] $Suffix
+    [Switch] $UseExistingResources = $false
+    [Switch] $UseChildrenVHD = $true
     [System.Management.Automation.PSCredential] $Credentials
 
-    HypervBackend ($Params) : base ($Params) {
-        $this.ComputerName = $Params[0]
-        $this.SecretsPath = $Params[1]
+    HypervBackend ($Params) : base ($Params.Item("Name")) {
+        $this.ComputerName = $Params["ComputerName"]
+        $this.SecretsPath = $Params["SecretsPath"]
+        $this.BaseVHDsPath = $Params["BaseVHDsPath"]
+        $this.WorkingVHDsPath = $Params["WorkingVHDsPath"]
+        $this.Suffix = $Params["Suffix"]
 
         if ($this.SecretsPath -and (Test-Path $this.SecretsPath)) {
-            $this.GetCredentials()
+            $this.Credentials = $this.GetCredentials()
         } else {
             Write-warning "Credential file does not exist. Using current user context."
         }
     }
 
-    [void] GetCredentials() {
-        . $this.SecretsPath
-        $securePassword = ConvertTo-SecureString -AsPlainText -Force $global:password
-        $this.Credentials = New-Object System.Management.Automation.PSCredential `
-            -ArgumentList $global:username, $securePassword
+    [Array] GetVMNames () {
+        $vmNames = @()
+        $fromVHDs = (Get-ChildItem $this.BaseVHDsPath -Filter "*.vhd*").Basename
+        foreach ($vhdName in $fromVHDs) {
+            $vmNames += $vhdName
+        }
+        return $vmNames
     }
 
-    [string] RunHypervCommand ($params) {
+    [System.Management.Automation.PSCredential] GetCredentials() {
+        . $this.SecretsPath
+        $securePassword = ConvertTo-SecureString -AsPlainText -Force $global:password
+        $credential = New-Object System.Management.Automation.PSCredential `
+            -ArgumentList $global:username, $securePassword
+        return $credential
+    }
+
+    [void] CopyResources () {
+        Write-Host "Copying resources..." -ForeGroundColor Magenta
+        $fromVHDs = Get-ChildItem $this.BaseVHDsPath -Filter "*.vhd*" | % {$_.FullName}
+        ForEach ($vhd in $fromVHDs) {
+                $basename = (Get-Item $VHD).Basename
+                $newPath = "{0}/{1}{2}.vhdx" -f @($this.WorkingVHDsPath, $basename, $this.Suffix)
+            if ($this.UseChildrenVHD) {
+                new-VHD -ParentPath $vhd -Path $newPath -Differencing
+            } else {
+                Copy-Item -Path $vhd -Destination $newPath
+            }
+        }
+    }
+
+    [String] RunHypervCommand ($params) {
         if ($this.Credentials) {
             $params += (@{"Credential"=$this.Credentials})
         }
@@ -705,8 +745,11 @@ class HypervBackend : Backend {
         return (Invoke-Command @params)
     }
 
-    [void] CreateInstance ($InstanceName, $VHDPath) {
+    [String] CreateInstance ($InstanceName, $VHDPath) {
         write-verbose ("Creating $InstanceName on backend " + $this.Name)
+        if ([string]::IsNullOrWhiteSpace($VHDPath)) {
+            $VHDPath = $this.GetPathFromInstanceName($InstanceName)
+        }
         $scriptBlock = {
             param($InstanceName, $VHDPath)
 
@@ -730,6 +773,7 @@ class HypervBackend : Backend {
             "ArgumentList"=@($InstanceName, $VHDPath);
         }
         $this.RunHypervCommand($params)
+        return $VHDPath
     }
 
     [Instance] GetInstanceWrapper ($InstanceName) {
@@ -800,13 +844,24 @@ class HypervBackend : Backend {
 
     static [HypervBackend] Deserialize([string] $Json) {
         $deserialized = ConvertFrom-Json -InputObject $Json
-        $HypervBackend = [HypervBackend]::new(@($deserialized.ComputerName))
+        $h = @{}
+        $deserialized.psobject.properties | foreach {$h[$_.Name] = $_.Value}
+        $HypervBackend = [HypervBackend]::new($h)
         return $HypervBackend
     }
 
-    [void] CleanupInstance ($InstanceName) {
-        write-verbose ("Cleaning $InstanceName on backend " + $this.Name) 
+    [String] GetPathFromInstanceName ($InstanceName) {
+        $Path = "{0}/{1}{2}.vhdx" -f @($this.WorkingVHDsPath, $InstanceName, $this.Suffix)
+        return $Path
+    }
+
+    [void] CleanupInstance ($InstanceName, $VHDPath) {
+        Write-Host ("Cleaning $InstanceName on backend " + $this.Name)
         $this.RemoveInstance($InstanceName)
+        if ([string]::IsNullOrWhiteSpace($VHDPath)) {
+            $VHDPath = $this.GetPathFromInstanceName($InstanceName)
+        }
+
         if ($this.UseExistingResources) {
             write-verbose "Preserving existing VHD for future use."
         } else {
@@ -814,9 +869,9 @@ class HypervBackend : Backend {
             $params = @{
                 "ScriptBlock"={
                     param($VHDPath)
-                    Remove-Item -Force $VHDPath
+                    Remove-Item -Path $VHDPath -Force -ErrorAction SilentlyContinue
                 };
-                "ArgumentList"=@($this.VHDPath);
+                "ArgumentList"=@($VHDPath);
             }
             $this.RunHypervCommand($params)
         }
@@ -826,23 +881,27 @@ class HypervBackend : Backend {
         # NOTE(papagalu):LIS drivers, LIS KVP daemon should be installed on the VM
         $scriptBlock = {
             param($InstanceName)
-            (Get-VMNetworkAdapter -VMName $InstanceName).IPaddresses[0]
+            $ip = (Get-VMNetworkAdapter -VMName $InstanceName).IPaddresses[0]
+            if ([String]::IsNullOrWhiteSpace($ip) -or ($ip -like "*:*")) {
+                throw "ip is not ipv4"
+            } else {
+                return $ip
+            }
         }
 
         $params = @{
             "ScriptBlock"=$scriptBlock;
             "ArgumentList"=@($InstanceName);
         }
-        $ip = ""
-        do {
-            Start-Sleep -s 10
-            $ip = $this.RunHypervCommand($params)
-        } while([string]::IsNullOrWhiteSpace($ip))
-
+        $command = @{
+            "ScriptBlock" = {$this.RunHypervCommand($params)};
+            "ArgumentList" = @($InstanceName);
+        }
+        $ip = Execute-Retry -Command $command 10 10
         return $ip
     }
 
-    [object] GetVM ($InstanceName) {
+    [Object] GetVM ($InstanceName) {
         $params = @{
             "ScriptBlock"={
                 param($InstanceName)
@@ -853,13 +912,21 @@ class HypervBackend : Backend {
         return ($this.RunHypervCommand($params))
     }
 
-    [object] GetPSSession ($InstanceName) {
-        if (!$this.Credentials) {
-            return $null
-        }
+    [System.Management.Automation.Runspaces.PSSession] GetPSSession ($InstanceName, $Creds) {
         $ip = $this.GetPublicIP($InstanceName)
-        $session = New-PSSession -ComputerName $ip -Credential $this.Credentials
+        $session = New-PSSession -ComputerName $ip -Credential $Creds `
+                                 -Authentication Basic
         return $session
+    }
+
+    [void] CheckInstance ($InstanceName, $Creds, $KernelVersion) {
+        $Session = $this.GetPSSession($InstanceName, $Creds)
+        $Kernel = Invoke-Command -ScriptBlock {uname -r} -Session $Session
+        if ($KernelVersion -ne $Kernel) {
+            throw "Kernel versions do not match: Installed Kernel: $Kernel != Expected Kernel: $KernelVersion"
+        } else {
+            Write-Output "Kernel versions match with version $Kernel"
+        }
     }
 }
 
@@ -867,5 +934,37 @@ class HypervBackend : Backend {
 class BackendFactory {
     [Backend] GetBackend([String] $Type, $Params) {
         return (New-Object -TypeName $Type -ArgumentList $Params)
+    }
+}
+
+function Execute-Retry {
+    Param(
+        [parameter(Mandatory=$true)]
+        $command,
+        [int]$maxRetryCount=4,
+        [int]$retryInterval=4
+    )
+
+    $currErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+
+    $retryCount = 0
+    while ($true) {
+        try {
+            $res = Invoke-Command @command
+            $ErrorActionPreference = $currErrorActionPreference
+            return $res
+        } catch [System.Exception] {
+            $retryCount++
+            if ($retryCount -ge $maxRetryCount) {
+                $ErrorActionPreference = $currErrorActionPreference
+                throw
+            } else {
+                if($_) {
+                    Write-Warning $_
+                }
+                Start-Sleep $retryInterval
+            }
+        }
     }
 }
