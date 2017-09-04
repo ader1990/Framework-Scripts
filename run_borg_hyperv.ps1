@@ -22,9 +22,9 @@ param (
     [Parameter(Mandatory=$false)]
     [string] $ProgressLogsPath="c:\temp\progress_logs\",
     [Parameter(Mandatory=$false)]
-    [switch] $UseChildrenVHD,
+    [switch] $UseChildrenVHD=$true,
     [Parameter(Mandatory=$false)]
-    [switch] $SkipCopy,
+    [switch] $SkipCopy=$false,
     [Parameter(Mandatory=$false)]
     [int] $VHDCopyTimeout=200,
     [Parameter(Mandatory=$false)]
@@ -102,16 +102,6 @@ function Cleanup-Environment {
     Write-Host "Environment has been cleaned."
 }
 
-function Get-VMNames {
-    $vhdsFiles = Get-ChildItem "$BaseVHDsPath\*.vhd*" `
-        -ErrorAction SilentlyContinue
-    $vmNames = @()
-    foreach ($vhdFile in $vhdsFiles) {
-         $vmNames += $vhdFile.Name.Split('.')[0]
-    }
-    return $vmNames
-}
-
 function Get-CleanupVMSScript {
     $scriptBlock = {
         param($VMName, $Backend)
@@ -132,7 +122,7 @@ Workflow Cleanup-VMS {
         $Workflow:scriptBlock = Get-CleanupVMSScript
         try {
             CreateWait-JobFromScript -ScriptBlock $Workflow:scriptBlock `
-                -ArgumentList @($vmName,$Backend) -Timeout $VMCleanTimeout `
+                -ArgumentList @($vmName, $Backend) -Timeout $VMCleanTimeout `
                 -JobName "DeallocateVM-$vmName-$suffix-{0}" `
                 -ScriptPath $env:scriptPath
         } catch {
@@ -145,81 +135,28 @@ Workflow Cleanup-VMS {
     (InlineScript {Write-Host "VMs have been cleaned." -ForegroundColor Green})
 }
 
-function Get-ScriptBlockVHDS {
-     $scriptBlock = {
-        param($VHDFile,
-              $BaseVHDsPath,
-              $WorkingVHDsPath,
-              $UseChildrenVHD
-        )
-        $from = Join-Path $BaseVHDsPath $vhdFile
-        $to = Join-Path $WorkingVHDsPath $vhdFile
-        Remove-Item -Path $to -Force -ErrorAction SilentlyContinue | Out-Null
-        if (!$UseChildrenVHD) {
-            Write-Output "Starting to copy VHD $VHDFile to working directory..."
-            $out = Robocopy.exe $BaseVHDsPath $WorkingVHDsPath $VHDFile
-            if (!(Test-Path $to)) {
-                throw ("$VHDFile could not be copied. Robocopy output: $out." + `
-                       "LASTEXITCODE: $LASTEXITCODE")
-            } else {
-                Write-Output "Finished copying $VHDFile to working directory."
-            }
-        } else {
-            New-VHD -ParentPath $from -Path $to | Out-Null
-            Write-Output "Finished creating child vhd: $VHDFile in the working directory."
-        }
-    }.ToString()
+function Get-CreateVMSScript {
+    $scriptBlock = {
+        param($VMName, $Backend)
+        $instance = [HypervBackend]::Deserialize($Backend).GetInstanceWrapper($VMName)
+        $instance.Create()
+    }
     return $scriptBlock
 }
 
-Workflow Copy-VHDS {
-    param($BaseVHDsPath, $WorkingVHDsPath, $UseChildrenVHD, $VHDCopyTimeout)
-    Write-Output "Copying VHDs..."
-    $errors = 0
-    $suffix = Get-Random 1000000
-    $vhdsFiles = Get-ChildItem "$BaseVHDsPath\*.vhd*" -ErrorAction SilentlyContinue
-    $scriptBlock = $null
-    foreach -parallel ($vhdFile in $vhdsFiles) {
-        $Workflow:scriptBlock = Get-ScriptBlockVHDS
-        $VHDFileName = $vhdFile.Name
-        try {
-            CreateWait-JobFromScript -ScriptBlock $Workflow:scriptBlock `
-                -ArgumentList @($VHDFileName, $BaseVHDsPath, $WorkingVHDsPath, $UseChildrenVHD) `
-                -Timeout $VHDCopyTimeout -JobName "CopyVHD-$VHDFileName-$suffix-{0}" `
-                -ScriptPath $env:scriptPath
-        } catch {
-            $Workflow:errors += 1
-        }
-    }
-    if ($Workflow:errors) {
-        throw "Copying VHDS failed."
-    }
-    (InlineScript {Write-Host "VHDs have been copied."  -ForegroundColor Green})
-}
-
 Workflow Create-VMS {
-    param($WorkingVHDsPath, $VMBootTimeout, $VMNamesDumpFilePath)
+    param($VMNames, $WorkingVHDsPath, $VMBootTimeout, $VMNamesDumpFilePath, $Backend)
     Write-Output "Creating VMs..."
     $errors = 0
     $suffix = Get-Random 1000000
     $vhdsFiles = Get-ChildItem "$WorkingVHDsPath\*.vhd*" -ErrorAction SilentlyContinue
     $scriptBlock = $null
     $vmsCreated = @()
-    foreach -parallel ($vhdFile in $vhdsFiles) {
-        $vmName = $vhdFile.Name.Split('.')[0]
-        $Workflow:scriptBlock = {
-            param($VMName, $VHDPath)
-            New-VM -Name $VMName -MemoryStartupBytes 2048MB -Generation 1 `
-                -SwitchName "External" -VHDPath $VHDPath | Out-Null
-            Set-VM -ProcessorCount 2 -Name $VMName -DynamicMemory:$false
-            Set-VMMemory -DynamicMemoryEnabled $false -VMName $VMName
-            Enable-VMIntegrationService -Name "*" -VMName $VMName
-            Start-VM -Name $VMName
-            Write-Output "VM $VMName has been created and started successfully."
-        }
+    foreach -parallel ($VMName in $VMNames) {
+        $Workflow:scriptBlock = Get-CreateVMSScript
         try {
             CreateWait-JobFromScript -ScriptBlock $Workflow:scriptBlock `
-                -ArgumentList @($vmName, $vhdFile.FullName) `
+                -ArgumentList @($vmName, $Backend) `
                 -Timeout $VMBootTimeout -JobName "CreateVM-$vmName-$suffix-{0}" `
                 -ScriptPath $env:scriptPath
             $Workflow:vmsCreated += $vmName
@@ -237,47 +174,17 @@ Workflow Create-VMS {
     }
 }
 
-function Get-ScriptblockCheckVMS {
-    return  {
-        param($VMName, $Credential, $KernelVersion)
-        # (avladu): add a retry method
-        while ($true) {
-            try {
-                $ipv4Ip = $null
-                $vm = Get-VM -Name $VMName
-                $vmNetAdapter = Get-VMNetworkAdapter -VM $vm
-                Write-Output "Checking if VM $VMName exposes the IPv4 address...`r`n"
-                foreach ($ip in $vmNetAdapter.IPAddresses) {
-                    if (([ipaddress]$ip).AddressFamily -eq "InterNetwork") {
-                        $ipv4Ip = $ip
-                        break
-                    }
-                }
-                if (!$ipv4Ip) {
-                    Write-Output "VM $VMName does not expose the IPv4 address yet. Retrying...`r`n"
-                    Start-Sleep 5
-                    continue
-                }
-            } catch {
-                Write-Output $_.Message
-            }
-            Write-Output "VM $VMName has been created and started successfully with ip $ip."
-            $session = New-PSSession -ComputerName $ipv4Ip -Authentication Basic -Credential $Credential
-            $kernel = Invoke-Command -ScriptBlock {uname -r} -Session $session
-            $session | Remove-PSSession
-            # (avladu): add a retry check here, in case the kernel is getting installed
-            if ($KernelVersion -ne $kernel) {
-                throw "Kernel versions do not match. Existent kernel $kernel != Desired kernel $KernelVersion"
-            } else {
-                Write-Output "Kernel versions match. Existent kernel $kernel == Desired kernel`r`n"
-            }
-            break
-        }
-    }.ToString()
+function Get-CheckVMSScript {
+    $scriptBlock = {
+        param($VMName, $Creds, $KernelVersion, $Backend)
+        $instance = [HypervBackend]::Deserialize($Backend).GetInstanceWrapper($VMName)
+        $instance.CheckInstance($Creds, $KernelVersion)
+    }
+    return $scriptBlock
 }
 
 Workflow Check-VMS {
-    param($VMNames, $VMCheckTimeout, $creds, $KernelVersion)
+    param($VMNames, $VMCheckTimeout, $creds, $KernelVersion, $Backend)
     InlineScript {
         Write-Host "Checking VMs state..."
     }
@@ -286,10 +193,10 @@ Workflow Check-VMS {
     $scriptBlock = $null
     $vmsCreated = @()
     foreach -parallel ($vmName in $VMNames) {
-        $Workflow:scriptBlock = Get-ScriptblockCheckVMS
+        $Workflow:scriptBlock = Get-CheckVMSScript
         try {
             CreateWait-JobFromScript -ScriptBlock $Workflow:scriptBlock `
-                -ArgumentList @($vmName, $creds, $KernelVersion) `
+                -ArgumentList @($vmName, $Creds, $KernelVersion, $Backend) `
                 -Timeout $VMCheckTimeout -JobName "CheckVM-$vmName-$suffix-{0}" `
                 -ScriptPath $env:scriptPath
             $Workflow:vmsCreated += $vmName
@@ -324,18 +231,27 @@ function Main {
     Write-Host "    "
 
     Cleanup-Environment $BootResultsPath $ProgressLogsPath
-    $vmNames = Get-VMNames
-    $Backend = [HypervBackend]::new(@("localhost"))
-    Cleanup-VMS -VMNames $vmNames $VMCleanTimeout $Backend.Serialize()
+
+    $Params = @{
+        "ComputerName" = "localhost";
+        "SecretsPath" = "";
+        "BaseVHDsPath" = $BaseVHDsPath;
+        "WorkingVHDsPath" = $WorkingVHDsPath;
+    }
+
+    $backend = [HypervBackend]::new($Params)
+    $vmNames = $backend.GetVMNames()
+    Write-Host $vmNames
+    Cleanup-VMS -VMNames $vmNames $VMCleanTimeout $backend.Serialize()
 
     if (!$SkipCopy) {
-        Copy-VHDS $BaseVHDsPath $WorkingVHDsPath $UseChildrenVHD $VHDCopyTimeout
+        $backend.CopyResources()
     } else {
         Write-Host "Skipping VHDs copy."
     }
 
-    Create-VMS $WorkingVHDsPath $VMBootTimeout $VMNamesDumpFilePath
-    Check-VMS $vmNames $VMCheckTimeout (make_cred) $KernelVersion
+    Create-VMS $vmNames $WorkingVHDsPath $VMBootTimeout $VMNamesDumpFilePath $backend.Serialize()
+    Check-VMS $vmNames $VMCheckTimeout (make_cred) $KernelVersion $backend.Serialize()
 }
 
 Main
