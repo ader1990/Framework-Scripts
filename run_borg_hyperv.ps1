@@ -45,45 +45,6 @@ $env:scriptPath = $scriptPath
 . "$scriptPath\common_functions.ps1"
 . "$scriptPath\backend.ps1"
 
-function CreateWait-JobFromScript {
-    param(
-        [Parameter(Mandatory=$true)]
-        [String] $ScriptBlock,
-        [Parameter(Mandatory=$true)]
-        [int] $Timeout = 100,
-        [Parameter(Mandatory=$false)]
-        [array] $ArgumentList,
-        [Parameter(Mandatory=$false)]
-        [string] $JobName="Hyperv-Borg-Job-{0}",
-        [Parameter(Mandatory=$false)]
-        [string]$ScriptPath=$env:scriptPath
-    )
-    $JobName = $JobName -f @(Get-Random 1000000)
-    try {
-        $initScript = '. "{0}"' -f @("$scriptPath\backend.ps1")
-        $s = [Scriptblock]::Create($ScriptBlock)
-        $job = Start-Job -Name $JobName -ScriptBlock $s `
-            -ArgumentList $ArgumentList `
-            -InitializationScript ([Scriptblock]::Create($initScript))
-        $jobResult = Wait-Job $job -Timeout $Timeout -Force
-        Stop-Job $JobName -ErrorAction SilentlyContinue -Confirm:$false
-        $output = Receive-Job $JobName -Keep
-        if ($jobResult.State -ne "Completed") {
-            Write-Output "Job $JobName failed with output >>`r`n $output`r`n <<"
-            throw "Job $JobName failed with output >> $output <<"
-        } else {
-            Write-Output "Job $JobName succeeded with output >>`r`n $output`r`n <<"
-        }
-    } catch {
-        if (!($PSItem -like "Job $JobName failed with output*")) {
-            Write-Output "Job $JobName failed with error: >> `r`n$PSItem`r`n <<"
-        }
-        throw
-    } finally {
-        Remove-Job $JobName -ErrorAction SilentlyContinue
-    }
-}
-
 function Cleanup-Environment {
     Write-Host "Cleaning environment before starting BORG..."
     Write-Host "Cleaning up sentinel files..." -ForegroundColor Green
@@ -131,10 +92,11 @@ Workflow Cleanup-VMS {
     foreach -parallel ($vmName in $VMNames) {
         $Workflow:scriptBlock = Get-CleanupVMSScript
         try {
-            CreateWait-JobFromScript -ScriptBlock $Workflow:scriptBlock `
+            $output = CreateWait-JobFromScript -ScriptBlock $Workflow:scriptBlock `
                 -ArgumentList @($vmName,$Backend) -Timeout $VMCleanTimeout `
                 -JobName "DeallocateVM-$vmName-$suffix-{0}" `
                 -ScriptPath $env:scriptPath
+            Write-Output $output
         } catch {
             $Workflow:errors += 1
         }
