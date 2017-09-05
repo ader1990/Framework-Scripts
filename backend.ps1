@@ -1,6 +1,46 @@
 ##### Install PowerShell 5 using https://github.com/DarwinJS/ChocoPackages/blob/master/PowerShell/v5.1/tools/ChocolateyInstall.ps1#L107-L173
 ##### For 2008 R2, run the .ps1 from: https://download.microsoft.com/download/6/F/5/6F5FF66C-6775-42B0-86C4-47D41F2DA187/Win7AndW2K8R2-KB3191566-x64.zip
 
+function CreateWait-JobFromScript {
+    param(
+        [Parameter(Mandatory=$true)]
+        [String] $ScriptBlock,
+        [Parameter(Mandatory=$true)]
+        [int] $Timeout = 100,
+        [Parameter(Mandatory=$false)]
+        [array] $ArgumentList,
+        [Parameter(Mandatory=$false)]
+        [string] $JobName="Hyperv-Borg-Job-{0}",
+        [Parameter(Mandatory=$false)]
+        [string]$ScriptPath=$env:scriptPath
+    )
+    $JobName = $JobName -f @(Get-Random 1000000)
+    try {
+        $initScript = '. "{0}"' -f @("$scriptPath\backend.ps1")
+        $s = [Scriptblock]::Create($ScriptBlock)
+        $job = Start-Job -Name $JobName -ScriptBlock $s `
+            -ArgumentList $ArgumentList `
+            -InitializationScript ([Scriptblock]::Create($initScript))
+        $jobResult = Wait-Job $job -Timeout $Timeout -Force
+        Stop-Job $JobName -ErrorAction SilentlyContinue -Confirm:$false
+        $output = Receive-Job $JobName -Keep
+        if ($jobResult.State -ne "Completed") {
+            Write-Output "Job $JobName failed with output >>`r`n $output`r`n <<"
+            throw "Job $JobName failed with output >> $output <<"
+        } else {
+            Write-Output "Job $JobName succeeded with output >>`r`n $output`r`n <<"
+        }
+    } catch {
+        if (!($PSItem -like "Job $JobName failed with output*")) {
+            Write-Output "Job $JobName failed with error: >> `r`n$PSItem`r`n <<"
+        }
+        throw
+    } finally {
+        Remove-Job $JobName -ErrorAction SilentlyContinue
+    }
+}
+
+
 class Instance {
     [Backend] $Backend
     [String] $Name
