@@ -1,0 +1,2037 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20170901105759
+Username: REDMOND\jfawcett
+RunAs User: REDMOND\jfawcett
+Machine: LIS-F1637 (Microsoft Windows NT 10.0.14393.0)
+Host Application: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+Process ID: 6832
+PSVersion: 5.1.14393.117
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.14393.117
+BuildVersion: 10.0.14393.117
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is .\variant_demo_with_start.log
+***************************************************************************************************
+*              HIPPEE Variants Demonstration -- Two Distros and Three Flavors                     *
+***************************************************************************************************
+Starting the variant machines...
+VERBOSE: Using existing storage account smokebvtstorageaccount in resource group smoke_bvts_resource_group
+smokebvtstorageaccount
+Get-AzureRmResourceGroup : 10:58:09 AM - Provided resource group does not exist.
+At C:\Framework-Scripts\start_variants.ps1:87 char:18
++ $existingGroup = Get-AzureRmResourceGroup -Name $destRG
++                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:) [Get-AzureRmResourceGroup], Exception
+    + FullyQualifiedErrorId : 
+Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.GetAzureResourceGroupCmdlet
+Get-AzureRmResourceGroup : 10:58:09 AM - Provided resource group does not exist.
+At C:\Framework-Scripts\start_variants.ps1:87 char:18
++ $existingGroup = Get-AzureRmResourceGroup -Name $destRG
++                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:) [Get-AzureRmResourceGroup], Exception
+    + FullyQualifiedErrorId : Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.GetAzureResourceGroupCmdlet
+
+Creating new resource group variants_test_demo_2 in loction westus
+VERBOSE: 10:58:10 AM - Created resource group 'variants_test_demo_2' in location 'westus'
+
+
+ResourceGroupName : variants_test_demo_2
+Location          : westus
+ProvisioningState : Succeeded
+Tags              :
+ResourceId        : /subscriptions/2cd20493-fe97-42ef-9ace-ab95b63d82c4/resourceGroups/variants_test_demo_2
+
+Get-AzureRmStorageAccount : The Resource 'Microsoft.Storage/storageAccounts/variantsdemo2' under resource group 
+'variants_test_demo_2' was not found.
+At C:\Framework-Scripts\start_variants.ps1:104 char:13
++ $existingRG=Get-AzureRmStorageAccount -ResourceGroupName $destRG -Nam ...
++             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : CloseError: (:) [Get-AzureRmStorageAccount], CloudException
+    + FullyQualifiedErrorId : Microsoft.Azure.Commands.Management.Storage.GetAzureStorageAccountCommand
+Get-AzureRmStorageAccount : The Resource 'Microsoft.Storage/storageAccounts/variantsdemo2' under resource group 'variants_test_demo_2' was not found.
+At C:\Framework-Scripts\start_variants.ps1:104 char:13
++ $existingRG=Get-AzureRmStorageAccount -ResourceGroupName $destRG -Nam ...
++             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : CloseError: (:) [Get-AzureRmStorageAccount], CloudException
+    + FullyQualifiedErrorId : Microsoft.Azure.Commands.Management.Storage.GetAzureStorageAccountCommand
+
+Storage account variantsdemo2 did not exist.  Creating it and populating with the right containers...
+
+ResourceGroupName      : variants_test_demo_2
+StorageAccountName     : variantsdemo2
+Id                     : /subscriptions/2cd20493-fe97-42ef-9ace-ab95b63d82c4/resourceGroups/variants_test_demo_2/providers/Microsoft.Storage/storageAccounts/variantsdemo2
+Location               : westus
+Sku                    : Microsoft.Azure.Management.Storage.Models.Sku
+Kind                   : Storage
+Encryption             :
+AccessTier             :
+CreationTime           : 9/1/2017 5:58:12 PM
+CustomDomain           :
+Identity               :
+LastGeoFailoverTime    :
+PrimaryEndpoints       : Microsoft.Azure.Management.Storage.Models.Endpoints
+PrimaryLocation        : westus
+ProvisioningState      : Succeeded
+SecondaryEndpoints     :
+SecondaryLocation      :
+StatusOfPrimary        : Available
+StatusOfSecondary      :
+Tags                   : {}
+EnableHttpsTrafficOnly : False
+Context                : Microsoft.WindowsAzure.Commands.Common.Storage.LazyAzureStorageContext
+ExtendedProperties     : {}
+
+Selecting it as the current SA
+variantsdemo2
+creating the containers
+
+CloudBlobContainer : Microsoft.WindowsAzure.Storage.Blob.CloudBlobContainer
+Permission         : Microsoft.WindowsAzure.Storage.Blob.BlobContainerPermissions
+PublicAccess       : Blob
+LastModified       : 9/1/2017 5:58:44 PM +00:00
+ContinuationToken  :
+Context            : Microsoft.WindowsAzure.Commands.Storage.AzureStorageContext
+Name               : running-variants
+
+Complete.
+variantsdemo2
+smokebvtstorageaccount
+VERBOSE: Initialized backend AzureBackend
+VERBOSE: Starting the backend
+VERBOSE: Backend CP 1
+VERBOSE: Backend CP 2
+VERBOSE: Checkpoint 1
+VERBOSE: Using existing storage account variantsdemo2 in resource group variants_test_demo_2
+VERBOSE: Checkpoint 2
+VERBOSE: Checkpoint 3
+VERBOSE: Checkpoint 4
+VERBOSE: Checkpoint 5
+VERBOSE: Initialized instance wrapper for AzureSetup---westus-unset-Smoke-1
+VERBOSE: AzureInstance
+VERBOSE: All good
+VERBOSE: Setting up Azure RG
+VERBOSE: Getting the NSG
+Get-AzureRmNetworkSecurityGroup : The Resource 'Microsoft.Network/networkSecurityGroups/SmokeNSG' under resource group 
+'variants_test_demo_2' was not found.
+StatusCode: 404
+ReasonPhrase: Not Found
+OperationID : '24126996-4c12-493c-849a-7ae6245e0dd5'
+At C:\Framework-Scripts\backend.ps1:326 char:15
++ ...       $sg = Get-AzureRmNetworkSecurityGroup -Name $this.NetworkSecGro ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : CloseError: (:) [Get-AzureRmNetworkSecurityGroup], NetworkCloudException
+    + FullyQualifiedErrorId : Microsoft.Azure.Commands.Network.GetAzureNetworkSecurityGroupCommand
+WARNING: The output object type of this cmdlet will be modified in a future release.
+VERBOSE: Getting the network
+Get-AzureRmVirtualNetwork : The Resource 'Microsoft.Network/virtualNetworks/SmokeVNet' under resource group 
+'variants_test_demo_2' was not found.
+StatusCode: 404
+ReasonPhrase: Not Found
+OperationID : 'f5cd2cd9-39f5-4ed5-aac1-79495478800f'
+At C:\Framework-Scripts\backend.ps1:350 char:25
++ ... NETObject = Get-AzureRmVirtualNetwork -Name $this.NetworkName -Resour ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : CloseError: (:) [Get-AzureRmVirtualNetwork], NetworkCloudException
+    + FullyQualifiedErrorId : Microsoft.Azure.Commands.Network.GetAzureVirtualNetworkCommand
+WARNING: The output object type of this cmdlet will be modified in a future release.
+VERBOSE: Getting the subnet
+Success
+VERBOSE: Starting variants for machine OpenLogic-CentOS-73-LAT
+VERBOSE: Launching job to start machine OpenLogic-CentOS-73-LAT in flavor Standard_D1_v2
+
+HasMoreData   : True
+StatusMessage :
+Location      : localhost
+Command       :
+                    param ($vmName,
+                            $sourceRG,
+                            $sourceSA,
+                            $sourceContainer,
+                            $destRG,
+                            $destSA,
+                            $destContainer,
+                            $location,
+                            $currentSuffix,
+                            $newSuffix,
+                            $NSG,
+                            $network,
+                            $subnet,
+                            $vmFlavor,
+                            $timeStarted
+                    )
+
+                    $logFileName = "c:\temp\transcripts\start_variants_scriptblock-" + $vmName + "-" + $vmFlavor + "-" + $timeStarted
+                    Start-Transcript $logFileName -Force
+
+                    . "C:\Framework-Scripts\common_functions.ps1"
+                    . "C:\Framework-Scripts\secrets.ps1"
+
+                    login_azure $sourceRG $sourceSA $location
+
+                    Set-AzureRmCurrentStorageAccount –ResourceGroupName $sourceRG –StorageAccountName $sourceSA
+
+                    $blobs = Get-AzureStorageBlob -Container $sourceContainer
+
+                    $blobName = "Unset"
+                    foreach ($blob in $blobs) {
+                        $blobName = $blob.Name
+                        Write-Verbose "Blob named $blobName was found in source container.  Seeing if it is a match..."
+                        if ($blobName.contains($vmName)) {
+                            Write-Verbose "Found blob $blobName for VM $vmName"
+                            break
+                        }
+                    }
+
+                    if ($blobName -eq "unset") {
+                        write-error "Blob for machine $vmName was not found in the container.  Cannot process."
+                        exit 1
+                    }
+
+                    Set-AzureRmCurrentStorageAccount -ResourceGroupName $destRG -Name $destSA
+
+                    Write-verbose "Deallocating machine $vmName, if it is up"
+                    $runningMachines = Get-AzureRmVm -ResourceGroupName $destRG -status | Where-Object -Property Name -Like "$vmName*"
+                    deallocate_machines_in_group $runningMachines $destRG $destSA $location
+
+                    $sourceURI = ("https://{0}.blob.core.windows.net/{1}/{2}" -f @($sourceSA, $sourceContainer, $blobName))
+
+                    $vmFlavLow = $vmFlavor.ToLower()
+
+                    #
+                    #  Just because it's up doesn't mean it's accepting connections yet.  Wait 2 minutes, then try to connect.  I tried 1 minute,
+                    #  but kept getting timeouts on the Ubuntu machines.
+                    $regionSuffix = ("-" + $location + "-" + $vmFlavor.ToLower()) -replace " ","-"
+                    $regionSuffix = $regionSuffix -replace "_","-"
+                    $imageName = $vmName + $regionSuffix
+                    $imageName = $imageName + $newSuffix
+                    $imageName = $imageName -replace ".vhd", ""
+
+                    Write-verbose "Attempting to create virtual machine $vmName from source URI $sourceURI.  This may take some time."
+                    C:\Framework-Scripts\launch_single_azure_vm.ps1 -vmName $vmName -resourceGroup $destRG -storageAccount $destSA -containerName $destContainer `
+                                                                -network $network -subnet $subnet -NSG $NSG -Location $location -VMFlavor $vmFlavLow -suffix $newSuffix `
+                                                                -imageIsGeneralized -generalizedBlobURI $sourceURI -Verbose
+                    if ($? -ne $true) {
+                        Write-error "Error creating VM $vmName.  This VM must be manually examined!!"
+                        Stop-Transcript
+                        exit 1
+                    }
+
+
+                    $machineIsUp = $false
+                    [int]$sleepCount = 0
+                    while ($false -eq $machineIsUp -and $sleepCount -lt 30) {
+                        $machineIsUp = $true
+                        $sleepCount = $sleepCount + 1
+                        $pipName = $imageName
+                        $ip=(Get-AzureRmPublicIpAddress -ResourceGroupName $destRG -Name $pipName).IpAddress
+                        if ($ip -eq $null -or $ip.ToLower() -eq "not assigned") {
+                            $machineIsIP = $false
+                            start-sleep -Seconds 10
+                        } else {
+                            $machineIsUp = $true
+                            break
+                        }
+                    }
+
+                    if ($true -ne $machineIsUp) {
+                        Write-errpr "Error getting IP address for VM $imageName.  This VM must be manually examined!!"
+                        Stop-Transcript
+                        exit 1
+                    }
+
+JobStateInfo  : Running
+Finished      : System.Threading.ManualResetEvent
+InstanceId    : d8a9e7a7-d3ec-4b24-875c-5250a14d28cf
+Id            : 85
+Name          : start_Standard_D1_v2OpenLogic-CentOS-73-LAT
+ChildJobs     : {Job86}
+PSBeginTime   : 9/1/2017 11:00:00 AM
+PSEndTime     :
+PSJobTypeName : BackgroundJob
+Output        : {}
+Error         : {}
+Progress      : {}
+Verbose       : {}
+Debug         : {}
+Warning       : {}
+Information   : {}
+State         : Running
+
+VERBOSE: Launching job to start machine OpenLogic-CentOS-73-LAT in flavor Standard_D3_v2
+
+HasMoreData   : True
+StatusMessage :
+Location      : localhost
+Command       :
+                    param ($vmName,
+                            $sourceRG,
+                            $sourceSA,
+                            $sourceContainer,
+                            $destRG,
+                            $destSA,
+                            $destContainer,
+                            $location,
+                            $currentSuffix,
+                            $newSuffix,
+                            $NSG,
+                            $network,
+                            $subnet,
+                            $vmFlavor,
+                            $timeStarted
+                    )
+
+                    $logFileName = "c:\temp\transcripts\start_variants_scriptblock-" + $vmName + "-" + $vmFlavor + "-" + $timeStarted
+                    Start-Transcript $logFileName -Force
+
+                    . "C:\Framework-Scripts\common_functions.ps1"
+                    . "C:\Framework-Scripts\secrets.ps1"
+
+                    login_azure $sourceRG $sourceSA $location
+
+                    Set-AzureRmCurrentStorageAccount –ResourceGroupName $sourceRG –StorageAccountName $sourceSA
+
+                    $blobs = Get-AzureStorageBlob -Container $sourceContainer
+
+                    $blobName = "Unset"
+                    foreach ($blob in $blobs) {
+                        $blobName = $blob.Name
+                        Write-Verbose "Blob named $blobName was found in source container.  Seeing if it is a match..."
+                        if ($blobName.contains($vmName)) {
+                            Write-Verbose "Found blob $blobName for VM $vmName"
+                            break
+                        }
+                    }
+
+                    if ($blobName -eq "unset") {
+                        write-error "Blob for machine $vmName was not found in the container.  Cannot process."
+                        exit 1
+                    }
+
+                    Set-AzureRmCurrentStorageAccount -ResourceGroupName $destRG -Name $destSA
+
+                    Write-verbose "Deallocating machine $vmName, if it is up"
+                    $runningMachines = Get-AzureRmVm -ResourceGroupName $destRG -status | Where-Object -Property Name -Like "$vmName*"
+                    deallocate_machines_in_group $runningMachines $destRG $destSA $location
+
+                    $sourceURI = ("https://{0}.blob.core.windows.net/{1}/{2}" -f @($sourceSA, $sourceContainer, $blobName))
+
+                    $vmFlavLow = $vmFlavor.ToLower()
+
+                    #
+                    #  Just because it's up doesn't mean it's accepting connections yet.  Wait 2 minutes, then try to connect.  I tried 1 minute,
+                    #  but kept getting timeouts on the Ubuntu machines.
+                    $regionSuffix = ("-" + $location + "-" + $vmFlavor.ToLower()) -replace " ","-"
+                    $regionSuffix = $regionSuffix -replace "_","-"
+                    $imageName = $vmName + $regionSuffix
+                    $imageName = $imageName + $newSuffix
+                    $imageName = $imageName -replace ".vhd", ""
+
+                    Write-verbose "Attempting to create virtual machine $vmName from source URI $sourceURI.  This may take some time."
+                    C:\Framework-Scripts\launch_single_azure_vm.ps1 -vmName $vmName -resourceGroup $destRG -storageAccount $destSA -containerName $destContainer `
+                                                                -network $network -subnet $subnet -NSG $NSG -Location $location -VMFlavor $vmFlavLow -suffix $newSuffix `
+                                                                -imageIsGeneralized -generalizedBlobURI $sourceURI -Verbose
+                    if ($? -ne $true) {
+                        Write-error "Error creating VM $vmName.  This VM must be manually examined!!"
+                        Stop-Transcript
+                        exit 1
+                    }
+
+
+                    $machineIsUp = $false
+                    [int]$sleepCount = 0
+                    while ($false -eq $machineIsUp -and $sleepCount -lt 30) {
+                        $machineIsUp = $true
+                        $sleepCount = $sleepCount + 1
+                        $pipName = $imageName
+                        $ip=(Get-AzureRmPublicIpAddress -ResourceGroupName $destRG -Name $pipName).IpAddress
+                        if ($ip -eq $null -or $ip.ToLower() -eq "not assigned") {
+                            $machineIsIP = $false
+                            start-sleep -Seconds 10
+                        } else {
+                            $machineIsUp = $true
+                            break
+                        }
+                    }
+
+                    if ($true -ne $machineIsUp) {
+                        Write-errpr "Error getting IP address for VM $imageName.  This VM must be manually examined!!"
+                        Stop-Transcript
+                        exit 1
+                    }
+
+JobStateInfo  : Running
+Finished      : System.Threading.ManualResetEvent
+InstanceId    : b67902c4-108f-4ef3-bbb6-b88208f66b7b
+Id            : 87
+Name          : start_Standard_D3_v2OpenLogic-CentOS-73-LAT
+ChildJobs     : {Job88}
+PSBeginTime   : 9/1/2017 11:00:00 AM
+PSEndTime     :
+PSJobTypeName : BackgroundJob
+Output        : {}
+Error         : {}
+Progress      : {}
+Verbose       : {}
+Debug         : {}
+Warning       : {}
+Information   : {}
+State         : Running
+
+VERBOSE: Launching job to start machine OpenLogic-CentOS-73-LAT in flavor Standard_D4_v2
+
+HasMoreData   : True
+StatusMessage :
+Location      : localhost
+Command       :
+                    param ($vmName,
+                            $sourceRG,
+                            $sourceSA,
+                            $sourceContainer,
+                            $destRG,
+                            $destSA,
+                            $destContainer,
+                            $location,
+                            $currentSuffix,
+                            $newSuffix,
+                            $NSG,
+                            $network,
+                            $subnet,
+                            $vmFlavor,
+                            $timeStarted
+                    )
+
+                    $logFileName = "c:\temp\transcripts\start_variants_scriptblock-" + $vmName + "-" + $vmFlavor + "-" + $timeStarted
+                    Start-Transcript $logFileName -Force
+
+                    . "C:\Framework-Scripts\common_functions.ps1"
+                    . "C:\Framework-Scripts\secrets.ps1"
+
+                    login_azure $sourceRG $sourceSA $location
+
+                    Set-AzureRmCurrentStorageAccount –ResourceGroupName $sourceRG –StorageAccountName $sourceSA
+
+                    $blobs = Get-AzureStorageBlob -Container $sourceContainer
+
+                    $blobName = "Unset"
+                    foreach ($blob in $blobs) {
+                        $blobName = $blob.Name
+                        Write-Verbose "Blob named $blobName was found in source container.  Seeing if it is a match..."
+                        if ($blobName.contains($vmName)) {
+                            Write-Verbose "Found blob $blobName for VM $vmName"
+                            break
+                        }
+                    }
+
+                    if ($blobName -eq "unset") {
+                        write-error "Blob for machine $vmName was not found in the container.  Cannot process."
+                        exit 1
+                    }
+
+                    Set-AzureRmCurrentStorageAccount -ResourceGroupName $destRG -Name $destSA
+
+                    Write-verbose "Deallocating machine $vmName, if it is up"
+                    $runningMachines = Get-AzureRmVm -ResourceGroupName $destRG -status | Where-Object -Property Name -Like "$vmName*"
+                    deallocate_machines_in_group $runningMachines $destRG $destSA $location
+
+                    $sourceURI = ("https://{0}.blob.core.windows.net/{1}/{2}" -f @($sourceSA, $sourceContainer, $blobName))
+
+                    $vmFlavLow = $vmFlavor.ToLower()
+
+                    #
+                    #  Just because it's up doesn't mean it's accepting connections yet.  Wait 2 minutes, then try to connect.  I tried 1 minute,
+                    #  but kept getting timeouts on the Ubuntu machines.
+                    $regionSuffix = ("-" + $location + "-" + $vmFlavor.ToLower()) -replace " ","-"
+                    $regionSuffix = $regionSuffix -replace "_","-"
+                    $imageName = $vmName + $regionSuffix
+                    $imageName = $imageName + $newSuffix
+                    $imageName = $imageName -replace ".vhd", ""
+
+                    Write-verbose "Attempting to create virtual machine $vmName from source URI $sourceURI.  This may take some time."
+                    C:\Framework-Scripts\launch_single_azure_vm.ps1 -vmName $vmName -resourceGroup $destRG -storageAccount $destSA -containerName $destContainer `
+                                                                -network $network -subnet $subnet -NSG $NSG -Location $location -VMFlavor $vmFlavLow -suffix $newSuffix `
+                                                                -imageIsGeneralized -generalizedBlobURI $sourceURI -Verbose
+                    if ($? -ne $true) {
+                        Write-error "Error creating VM $vmName.  This VM must be manually examined!!"
+                        Stop-Transcript
+                        exit 1
+                    }
+
+
+                    $machineIsUp = $false
+                    [int]$sleepCount = 0
+                    while ($false -eq $machineIsUp -and $sleepCount -lt 30) {
+                        $machineIsUp = $true
+                        $sleepCount = $sleepCount + 1
+                        $pipName = $imageName
+                        $ip=(Get-AzureRmPublicIpAddress -ResourceGroupName $destRG -Name $pipName).IpAddress
+                        if ($ip -eq $null -or $ip.ToLower() -eq "not assigned") {
+                            $machineIsIP = $false
+                            start-sleep -Seconds 10
+                        } else {
+                            $machineIsUp = $true
+                            break
+                        }
+                    }
+
+                    if ($true -ne $machineIsUp) {
+                        Write-errpr "Error getting IP address for VM $imageName.  This VM must be manually examined!!"
+                        Stop-Transcript
+                        exit 1
+                    }
+
+JobStateInfo  : Running
+Finished      : System.Threading.ManualResetEvent
+InstanceId    : dac91ac1-2968-4e96-b14f-f747e80e5977
+Id            : 89
+Name          : start_Standard_D4_v2OpenLogic-CentOS-73-LAT
+ChildJobs     : {Job90}
+PSBeginTime   : 9/1/2017 11:00:01 AM
+PSEndTime     :
+PSJobTypeName : BackgroundJob
+Output        : {}
+Error         : {}
+Progress      : {}
+Verbose       : {}
+Debug         : {}
+Warning       : {}
+Information   : {}
+State         : Running
+
+VERBOSE: Starting variants for machine Ubuntu1604-LTS-LATEST
+VERBOSE: Launching job to start machine Ubuntu1604-LTS-LATEST in flavor Standard_D1_v2
+
+HasMoreData   : True
+StatusMessage :
+Location      : localhost
+Command       :
+                    param ($vmName,
+                            $sourceRG,
+                            $sourceSA,
+                            $sourceContainer,
+                            $destRG,
+                            $destSA,
+                            $destContainer,
+                            $location,
+                            $currentSuffix,
+                            $newSuffix,
+                            $NSG,
+                            $network,
+                            $subnet,
+                            $vmFlavor,
+                            $timeStarted
+                    )
+
+                    $logFileName = "c:\temp\transcripts\start_variants_scriptblock-" + $vmName + "-" + $vmFlavor + "-" + $timeStarted
+                    Start-Transcript $logFileName -Force
+
+                    . "C:\Framework-Scripts\common_functions.ps1"
+                    . "C:\Framework-Scripts\secrets.ps1"
+
+                    login_azure $sourceRG $sourceSA $location
+
+                    Set-AzureRmCurrentStorageAccount –ResourceGroupName $sourceRG –StorageAccountName $sourceSA
+
+                    $blobs = Get-AzureStorageBlob -Container $sourceContainer
+
+                    $blobName = "Unset"
+                    foreach ($blob in $blobs) {
+                        $blobName = $blob.Name
+                        Write-Verbose "Blob named $blobName was found in source container.  Seeing if it is a match..."
+                        if ($blobName.contains($vmName)) {
+                            Write-Verbose "Found blob $blobName for VM $vmName"
+                            break
+                        }
+                    }
+
+                    if ($blobName -eq "unset") {
+                        write-error "Blob for machine $vmName was not found in the container.  Cannot process."
+                        exit 1
+                    }
+
+                    Set-AzureRmCurrentStorageAccount -ResourceGroupName $destRG -Name $destSA
+
+                    Write-verbose "Deallocating machine $vmName, if it is up"
+                    $runningMachines = Get-AzureRmVm -ResourceGroupName $destRG -status | Where-Object -Property Name -Like "$vmName*"
+                    deallocate_machines_in_group $runningMachines $destRG $destSA $location
+
+                    $sourceURI = ("https://{0}.blob.core.windows.net/{1}/{2}" -f @($sourceSA, $sourceContainer, $blobName))
+
+                    $vmFlavLow = $vmFlavor.ToLower()
+
+                    #
+                    #  Just because it's up doesn't mean it's accepting connections yet.  Wait 2 minutes, then try to connect.  I tried 1 minute,
+                    #  but kept getting timeouts on the Ubuntu machines.
+                    $regionSuffix = ("-" + $location + "-" + $vmFlavor.ToLower()) -replace " ","-"
+                    $regionSuffix = $regionSuffix -replace "_","-"
+                    $imageName = $vmName + $regionSuffix
+                    $imageName = $imageName + $newSuffix
+                    $imageName = $imageName -replace ".vhd", ""
+
+                    Write-verbose "Attempting to create virtual machine $vmName from source URI $sourceURI.  This may take some time."
+                    C:\Framework-Scripts\launch_single_azure_vm.ps1 -vmName $vmName -resourceGroup $destRG -storageAccount $destSA -containerName $destContainer `
+                                                                -network $network -subnet $subnet -NSG $NSG -Location $location -VMFlavor $vmFlavLow -suffix $newSuffix `
+                                                                -imageIsGeneralized -generalizedBlobURI $sourceURI -Verbose
+                    if ($? -ne $true) {
+                        Write-error "Error creating VM $vmName.  This VM must be manually examined!!"
+                        Stop-Transcript
+                        exit 1
+                    }
+
+
+                    $machineIsUp = $false
+                    [int]$sleepCount = 0
+                    while ($false -eq $machineIsUp -and $sleepCount -lt 30) {
+                        $machineIsUp = $true
+                        $sleepCount = $sleepCount + 1
+                        $pipName = $imageName
+                        $ip=(Get-AzureRmPublicIpAddress -ResourceGroupName $destRG -Name $pipName).IpAddress
+                        if ($ip -eq $null -or $ip.ToLower() -eq "not assigned") {
+                            $machineIsIP = $false
+                            start-sleep -Seconds 10
+                        } else {
+                            $machineIsUp = $true
+                            break
+                        }
+                    }
+
+                    if ($true -ne $machineIsUp) {
+                        Write-errpr "Error getting IP address for VM $imageName.  This VM must be manually examined!!"
+                        Stop-Transcript
+                        exit 1
+                    }
+
+JobStateInfo  : Running
+Finished      : System.Threading.ManualResetEvent
+InstanceId    : 58f04362-b675-404f-ab30-ae65d5caf6aa
+Id            : 91
+Name          : start_Standard_D1_v2Ubuntu1604-LTS-LATEST
+ChildJobs     : {Job92}
+PSBeginTime   : 9/1/2017 11:00:01 AM
+PSEndTime     :
+PSJobTypeName : BackgroundJob
+Output        : {}
+Error         : {}
+Progress      : {}
+Verbose       : {}
+Debug         : {}
+Warning       : {}
+Information   : {}
+State         : Running
+
+VERBOSE: Launching job to start machine Ubuntu1604-LTS-LATEST in flavor Standard_D3_v2
+
+HasMoreData   : True
+StatusMessage :
+Location      : localhost
+Command       :
+                    param ($vmName,
+                            $sourceRG,
+                            $sourceSA,
+                            $sourceContainer,
+                            $destRG,
+                            $destSA,
+                            $destContainer,
+                            $location,
+                            $currentSuffix,
+                            $newSuffix,
+                            $NSG,
+                            $network,
+                            $subnet,
+                            $vmFlavor,
+                            $timeStarted
+                    )
+
+                    $logFileName = "c:\temp\transcripts\start_variants_scriptblock-" + $vmName + "-" + $vmFlavor + "-" + $timeStarted
+                    Start-Transcript $logFileName -Force
+
+                    . "C:\Framework-Scripts\common_functions.ps1"
+                    . "C:\Framework-Scripts\secrets.ps1"
+
+                    login_azure $sourceRG $sourceSA $location
+
+                    Set-AzureRmCurrentStorageAccount –ResourceGroupName $sourceRG –StorageAccountName $sourceSA
+
+                    $blobs = Get-AzureStorageBlob -Container $sourceContainer
+
+                    $blobName = "Unset"
+                    foreach ($blob in $blobs) {
+                        $blobName = $blob.Name
+                        Write-Verbose "Blob named $blobName was found in source container.  Seeing if it is a match..."
+                        if ($blobName.contains($vmName)) {
+                            Write-Verbose "Found blob $blobName for VM $vmName"
+                            break
+                        }
+                    }
+
+                    if ($blobName -eq "unset") {
+                        write-error "Blob for machine $vmName was not found in the container.  Cannot process."
+                        exit 1
+                    }
+
+                    Set-AzureRmCurrentStorageAccount -ResourceGroupName $destRG -Name $destSA
+
+                    Write-verbose "Deallocating machine $vmName, if it is up"
+                    $runningMachines = Get-AzureRmVm -ResourceGroupName $destRG -status | Where-Object -Property Name -Like "$vmName*"
+                    deallocate_machines_in_group $runningMachines $destRG $destSA $location
+
+                    $sourceURI = ("https://{0}.blob.core.windows.net/{1}/{2}" -f @($sourceSA, $sourceContainer, $blobName))
+
+                    $vmFlavLow = $vmFlavor.ToLower()
+
+                    #
+                    #  Just because it's up doesn't mean it's accepting connections yet.  Wait 2 minutes, then try to connect.  I tried 1 minute,
+                    #  but kept getting timeouts on the Ubuntu machines.
+                    $regionSuffix = ("-" + $location + "-" + $vmFlavor.ToLower()) -replace " ","-"
+                    $regionSuffix = $regionSuffix -replace "_","-"
+                    $imageName = $vmName + $regionSuffix
+                    $imageName = $imageName + $newSuffix
+                    $imageName = $imageName -replace ".vhd", ""
+
+                    Write-verbose "Attempting to create virtual machine $vmName from source URI $sourceURI.  This may take some time."
+                    C:\Framework-Scripts\launch_single_azure_vm.ps1 -vmName $vmName -resourceGroup $destRG -storageAccount $destSA -containerName $destContainer `
+                                                                -network $network -subnet $subnet -NSG $NSG -Location $location -VMFlavor $vmFlavLow -suffix $newSuffix `
+                                                                -imageIsGeneralized -generalizedBlobURI $sourceURI -Verbose
+                    if ($? -ne $true) {
+                        Write-error "Error creating VM $vmName.  This VM must be manually examined!!"
+                        Stop-Transcript
+                        exit 1
+                    }
+
+
+                    $machineIsUp = $false
+                    [int]$sleepCount = 0
+                    while ($false -eq $machineIsUp -and $sleepCount -lt 30) {
+                        $machineIsUp = $true
+                        $sleepCount = $sleepCount + 1
+                        $pipName = $imageName
+                        $ip=(Get-AzureRmPublicIpAddress -ResourceGroupName $destRG -Name $pipName).IpAddress
+                        if ($ip -eq $null -or $ip.ToLower() -eq "not assigned") {
+                            $machineIsIP = $false
+                            start-sleep -Seconds 10
+                        } else {
+                            $machineIsUp = $true
+                            break
+                        }
+                    }
+
+                    if ($true -ne $machineIsUp) {
+                        Write-errpr "Error getting IP address for VM $imageName.  This VM must be manually examined!!"
+                        Stop-Transcript
+                        exit 1
+                    }
+
+JobStateInfo  : Running
+Finished      : System.Threading.ManualResetEvent
+InstanceId    : ffc38b70-4c76-4a88-941f-4cb7a7422919
+Id            : 93
+Name          : start_Standard_D3_v2Ubuntu1604-LTS-LATEST
+ChildJobs     : {Job94}
+PSBeginTime   : 9/1/2017 11:00:01 AM
+PSEndTime     :
+PSJobTypeName : BackgroundJob
+Output        : {}
+Error         : {}
+Progress      : {}
+Verbose       : {}
+Debug         : {}
+Warning       : {}
+Information   : {}
+State         : Running
+
+VERBOSE: Launching job to start machine Ubuntu1604-LTS-LATEST in flavor Standard_D4_v2
+
+HasMoreData   : True
+StatusMessage :
+Location      : localhost
+Command       :
+                    param ($vmName,
+                            $sourceRG,
+                            $sourceSA,
+                            $sourceContainer,
+                            $destRG,
+                            $destSA,
+                            $destContainer,
+                            $location,
+                            $currentSuffix,
+                            $newSuffix,
+                            $NSG,
+                            $network,
+                            $subnet,
+                            $vmFlavor,
+                            $timeStarted
+                    )
+
+                    $logFileName = "c:\temp\transcripts\start_variants_scriptblock-" + $vmName + "-" + $vmFlavor + "-" + $timeStarted
+                    Start-Transcript $logFileName -Force
+
+                    . "C:\Framework-Scripts\common_functions.ps1"
+                    . "C:\Framework-Scripts\secrets.ps1"
+
+                    login_azure $sourceRG $sourceSA $location
+
+                    Set-AzureRmCurrentStorageAccount –ResourceGroupName $sourceRG –StorageAccountName $sourceSA
+
+                    $blobs = Get-AzureStorageBlob -Container $sourceContainer
+
+                    $blobName = "Unset"
+                    foreach ($blob in $blobs) {
+                        $blobName = $blob.Name
+                        Write-Verbose "Blob named $blobName was found in source container.  Seeing if it is a match..."
+                        if ($blobName.contains($vmName)) {
+                            Write-Verbose "Found blob $blobName for VM $vmName"
+                            break
+                        }
+                    }
+
+                    if ($blobName -eq "unset") {
+                        write-error "Blob for machine $vmName was not found in the container.  Cannot process."
+                        exit 1
+                    }
+
+                    Set-AzureRmCurrentStorageAccount -ResourceGroupName $destRG -Name $destSA
+
+                    Write-verbose "Deallocating machine $vmName, if it is up"
+                    $runningMachines = Get-AzureRmVm -ResourceGroupName $destRG -status | Where-Object -Property Name -Like "$vmName*"
+                    deallocate_machines_in_group $runningMachines $destRG $destSA $location
+
+                    $sourceURI = ("https://{0}.blob.core.windows.net/{1}/{2}" -f @($sourceSA, $sourceContainer, $blobName))
+
+                    $vmFlavLow = $vmFlavor.ToLower()
+
+                    #
+                    #  Just because it's up doesn't mean it's accepting connections yet.  Wait 2 minutes, then try to connect.  I tried 1 minute,
+                    #  but kept getting timeouts on the Ubuntu machines.
+                    $regionSuffix = ("-" + $location + "-" + $vmFlavor.ToLower()) -replace " ","-"
+                    $regionSuffix = $regionSuffix -replace "_","-"
+                    $imageName = $vmName + $regionSuffix
+                    $imageName = $imageName + $newSuffix
+                    $imageName = $imageName -replace ".vhd", ""
+
+                    Write-verbose "Attempting to create virtual machine $vmName from source URI $sourceURI.  This may take some time."
+                    C:\Framework-Scripts\launch_single_azure_vm.ps1 -vmName $vmName -resourceGroup $destRG -storageAccount $destSA -containerName $destContainer `
+                                                                -network $network -subnet $subnet -NSG $NSG -Location $location -VMFlavor $vmFlavLow -suffix $newSuffix `
+                                                                -imageIsGeneralized -generalizedBlobURI $sourceURI -Verbose
+                    if ($? -ne $true) {
+                        Write-error "Error creating VM $vmName.  This VM must be manually examined!!"
+                        Stop-Transcript
+                        exit 1
+                    }
+
+
+                    $machineIsUp = $false
+                    [int]$sleepCount = 0
+                    while ($false -eq $machineIsUp -and $sleepCount -lt 30) {
+                        $machineIsUp = $true
+                        $sleepCount = $sleepCount + 1
+                        $pipName = $imageName
+                        $ip=(Get-AzureRmPublicIpAddress -ResourceGroupName $destRG -Name $pipName).IpAddress
+                        if ($ip -eq $null -or $ip.ToLower() -eq "not assigned") {
+                            $machineIsIP = $false
+                            start-sleep -Seconds 10
+                        } else {
+                            $machineIsUp = $true
+                            break
+                        }
+                    }
+
+                    if ($true -ne $machineIsUp) {
+                        Write-errpr "Error getting IP address for VM $imageName.  This VM must be manually examined!!"
+                        Stop-Transcript
+                        exit 1
+                    }
+
+JobStateInfo  : Running
+Finished      : System.Threading.ManualResetEvent
+InstanceId    : 69e9e20e-af88-4784-9152-8587215080ed
+Id            : 95
+Name          : start_Standard_D4_v2Ubuntu1604-LTS-LATEST
+ChildJobs     : {Job96}
+PSBeginTime   : 9/1/2017 11:00:02 AM
+PSEndTime     :
+PSJobTypeName : BackgroundJob
+Output        : {}
+Error         : {}
+Progress      : {}
+Verbose       : {}
+Debug         : {}
+Warning       : {}
+Information   : {}
+State         : Running
+
+    Job start_Standard_D1_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D1_v2-2017-09-01T10-58-09 :
+         CLRVersion: 4.0.30319.42000
+         WSManStackVersion: 3.0
+         PSRemotingProtocolVersion: 2.3
+         SerializationVersion: 1.1.0.1
+         **********************
+    Job start_Standard_D3_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D3_v2-2017-09-01T10-58-09 :
+         CLRVersion: 4.0.30319.42000
+         WSManStackVersion: 3.0
+         PSRemotingProtocolVersion: 2.3
+         SerializationVersion: 1.1.0.1
+         **********************
+    Job start_Standard_D4_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D4_v2-2017-09-01T10-58-09 :
+         CLRVersion: 4.0.30319.42000
+         WSManStackVersion: 3.0
+         PSRemotingProtocolVersion: 2.3
+         SerializationVersion: 1.1.0.1
+         **********************
+    Job start_Standard_D1_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D1_v2-2017-09-01T10-58-09 :
+         CLRVersion: 4.0.30319.42000
+         WSManStackVersion: 3.0
+         PSRemotingProtocolVersion: 2.3
+         SerializationVersion: 1.1.0.1
+         **********************
+    Job start_Standard_D3_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D3_v2-2017-09-01T10-58-09 :
+         CLRVersion: 4.0.30319.42000
+         WSManStackVersion: 3.0
+         PSRemotingProtocolVersion: 2.3
+         SerializationVersion: 1.1.0.1
+         **********************
+    Job start_Standard_D4_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D4_v2-2017-09-01T10-58-09 :
+         CLRVersion: 4.0.30319.42000
+         WSManStackVersion: 3.0
+         PSRemotingProtocolVersion: 2.3
+         SerializationVersion: 1.1.0.1
+         **********************
+    Job start_Standard_D1_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D1_v2-2017-09-01T10-58-09 :
+         VERBOSE: Initialized backend AzureBackend
+         VERBOSE: Starting the backend
+         VERBOSE: Backend CP 1
+         VERBOSE: Backend CP 2
+         VERBOSE: Checkpoint 1
+    Job start_Standard_D3_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: Initialized backend AzureBackend
+         VERBOSE: Starting the backend
+         VERBOSE: Backend CP 1
+         VERBOSE: Backend CP 2
+         VERBOSE: Checkpoint 1
+    Job start_Standard_D4_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D4_v2-2017-09-01T10-58-09 :
+         VERBOSE: Initialized backend AzureBackend
+         VERBOSE: Starting the backend
+         VERBOSE: Backend CP 1
+         VERBOSE: Backend CP 2
+         VERBOSE: Checkpoint 1
+    Job start_Standard_D1_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D1_v2-2017-09-01T10-58-09 :
+         VERBOSE: Initialized backend AzureBackend
+         VERBOSE: Starting the backend
+         VERBOSE: Backend CP 1
+         VERBOSE: Backend CP 2
+         VERBOSE: Checkpoint 1
+    Job start_Standard_D3_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: Initialized backend AzureBackend
+         VERBOSE: Starting the backend
+         VERBOSE: Backend CP 1
+         VERBOSE: Backend CP 2
+         VERBOSE: Checkpoint 1
+    Job start_Standard_D4_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D4_v2-2017-09-01T10-58-09 :
+         VERBOSE: Initialized backend AzureBackend
+         VERBOSE: Starting the backend
+         VERBOSE: Backend CP 1
+         VERBOSE: Backend CP 2
+         VERBOSE: Checkpoint 1
+    Job start_Standard_D1_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D1_v2-2017-09-01T10-58-09 :
+         At C:\Framework-Scripts\backend.ps1:382 char:16
+         + ...      $pip = Get-AzureRmPublicIpAddress -ResourceGroupName $this.Resou ...
+         +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             + CategoryInfo          : CloseError: (:) [Get-AzureRmPublicIpAddress], NetworkCloudException
+             + FullyQualifiedErrorId : Microsoft.Azure.Commands.Network.GetAzurePublicIpAddressCommand
+    Job start_Standard_D3_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D3_v2-2017-09-01T10-58-09 :
+         At C:\Framework-Scripts\backend.ps1:382 char:16
+         + ...      $pip = Get-AzureRmPublicIpAddress -ResourceGroupName $this.Resou ...
+         +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             + CategoryInfo          : CloseError: (:) [Get-AzureRmPublicIpAddress], NetworkCloudException
+             + FullyQualifiedErrorId : Microsoft.Azure.Commands.Network.GetAzurePublicIpAddressCommand
+    Job start_Standard_D4_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D4_v2-2017-09-01T10-58-09 :
+         At C:\Framework-Scripts\backend.ps1:382 char:16
+         + ...      $pip = Get-AzureRmPublicIpAddress -ResourceGroupName $this.Resou ...
+         +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             + CategoryInfo          : CloseError: (:) [Get-AzureRmPublicIpAddress], NetworkCloudException
+             + FullyQualifiedErrorId : Microsoft.Azure.Commands.Network.GetAzurePublicIpAddressCommand
+    Job start_Standard_D1_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D1_v2-2017-09-01T10-58-09 :
+         At C:\Framework-Scripts\backend.ps1:382 char:16
+         + ...      $pip = Get-AzureRmPublicIpAddress -ResourceGroupName $this.Resou ...
+         +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             + CategoryInfo          : CloseError: (:) [Get-AzureRmPublicIpAddress], NetworkCloudException
+             + FullyQualifiedErrorId : Microsoft.Azure.Commands.Network.GetAzurePublicIpAddressCommand
+    Job start_Standard_D3_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: All good
+         VERBOSE: Removing machine Ubuntu1604-LTS-LATEST---westus-standard-d3-v2-Variant
+         VERBOSE: Preserving existing PIP and NIC for future use.
+         VERBOSE: Instantinating VM Ubuntu1604-LTS-LATEST from a generalized image...
+         VERBOSE: Creating a new VM config...
+    Job start_Standard_D4_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D4_v2-2017-09-01T10-58-09 :
+         At C:\Framework-Scripts\backend.ps1:382 char:16
+         + ...      $pip = Get-AzureRmPublicIpAddress -ResourceGroupName $this.Resou ...
+         +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             + CategoryInfo          : CloseError: (:) [Get-AzureRmPublicIpAddress], NetworkCloudException
+             + FullyQualifiedErrorId : Microsoft.Azure.Commands.Network.GetAzurePublicIpAddressCommand
+    Job start_Standard_D1_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D1_v2-2017-09-01T10-58-09 :
+         At C:\Framework-Scripts\backend.ps1:382 char:16
+         + ...      $pip = Get-AzureRmPublicIpAddress -ResourceGroupName $this.Resou ...
+         +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             + CategoryInfo          : CloseError: (:) [Get-AzureRmPublicIpAddress], NetworkCloudException
+             + FullyQualifiedErrorId : Microsoft.Azure.Commands.Network.GetAzurePublicIpAddressCommand
+    Job start_Standard_D3_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D3_v2-2017-09-01T10-58-09 :
+         At C:\Framework-Scripts\backend.ps1:382 char:16
+         + ...      $pip = Get-AzureRmPublicIpAddress -ResourceGroupName $this.Resou ...
+         +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             + CategoryInfo          : CloseError: (:) [Get-AzureRmPublicIpAddress], NetworkCloudException
+             + FullyQualifiedErrorId : Microsoft.Azure.Commands.Network.GetAzurePublicIpAddressCommand
+    Job start_Standard_D4_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D4_v2-2017-09-01T10-58-09 :
+         At C:\Framework-Scripts\backend.ps1:382 char:16
+         + ...      $pip = Get-AzureRmPublicIpAddress -ResourceGroupName $this.Resou ...
+         +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             + CategoryInfo          : CloseError: (:) [Get-AzureRmPublicIpAddress], NetworkCloudException
+             + FullyQualifiedErrorId : Microsoft.Azure.Commands.Network.GetAzurePublicIpAddressCommand
+    Job start_Standard_D1_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D1_v2-2017-09-01T10-58-09 :
+         At C:\Framework-Scripts\backend.ps1:382 char:16
+         + ...      $pip = Get-AzureRmPublicIpAddress -ResourceGroupName $this.Resou ...
+         +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             + CategoryInfo          : CloseError: (:) [Get-AzureRmPublicIpAddress], NetworkCloudException
+             + FullyQualifiedErrorId : Microsoft.Azure.Commands.Network.GetAzurePublicIpAddressCommand
+    Job start_Standard_D3_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D3_v2-2017-09-01T10-58-09 :
+         At C:\Framework-Scripts\backend.ps1:382 char:16
+         + ...      $pip = Get-AzureRmPublicIpAddress -ResourceGroupName $this.Resou ...
+         +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             + CategoryInfo          : CloseError: (:) [Get-AzureRmPublicIpAddress], NetworkCloudException
+             + FullyQualifiedErrorId : Microsoft.Azure.Commands.Network.GetAzurePublicIpAddressCommand
+    Job start_Standard_D4_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D4_v2-2017-09-01T10-58-09 :
+         At C:\Framework-Scripts\backend.ps1:382 char:16
+         + ...      $pip = Get-AzureRmPublicIpAddress -ResourceGroupName $this.Resou ...
+         +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             + CategoryInfo          : CloseError: (:) [Get-AzureRmPublicIpAddress], NetworkCloudException
+             + FullyQualifiedErrorId : Microsoft.Azure.Commands.Network.GetAzurePublicIpAddressCommand
+    Job start_Standard_D1_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D1_v2-2017-09-01T10-58-09 :
+         At C:\Framework-Scripts\backend.ps1:382 char:16
+         + ...      $pip = Get-AzureRmPublicIpAddress -ResourceGroupName $this.Resou ...
+         +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             + CategoryInfo          : CloseError: (:) [Get-AzureRmPublicIpAddress], NetworkCloudException
+             + FullyQualifiedErrorId : Microsoft.Azure.Commands.Network.GetAzurePublicIpAddressCommand
+    Job start_Standard_D3_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D3_v2-2017-09-01T10-58-09 :
+         At C:\Framework-Scripts\backend.ps1:382 char:16
+         + ...      $pip = Get-AzureRmPublicIpAddress -ResourceGroupName $this.Resou ...
+         +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             + CategoryInfo          : CloseError: (:) [Get-AzureRmPublicIpAddress], NetworkCloudException
+             + FullyQualifiedErrorId : Microsoft.Azure.Commands.Network.GetAzurePublicIpAddressCommand
+    Job start_Standard_D4_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D4_v2-2017-09-01T10-58-09 :
+         At C:\Framework-Scripts\backend.ps1:382 char:16
+         + ...      $pip = Get-AzureRmPublicIpAddress -ResourceGroupName $this.Resou ...
+         +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             + CategoryInfo          : CloseError: (:) [Get-AzureRmPublicIpAddress], NetworkCloudException
+             + FullyQualifiedErrorId : Microsoft.Azure.Commands.Network.GetAzurePublicIpAddressCommand
+    Job start_Standard_D1_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D1_v2-2017-09-01T10-58-09 :
+         At C:\Framework-Scripts\backend.ps1:382 char:16
+         + ...      $pip = Get-AzureRmPublicIpAddress -ResourceGroupName $this.Resou ...
+         +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             + CategoryInfo          : CloseError: (:) [Get-AzureRmPublicIpAddress], NetworkCloudException
+             + FullyQualifiedErrorId : Microsoft.Azure.Commands.Network.GetAzurePublicIpAddressCommand
+    Job start_Standard_D3_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D3_v2-2017-09-01T10-58-09 :
+         At C:\Framework-Scripts\backend.ps1:382 char:16
+         + ...      $pip = Get-AzureRmPublicIpAddress -ResourceGroupName $this.Resou ...
+         +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             + CategoryInfo          : CloseError: (:) [Get-AzureRmPublicIpAddress], NetworkCloudException
+             + FullyQualifiedErrorId : Microsoft.Azure.Commands.Network.GetAzurePublicIpAddressCommand
+    Job start_Standard_D4_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D4_v2-2017-09-01T10-58-09 :
+         At C:\Framework-Scripts\backend.ps1:382 char:16
+         + ...      $pip = Get-AzureRmPublicIpAddress -ResourceGroupName $this.Resou ...
+         +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             + CategoryInfo          : CloseError: (:) [Get-AzureRmPublicIpAddress], NetworkCloudException
+             + FullyQualifiedErrorId : Microsoft.Azure.Commands.Network.GetAzurePublicIpAddressCommand
+    Job start_Standard_D1_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D1_v2-2017-09-01T10-58-09 :
+         + ...      $pip = Get-AzureRmPublicIpAddress -ResourceGroupName $this.Resou ...
+         +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             + CategoryInfo          : CloseError: (:) [Get-AzureRmPublicIpAddress], NetworkCloudException
+             + FullyQualifiedErrorId : Microsoft.Azure.Commands.Network.GetAzurePublicIpAddressCommand
+         WARNING: The output object type of this cmdlet will be modified in a future release.
+    Job start_Standard_D3_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D3_v2-2017-09-01T10-58-09 :
+         At C:\Framework-Scripts\backend.ps1:382 char:16
+         + ...      $pip = Get-AzureRmPublicIpAddress -ResourceGroupName $this.Resou ...
+         +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             + CategoryInfo          : CloseError: (:) [Get-AzureRmPublicIpAddress], NetworkCloudException
+             + FullyQualifiedErrorId : Microsoft.Azure.Commands.Network.GetAzurePublicIpAddressCommand
+    Job start_Standard_D4_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D4_v2-2017-09-01T10-58-09 :
+         At C:\Framework-Scripts\backend.ps1:382 char:16
+         + ...      $pip = Get-AzureRmPublicIpAddress -ResourceGroupName $this.Resou ...
+         +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             + CategoryInfo          : CloseError: (:) [Get-AzureRmPublicIpAddress], NetworkCloudException
+             + FullyQualifiedErrorId : Microsoft.Azure.Commands.Network.GetAzurePublicIpAddressCommand
+    Job start_Standard_D1_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D1_v2-2017-09-01T10-58-09 :
+             + CategoryInfo          : CloseError: (:) [Get-AzureRmPublicIpAddress], NetworkCloudException
+             + FullyQualifiedErrorId : Microsoft.Azure.Commands.Network.GetAzurePublicIpAddressCommand
+         WARNING: The output object type of this cmdlet will be modified in a future release.
+         VERBOSE: Assigning the network interface
+         VERBOSE: GetNIC CP 1
+    Job start_Standard_D3_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D3_v2-2017-09-01T10-58-09 :
+         At C:\Framework-Scripts\backend.ps1:382 char:16
+         + ...      $pip = Get-AzureRmPublicIpAddress -ResourceGroupName $this.Resou ...
+         +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             + CategoryInfo          : CloseError: (:) [Get-AzureRmPublicIpAddress], NetworkCloudException
+             + FullyQualifiedErrorId : Microsoft.Azure.Commands.Network.GetAzurePublicIpAddressCommand
+    Job start_Standard_D4_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D4_v2-2017-09-01T10-58-09 :
+         At C:\Framework-Scripts\backend.ps1:382 char:16
+         + ...      $pip = Get-AzureRmPublicIpAddress -ResourceGroupName $this.Resou ...
+         +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             + CategoryInfo          : CloseError: (:) [Get-AzureRmPublicIpAddress], NetworkCloudException
+             + FullyQualifiedErrorId : Microsoft.Azure.Commands.Network.GetAzurePublicIpAddressCommand
+    Job start_Standard_D1_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D1_v2-2017-09-01T10-58-09 :
+         WARNING: The output object type of this cmdlet will be modified in a future release.
+         VERBOSE: GetNIC CP 4
+         VERBOSE: GetNIC CP 5
+         VERBOSE: GetNIC CP 6
+         VERBOSE: Adding the network interface
+    Job start_Standard_D3_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D3_v2-2017-09-01T10-58-09 :
+         WARNING: The output object type of this cmdlet will be modified in a future release.
+         VERBOSE: GetNIC CP 4
+         VERBOSE: GetNIC CP 5
+         VERBOSE: GetNIC CP 6
+         VERBOSE: Adding the network interface
+    Job start_Standard_D4_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D4_v2-2017-09-01T10-58-09 :
+         WARNING: The output object type of this cmdlet will be modified in a future release.
+         VERBOSE: GetNIC CP 4
+         VERBOSE: GetNIC CP 5
+         VERBOSE: GetNIC CP 6
+         VERBOSE: Adding the network interface
+    Job start_Standard_D1_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D1_v2-2017-09-01T10-58-09 :
+         WARNING: The output object type of this cmdlet will be modified in a future release.
+         VERBOSE: GetNIC CP 4
+         VERBOSE: GetNIC CP 5
+         VERBOSE: GetNIC CP 6
+         VERBOSE: Adding the network interface
+    Job start_Standard_D3_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: GetNIC CP 3
+         WARNING: The output object type of this cmdlet will be modified in a future release.
+         VERBOSE: GetNIC CP 4
+         VERBOSE: GetNIC CP 5
+         VERBOSE: GetNIC CP 6
+    Job start_Standard_D4_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D4_v2-2017-09-01T10-58-09 :
+         WARNING: The output object type of this cmdlet will be modified in a future release.
+         VERBOSE: GetNIC CP 4
+         VERBOSE: GetNIC CP 5
+         VERBOSE: GetNIC CP 6
+         VERBOSE: Adding the network interface
+    Job start_Standard_D1_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D1_v2-2017-09-01T10-58-09 :
+         WARNING: The output object type of this cmdlet will be modified in a future release.
+         VERBOSE: GetNIC CP 4
+         VERBOSE: GetNIC CP 5
+         VERBOSE: GetNIC CP 6
+         VERBOSE: Adding the network interface
+    Job start_Standard_D3_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D3_v2-2017-09-01T10-58-09 :
+         WARNING: The output object type of this cmdlet will be modified in a future release.
+         VERBOSE: GetNIC CP 4
+         VERBOSE: GetNIC CP 5
+         VERBOSE: GetNIC CP 6
+         VERBOSE: Adding the network interface
+    Job start_Standard_D4_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D4_v2-2017-09-01T10-58-09 :
+         WARNING: The output object type of this cmdlet will be modified in a future release.
+         VERBOSE: GetNIC CP 4
+         VERBOSE: GetNIC CP 5
+         VERBOSE: GetNIC CP 6
+         VERBOSE: Adding the network interface
+    Job start_Standard_D1_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D1_v2-2017-09-01T10-58-09 :
+         WARNING: The output object type of this cmdlet will be modified in a future release.
+         VERBOSE: GetNIC CP 4
+         VERBOSE: GetNIC CP 5
+         VERBOSE: GetNIC CP 6
+         VERBOSE: Adding the network interface
+    Job start_Standard_D3_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D3_v2-2017-09-01T10-58-09 :
+         WARNING: The output object type of this cmdlet will be modified in a future release.
+         VERBOSE: GetNIC CP 4
+         VERBOSE: GetNIC CP 5
+         VERBOSE: GetNIC CP 6
+         VERBOSE: Adding the network interface
+    Job start_Standard_D4_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D4_v2-2017-09-01T10-58-09 :
+         WARNING: The output object type of this cmdlet will be modified in a future release.
+         VERBOSE: GetNIC CP 4
+         VERBOSE: GetNIC CP 5
+         VERBOSE: GetNIC CP 6
+         VERBOSE: Adding the network interface
+    Job start_Standard_D1_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D1_v2-2017-09-01T10-58-09 :
+         WARNING: The output object type of this cmdlet will be modified in a future release.
+         VERBOSE: GetNIC CP 4
+         VERBOSE: GetNIC CP 5
+         VERBOSE: GetNIC CP 6
+         VERBOSE: Adding the network interface
+    Job start_Standard_D3_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D3_v2-2017-09-01T10-58-09 :
+         WARNING: The output object type of this cmdlet will be modified in a future release.
+         VERBOSE: GetNIC CP 4
+         VERBOSE: GetNIC CP 5
+         VERBOSE: GetNIC CP 6
+         VERBOSE: Adding the network interface
+    Job start_Standard_D4_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D4_v2-2017-09-01T10-58-09 :
+         WARNING: The output object type of this cmdlet will be modified in a future release.
+         VERBOSE: GetNIC CP 4
+         VERBOSE: GetNIC CP 5
+         VERBOSE: GetNIC CP 6
+         VERBOSE: Adding the network interface
+    Job start_Standard_D1_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D1_v2-2017-09-01T10-58-09 :
+         WARNING: The output object type of this cmdlet will be modified in a future release.
+         VERBOSE: GetNIC CP 4
+         VERBOSE: GetNIC CP 5
+         VERBOSE: GetNIC CP 6
+         VERBOSE: Adding the network interface
+    Job start_Standard_D3_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D3_v2-2017-09-01T10-58-09 :
+         WARNING: The output object type of this cmdlet will be modified in a future release.
+         VERBOSE: GetNIC CP 4
+         VERBOSE: GetNIC CP 5
+         VERBOSE: GetNIC CP 6
+         VERBOSE: Adding the network interface
+    Job start_Standard_D4_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D4_v2-2017-09-01T10-58-09 :
+         WARNING: The output object type of this cmdlet will be modified in a future release.
+         VERBOSE: GetNIC CP 4
+         VERBOSE: GetNIC CP 5
+         VERBOSE: GetNIC CP 6
+         VERBOSE: Adding the network interface
+    Job start_Standard_D1_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D1_v2-2017-09-01T10-58-09 :
+         WARNING: The output object type of this cmdlet will be modified in a future release.
+         VERBOSE: GetNIC CP 4
+         VERBOSE: GetNIC CP 5
+         VERBOSE: GetNIC CP 6
+         VERBOSE: Adding the network interface
+    Job start_Standard_D3_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D3_v2-2017-09-01T10-58-09 :
+         WARNING: The output object type of this cmdlet will be modified in a future release.
+         VERBOSE: GetNIC CP 4
+         VERBOSE: GetNIC CP 5
+         VERBOSE: GetNIC CP 6
+         VERBOSE: Adding the network interface
+    Job start_Standard_D4_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D4_v2-2017-09-01T10-58-09 :
+         WARNING: The output object type of this cmdlet will be modified in a future release.
+         VERBOSE: GetNIC CP 4
+         VERBOSE: GetNIC CP 5
+         VERBOSE: GetNIC CP 6
+         VERBOSE: Adding the network interface
+    Job start_Standard_D1_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D1_v2-2017-09-01T10-58-09 :
+         WARNING: The output object type of this cmdlet will be modified in a future release.
+         VERBOSE: GetNIC CP 4
+         VERBOSE: GetNIC CP 5
+         VERBOSE: GetNIC CP 6
+         VERBOSE: Adding the network interface
+    Job start_Standard_D3_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D3_v2-2017-09-01T10-58-09 :
+         WARNING: The output object type of this cmdlet will be modified in a future release.
+         VERBOSE: GetNIC CP 4
+         VERBOSE: GetNIC CP 5
+         VERBOSE: GetNIC CP 6
+         VERBOSE: Adding the network interface
+    Job start_Standard_D4_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D4_v2-2017-09-01T10-58-09 :
+         WARNING: The output object type of this cmdlet will be modified in a future release.
+         VERBOSE: GetNIC CP 4
+         VERBOSE: GetNIC CP 5
+         VERBOSE: GetNIC CP 6
+         VERBOSE: Adding the network interface
+    Job start_Standard_D1_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D1_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d1-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D3_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d3-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D4_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D4_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d4-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D1_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D1_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d1-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D3_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: GetNIC CP 5
+         VERBOSE: GetNIC CP 6
+         VERBOSE: Adding the network interface
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d3-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+    Job start_Standard_D4_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D4_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d4-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D1_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D1_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d1-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D3_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d3-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D4_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D4_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d4-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D1_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D1_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d1-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D3_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d3-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D4_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D4_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d4-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D1_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D1_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d1-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D3_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d3-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D4_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D4_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d4-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D1_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D1_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d1-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D3_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d3-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D4_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D4_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d4-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D1_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D1_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d1-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D3_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d3-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D4_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D4_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d4-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D1_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D1_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d1-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D3_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d3-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D4_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D4_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d4-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D1_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D1_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d1-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D3_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d3-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D4_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D4_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d4-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D1_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D1_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d1-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D3_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d3-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D4_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D4_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d4-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D1_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D1_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d1-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D3_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d3-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D4_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D4_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d4-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D1_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D1_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d1-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D3_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d3-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D4_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D4_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d4-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D1_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D1_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d1-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D3_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d3-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D4_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D4_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d4-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D1_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D1_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d1-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D3_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d3-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D4_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D4_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d4-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D1_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D1_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d1-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D3_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d3-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D4_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D4_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d4-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D1_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D1_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d1-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D3_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d3-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D4_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D4_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d4-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D1_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D1_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d1-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D3_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d3-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D4_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D4_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d4-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D1_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D1_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d1-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D3_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d3-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D4_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D4_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d4-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D1_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D1_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d1-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D3_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d3-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D4_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D4_v2-2017-09-01T10-58-09 :
+         At line:82 char:14
+         + ...        $ip=(Get-AzureRmPublicIpAddress -ResourceGroupName $destRG -Na ...
+         +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             + CategoryInfo          : CloseError: (:) [Get-AzureRmPublicIpAddress], NetworkCloudException
+             + FullyQualifiedErrorId : Microsoft.Azure.Commands.Network.GetAzurePublicIpAddressCommand
+    Job start_Standard_D1_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D1_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d1-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D3_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d3-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D4_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D4_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d4-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D1_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D1_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d1-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D3_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d3-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D1_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D1_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d1-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D3_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d3-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D4_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D4_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d4-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D1_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D1_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d1-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D3_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/OpenLogic-CentOS-73-LAT---westus-standard-d3-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D1_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D1_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d1-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D3_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d3-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D4_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D4_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d4-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D1_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D1_v2-2017-09-01T10-58-09 :
+         At line:82 char:14
+         + ...        $ip=(Get-AzureRmPublicIpAddress -ResourceGroupName $destRG -Na ...
+         +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             + CategoryInfo          : CloseError: (:) [Get-AzureRmPublicIpAddress], NetworkCloudException
+             + FullyQualifiedErrorId : Microsoft.Azure.Commands.Network.GetAzurePublicIpAddressCommand
+    Job start_Standard_D3_v2OpenLogic-CentOS-73-LAT is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-OpenLogic-CentOS-73-LAT-Standard_D3_v2-2017-09-01T10-58-09 :
+         At line:82 char:14
+         + ...        $ip=(Get-AzureRmPublicIpAddress -ResourceGroupName $destRG -Na ...
+         +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             + CategoryInfo          : CloseError: (:) [Get-AzureRmPublicIpAddress], NetworkCloudException
+             + FullyQualifiedErrorId : Microsoft.Azure.Commands.Network.GetAzurePublicIpAddressCommand
+    Job start_Standard_D1_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D1_v2-2017-09-01T10-58-09 :
+         At line:82 char:14
+         + ...        $ip=(Get-AzureRmPublicIpAddress -ResourceGroupName $destRG -Na ...
+         +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             + CategoryInfo          : CloseError: (:) [Get-AzureRmPublicIpAddress], NetworkCloudException
+             + FullyQualifiedErrorId : Microsoft.Azure.Commands.Network.GetAzurePublicIpAddressCommand
+    Job start_Standard_D3_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d3-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D4_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D4_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d4-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D3_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d3-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D4_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D4_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d4-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D3_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d3-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D4_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D4_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d4-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D3_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D3_v2-2017-09-01T10-58-09 :
+         VERBOSE: OSDIskVHD URI set to https://variantsdemo2.blob.core.windows.net/running-variants/Ubuntu1604-LTS-LATEST---westus-standard-d3-v2-Variant.vhd
+         VERBOSE: Adding the operating system
+         VERBOSE: Setting up the OS disk
+         VERBOSE: Disabling boot diagnostics
+         VERBOSE: Starting the VM
+    Job start_Standard_D4_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D4_v2-2017-09-01T10-58-09 :
+         At line:82 char:14
+         + ...        $ip=(Get-AzureRmPublicIpAddress -ResourceGroupName $destRG -Na ...
+         +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             + CategoryInfo          : CloseError: (:) [Get-AzureRmPublicIpAddress], NetworkCloudException
+             + FullyQualifiedErrorId : Microsoft.Azure.Commands.Network.GetAzurePublicIpAddressCommand
+    Job start_Standard_D3_v2Ubuntu1604-LTS-LATEST is in state Running
+         Last 5 lines from log file c:\temp\transcripts\start_variants_scriptblock-Ubuntu1604-LTS-LATEST-Standard_D3_v2-2017-09-01T10-58-09 :
+         At line:82 char:14
+         + ...        $ip=(Get-AzureRmPublicIpAddress -ResourceGroupName $destRG -Na ...
+         +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+             + CategoryInfo          : CloseError: (:) [Get-AzureRmPublicIpAddress], NetworkCloudException
+             + FullyQualifiedErrorId : Microsoft.Azure.Commands.Network.GetAzurePublicIpAddressCommand
+Successfully created variant machines.
+Machines are up
+It required 00:06:47.1214516 to start the variant group
+Executing a command against the launched machines...
+VERBOSE: Executing command on machine OpenLogic-CentOS-73-LAT---westus-standard-d1-v2-Variant, resource group variants_test_demo_2
+VERBOSE: Executing command on machine OpenLogic-CentOS-73-LAT---westus-standard-d3-v2-Variant, resource group variants_test_demo_2
+VERBOSE: Executing command on machine OpenLogic-CentOS-73-LAT---westus-standard-d4-v2-Variant, resource group variants_test_demo_2
+VERBOSE: Executing command on machine Ubuntu1604-LTS-LATEST---westus-standard-d1-v2-Variant, resource group variants_test_demo_2
+VERBOSE: Executing command on machine Ubuntu1604-LTS-LATEST---westus-standard-d3-v2-Variant, resource group variants_test_demo_2
+VERBOSE: Executing command on machine Ubuntu1604-LTS-LATEST---westus-standard-d4-v2-Variant, resource group variants_test_demo_2
+Reply from machine OpenLogic-CentOS-73-LAT---westus-standard-d1-v2-Variant :
+         Architecture:          x86_64
+         CPU op-mode(s):        32-bit, 64-bit
+         Byte Order:            Little Endian
+         CPU(s):                1
+         On-line CPU(s) list:   0
+         Thread(s) per core:    1
+         Core(s) per socket:    1
+         Socket(s):             1
+         NUMA node(s):          1
+         Vendor ID:             GenuineIntel
+         CPU family:            6
+         Model:                 63
+         Model name:            Intel(R) Xeon(R) CPU E5-2673 v3 @ 2.40GHz
+         Stepping:              2
+         CPU MHz:               2394.462
+         BogoMIPS:              4788.92
+         Hypervisor vendor:     Microsoft
+         Virtualization type:   full
+         L1d cache:             32K
+         L1i cache:             32K
+         L2 cache:              256K
+         L3 cache:              30720K
+         NUMA node0 CPU(s):     0
+
+Reply from machine OpenLogic-CentOS-73-LAT---westus-standard-d3-v2-Variant :
+         Architecture:          x86_64
+         CPU op-mode(s):        32-bit, 64-bit
+         Byte Order:            Little Endian
+         CPU(s):                4
+         On-line CPU(s) list:   0-3
+         Thread(s) per core:    1
+         Core(s) per socket:    4
+         Socket(s):             1
+         NUMA node(s):          1
+         Vendor ID:             GenuineIntel
+         CPU family:            6
+         Model:                 63
+         Model name:            Intel(R) Xeon(R) CPU E5-2673 v3 @ 2.40GHz
+         Stepping:              2
+         CPU MHz:               2397.172
+         BogoMIPS:              4794.34
+         Hypervisor vendor:     Microsoft
+         Virtualization type:   full
+         L1d cache:             32K
+         L1i cache:             32K
+         L2 cache:              256K
+         L3 cache:              30720K
+         NUMA node0 CPU(s):     0-3
+
+Reply from machine OpenLogic-CentOS-73-LAT---westus-standard-d4-v2-Variant :
+         Architecture:          x86_64
+         CPU op-mode(s):        32-bit, 64-bit
+         Byte Order:            Little Endian
+         CPU(s):                8
+         On-line CPU(s) list:   0-7
+         Thread(s) per core:    1
+         Core(s) per socket:    8
+         Socket(s):             1
+         NUMA node(s):          1
+         Vendor ID:             GenuineIntel
+         CPU family:            6
+         Model:                 63
+         Model name:            Intel(R) Xeon(R) CPU E5-2673 v3 @ 2.40GHz
+         Stepping:              2
+         CPU MHz:               2397.223
+         BogoMIPS:              4794.44
+         Hypervisor vendor:     Microsoft
+         Virtualization type:   full
+         L1d cache:             32K
+         L1i cache:             32K
+         L2 cache:              256K
+         L3 cache:              30720K
+         NUMA node0 CPU(s):     0-7
+
+Reply from machine Ubuntu1604-LTS-LATEST---westus-standard-d1-v2-Variant :
+         Architecture:          x86_64
+         CPU op-mode(s):        32-bit, 64-bit
+         Byte Order:            Little Endian
+         CPU(s):                1
+         On-line CPU(s) list:   0
+         Thread(s) per core:    1
+         Core(s) per socket:    1
+         Socket(s):             1
+         NUMA node(s):          1
+         Vendor ID:             GenuineIntel
+         CPU family:            6
+         Model:                 63
+         Model name:            Intel(R) Xeon(R) CPU E5-2673 v3 @ 2.40GHz
+         Stepping:              2
+         CPU MHz:               2397.194
+         BogoMIPS:              4794.38
+         Hypervisor vendor:     Microsoft
+         Virtualization type:   full
+         L1d cache:             32K
+         L1i cache:             32K
+         L2 cache:              256K
+         L3 cache:              30720K
+         NUMA node0 CPU(s):     0
+         Flags:                 fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss syscall nx lm constant_tsc rep_good nopl eagerfpu pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm abm fsgsbase bmi1 avx2 smep bmi2 erms xsaveopt
+
+Reply from machine Ubuntu1604-LTS-LATEST---westus-standard-d3-v2-Variant :
+         Architecture:          x86_64
+         CPU op-mode(s):        32-bit, 64-bit
+         Byte Order:            Little Endian
+         CPU(s):                4
+         On-line CPU(s) list:   0-3
+         Thread(s) per core:    1
+         Core(s) per socket:    4
+         Socket(s):             1
+         NUMA node(s):          1
+         Vendor ID:             GenuineIntel
+         CPU family:            6
+         Model:                 63
+         Model name:            Intel(R) Xeon(R) CPU E5-2673 v3 @ 2.40GHz
+         Stepping:              2
+         CPU MHz:               2394.448
+         BogoMIPS:              4788.89
+         Hypervisor vendor:     Microsoft
+         Virtualization type:   full
+         L1d cache:             32K
+         L1i cache:             32K
+         L2 cache:              256K
+         L3 cache:              30720K
+         NUMA node0 CPU(s):     0-3
+         Flags:                 fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx lm constant_tsc rep_good nopl eagerfpu pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm abm fsgsbase bmi1 avx2 smep bmi2 erms xsaveopt
+
+Reply from machine Ubuntu1604-LTS-LATEST---westus-standard-d4-v2-Variant :
+         Architecture:          x86_64
+         CPU op-mode(s):        32-bit, 64-bit
+         Byte Order:            Little Endian
+         CPU(s):                8
+         On-line CPU(s) list:   0-7
+         Thread(s) per core:    1
+         Core(s) per socket:    8
+         Socket(s):             1
+         NUMA node(s):          1
+         Vendor ID:             GenuineIntel
+         CPU family:            6
+         Model:                 63
+         Model name:            Intel(R) Xeon(R) CPU E5-2673 v3 @ 2.40GHz
+         Stepping:              2
+         CPU MHz:               2397.206
+         BogoMIPS:              4794.41
+         Hypervisor vendor:     Microsoft
+         Virtualization type:   full
+         L1d cache:             32K
+         L1i cache:             32K
+         L2 cache:              256K
+         L3 cache:              30720K
+         NUMA node0 CPU(s):     0-7
+         Flags:                 fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx lm constant_tsc rep_good nopl eagerfpu pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm abm fsgsbase bmi1 avx2 smep bmi2 erms xsaveopt
+
+Command execution complete.
+It required 00:00:51.3815055 run the command aginst all machines
+It required 00:00:00.0000206 to deallocate the remove the NIC and PIP for the variant group
+It required 00:07:38.5086219 to instantiate the topology, run the command, and take the topology down.
+***************************************************************************************************
+*              HIPPEE Variants Demonstration Complete!  Thanks for playing!                       *
+***************************************************************************************************
+Transcript stopped, output file is C:\temp\transcripts\launch_single_azure_vm_AzureSetup---westus-unset-Smoke-1.log-2017-09-01T10-58-53
+
+
+PS C:\Framework-Scripts> Stop-Transcript
+**********************
+Windows PowerShell transcript end
+End time: 20170901111528
+**********************

@@ -10,13 +10,13 @@
 #
 ##############################################################
 param (
-    [Parameter(Mandatory=$false)] [string] $getAll=$false,
-    [Parameter(Mandatory=$false)] [string] $replaceVHD=$false,
+    [Parameter(Mandatory=$false)] [string] $getAll="False",
+    [Parameter(Mandatory=$false)] [string] $replaceVHD="False",
     [Parameter(Mandatory=$false)] [string[]] $requestedVMs,
 
     [Parameter(Mandatory=$false)] [string] $rg="smoke_source_resource_group",
     [Parameter(Mandatory=$false)] [string] $nm="smokesrc",
-    [Parameter(Mandatory=$false)] [string] $srcContainer="safe-templates",
+    [Parameter(Mandatory=$false)] [string] $srcContainer="drones",
 
     [Parameter(Mandatory=$false)] [string[]] $location
 )
@@ -31,13 +31,13 @@ $uri_front="https://"
 $neededVms_array=@()
 $neededVms = {$neededVms_array}.Invoke()
 
-Write-Host "Getting the list of disks..."
-$blobs=get-AzureStorageBlob -Container $srcContainer -Blob "*-RunOnce-Primed.vhd"
+Write-Host "Getting the list of disks.  GetAll = $getAll.."
+$blobs=get-AzureStorageBlob -Container $srcContainer -Blob "*.vhd"
 foreach ($oneblob in $blobs) {
     $sourceName=$oneblob.Name
     $targetName = $sourceName
 
-    if ((Test-Path D:\azure_images\$targetName) -eq $true -and $replaceVHD -eq $true) {
+    if ((Test-Path D:\azure_images\$targetName) -eq $true -and $replaceVHD -eq "True") {
             Write-Host "Machine $targetName is being deleted from the disk and will be downloaded again..." -ForegroundColor green
             remove-item "D:\azure_images\$targetName" -recurse -force
             stop-vm -Name $targetName -ErrorAction SilentlyContinue
@@ -53,7 +53,7 @@ foreach ($oneblob in $blobs) {
         }
 }
 
-if ($getAll -eq $true) {
+if ($getAll -eq "True") {
     Write-Host "Downloading all machines.  This may take some time..." -ForegroundColor green
     foreach ($machine in $neededVms) {
         $machine_name = "D:/azure_images/" + $machine
@@ -108,7 +108,7 @@ while ($stop_checking -eq $false) {
 
         if ($jobState.State -eq "Running") {
             if (($sleep_count % 6) -eq 0) {
-                $dlLog="c:\temp\"+ $jobName+ "_download.log"
+                $dlLog="c:\temp\transcripts\download_single_vm-" + $jobName + ".log"
                 Write-Host "Download still in progress.  Last line from log file is:" -ForegroundColor green
                 get-content $dlLog | Select-Object -Last 1 | write-host  -ForegroundColor cyan -ErrorAction SilentlyContinue
                 $failed=$false

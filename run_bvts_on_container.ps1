@@ -19,7 +19,7 @@ param (
     [Parameter(Mandatory=$false)] [string] $OverwriteVHDs="False",
 
     [Parameter(Mandatory=$true)] [string] $distro="Smoke-BVT",
-    [Parameter(Mandatory=$true)] [string] $testCycle="BVT"
+    [Parameter(Mandatory=$true)] [string[]] $testCycles="BVT"
 )
 
 $sourceSA = $sourceSA.Trim()
@@ -30,7 +30,7 @@ $templateFile = $templateFile.Trim()
 $removeTag = $removeTag.Trim()
 $OverwriteVHDs = $OverwriteVHDs.Trim()
 $distro = $distro.Trim()
-$testCycle = $testCycle.Trim()
+$testCycles = $testCycles.Trim()
 
 . C:\Framework-Scripts\common_functions.ps1
 . C:\Framework-Scripts\secrets.ps1
@@ -45,11 +45,18 @@ $copyblobs_array=@()
 $copyblobs = {$copyblobs_array}.Invoke()
 $copyblobs.Clear()
 
+$successfulcopies_array=@()
+$successfulCopies = {$successfulcopies_array}.Invoke()
+$successfulCopies.Clear()
+
 if ($OverwriteVHDs -ne "False") {
     $overwriteVHDs = $true
 } else {
     $overwriteVHDs = $false
 }
+
+$logFileName = "C:\temp\transcripts\run_bvts_on_container-" + $sourceRG + "-" + $sourceSA + "-" + $sourceContainer + "-" + (Get-Date -Format s).replace(":","-")
+Start-Transcript $logFileName 
 
 write-host "Overwrite flag is $overwriteVHDs"
 get-job | Stop-Job
@@ -108,6 +115,7 @@ if (($wasThere -eq $true) -and ($overwriteVHDs -eq $true)) {
 } elseif (($wasThere -eq $true) -and ($OverwriteVHDs -eq $false)) {
     if ($currentLoc -ne $location) {
         Write-Error "The storage account exists, but it is in region $currentLoc, while the tests specify region $location.  Tests will exit."
+        Stop-Transcript
         exit 1
     }
     Write-Host "Using existing storage account $destSA."
@@ -180,6 +188,7 @@ foreach ($oneblob in $blobs) {
             $copyblobs.Add($targetName)
         } else {
             Write-Host "Job to copy VHD $targetName failed to start.  Cannot continue"
+            Stop-Transcript
             exit 1
         }
     }
@@ -215,6 +224,7 @@ if ($copyblobs.Count -gt 0) {
                         Write-Host "   **** Job $blob has failed with state $exitStatus." -ForegroundColor Red
                     } else {
                         Write-Host "   **** Job $blob has completed successfully." -ForegroundColor Green
+                        $successfulCopies.Add($blob)
                     }
                     $copyblobs.Remove($blob)
                     $reset_copyblobs = $true
@@ -238,9 +248,7 @@ if ($copyblobs.Count -gt 0) {
 Set-Location C:\azure-linux-automation
 $launched_machines = 0
 
-$blobs=get-AzureStorageBlob -Container $destContainer
-
-foreach ($oneblob in $blobs) {
+foreach ($oneblob in $successfulCopies) {
     $fullName=$oneblob.Name
             
     $configFileName="c:\temp\bvt_configs\bvt_exec_" + $fullName + ".xml"
@@ -252,9 +260,9 @@ foreach ($oneblob in $blobs) {
 
     #
     # Launch the automation
-    write-host "Args are: $sourceName, $configFileName, $distro, $testCycle"
+    write-host "Args are: $sourceName, $configFileName, $distro, $testCycles"
     Start-Job -Name $jobName -ScriptBlock { C:\Framework-Scripts\run_single_bvt.ps1 -sourceName $args[0] -configFileName $args[1] -distro $args[2] -testCycle $args[3]  } `
-                                            -ArgumentList @($fullName),@($configFileName),@($distro),@($testCycle)
+                                            -ArgumentList @($fullName),@($configFileName),@($distro),@($testCycles)
     if ($? -ne $true) {
         Write-Host "Error launching job $jobName for source $fullName.  BVT will not be run." -ForegroundColor Red
     } else {
@@ -284,7 +292,6 @@ while ($completed_machines -lt $launched_machines) {
     foreach ($oneblob in $blobs) {
         $fullName=$oneblob.Name
         
-        $configFileName="c:\temp\bvt_configs\bvt_exec_" + $fullName + ".xml"
         $jobName=$fullName + "_BVT_Runner"
 
         $jobStatus=get-job -Name $jobName
@@ -294,12 +301,16 @@ while ($completed_machines -lt $launched_machines) {
             {
                 $completed_machines += 1
                 $failed_machines += 1
-                Write-Host " >>>> BVT job $jobName exited with FAILED state!" -ForegroundColor red
+                if ($logThisOne -eq $true) {
+                    Write-Host " >>>> BVT job $jobName exited with FAILED state!" -ForegroundColor red
+                }   
             }
             elseif ($jobState -eq "Completed")
             {
                 $completed_machines += 1
-                Write-Host "***** BVT job $jobName completed successfully." -ForegroundColor green
+                if ($logThisOne -eq $true) {
+                    Write-Host "***** BVT job $jobName completed successfully." -ForegroundColor green
+                }
             }
             elseif ($jobState -eq "Running")
             {
@@ -328,14 +339,17 @@ while ($completed_machines -lt $launched_machines) {
 
         if ($failed_machines -gt 0) {
             Write-Host "There were $failed_machines failures out of $launched_machines attempts.  BVTs have failed." -ForegroundColor Red
+            Stop-Transcript
             c:\framework-Scripts\clear_smoke_bvt_resource_groups
             exit 1
         } elseif ($completed_machines -eq $launched_machines) {
             Write-Host "All BVTs have passed! " -ForegroundColor Green
+            Stop-Transcript
             c:\framework-Scripts\clear_smoke_bvt_resource_groups
             exit 0
         } else {
             write-host "$launched_machines BVT jobs were launched.  Of those: completed = $completed_machines, Running = $running_machines, Failed = $failed_machines, and unknown = $other_machines" -ForegroundColor Red
+            Stop-Transcript
             c:\framework-Scripts\clear_smoke_bvt_resource_groups
             exit 1
         }

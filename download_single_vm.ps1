@@ -8,7 +8,7 @@ param (
 
 . "C:\Framework-Scripts\secrets.ps1"
 
-$logFileName="c:/temp/transcripts/download_single_vm-"+$j + "-" + (get-date -Format s).replace(":","-")
+$logFileName="c:/temp/transcripts/download_single_vm-" + $j + ".log"
 $localFileName=$n
 
 Start-Transcript -Path $logFileName -Force

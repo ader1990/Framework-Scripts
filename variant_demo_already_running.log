@@ -1,0 +1,193 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20170901111558
+Username: REDMOND\jfawcett
+RunAs User: REDMOND\jfawcett
+Machine: LIS-F1637 (Microsoft Windows NT 10.0.14393.0)
+Host Application: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+Process ID: 6832
+PSVersion: 5.1.14393.117
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.14393.117
+BuildVersion: 10.0.14393.117
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is .\variant_demo_already_running.log
+***************************************************************************************************
+*              HIPPEE Variants Demonstration -- Two Distros and Three Flavors                     *
+***************************************************************************************************
+It required 00:00:00.0048708 to start the variant group
+Executing a command against the launched machines...
+VERBOSE: Executing command on machine OpenLogic-CentOS-73-LAT---westus-standard-d1-v2-Variant, resource group variants_test_demo_2
+VERBOSE: Executing command on machine OpenLogic-CentOS-73-LAT---westus-standard-d3-v2-Variant, resource group variants_test_demo_2
+VERBOSE: Executing command on machine OpenLogic-CentOS-73-LAT---westus-standard-d4-v2-Variant, resource group variants_test_demo_2
+VERBOSE: Executing command on machine Ubuntu1604-LTS-LATEST---westus-standard-d1-v2-Variant, resource group variants_test_demo_2
+VERBOSE: Executing command on machine Ubuntu1604-LTS-LATEST---westus-standard-d3-v2-Variant, resource group variants_test_demo_2
+VERBOSE: Executing command on machine Ubuntu1604-LTS-LATEST---westus-standard-d4-v2-Variant, resource group variants_test_demo_2
+Reply from machine OpenLogic-CentOS-73-LAT---westus-standard-d1-v2-Variant :
+         Architecture:          x86_64
+         CPU op-mode(s):        32-bit, 64-bit
+         Byte Order:            Little Endian
+         CPU(s):                1
+         On-line CPU(s) list:   0
+         Thread(s) per core:    1
+         Core(s) per socket:    1
+         Socket(s):             1
+         NUMA node(s):          1
+         Vendor ID:             GenuineIntel
+         CPU family:            6
+         Model:                 63
+         Model name:            Intel(R) Xeon(R) CPU E5-2673 v3 @ 2.40GHz
+         Stepping:              2
+         CPU MHz:               2394.462
+         BogoMIPS:              4788.92
+         Hypervisor vendor:     Microsoft
+         Virtualization type:   full
+         L1d cache:             32K
+         L1i cache:             32K
+         L2 cache:              256K
+         L3 cache:              30720K
+         NUMA node0 CPU(s):     0
+
+Reply from machine OpenLogic-CentOS-73-LAT---westus-standard-d3-v2-Variant :
+         Architecture:          x86_64
+         CPU op-mode(s):        32-bit, 64-bit
+         Byte Order:            Little Endian
+         CPU(s):                4
+         On-line CPU(s) list:   0-3
+         Thread(s) per core:    1
+         Core(s) per socket:    4
+         Socket(s):             1
+         NUMA node(s):          1
+         Vendor ID:             GenuineIntel
+         CPU family:            6
+         Model:                 63
+         Model name:            Intel(R) Xeon(R) CPU E5-2673 v3 @ 2.40GHz
+         Stepping:              2
+         CPU MHz:               2397.172
+         BogoMIPS:              4794.34
+         Hypervisor vendor:     Microsoft
+         Virtualization type:   full
+         L1d cache:             32K
+         L1i cache:             32K
+         L2 cache:              256K
+         L3 cache:              30720K
+         NUMA node0 CPU(s):     0-3
+
+Reply from machine OpenLogic-CentOS-73-LAT---westus-standard-d4-v2-Variant :
+         Architecture:          x86_64
+         CPU op-mode(s):        32-bit, 64-bit
+         Byte Order:            Little Endian
+         CPU(s):                8
+         On-line CPU(s) list:   0-7
+         Thread(s) per core:    1
+         Core(s) per socket:    8
+         Socket(s):             1
+         NUMA node(s):          1
+         Vendor ID:             GenuineIntel
+         CPU family:            6
+         Model:                 63
+         Model name:            Intel(R) Xeon(R) CPU E5-2673 v3 @ 2.40GHz
+         Stepping:              2
+         CPU MHz:               2397.223
+         BogoMIPS:              4794.44
+         Hypervisor vendor:     Microsoft
+         Virtualization type:   full
+         L1d cache:             32K
+         L1i cache:             32K
+         L2 cache:              256K
+         L3 cache:              30720K
+         NUMA node0 CPU(s):     0-7
+
+Reply from machine Ubuntu1604-LTS-LATEST---westus-standard-d1-v2-Variant :
+         Architecture:          x86_64
+         CPU op-mode(s):        32-bit, 64-bit
+         Byte Order:            Little Endian
+         CPU(s):                1
+         On-line CPU(s) list:   0
+         Thread(s) per core:    1
+         Core(s) per socket:    1
+         Socket(s):             1
+         NUMA node(s):          1
+         Vendor ID:             GenuineIntel
+         CPU family:            6
+         Model:                 63
+         Model name:            Intel(R) Xeon(R) CPU E5-2673 v3 @ 2.40GHz
+         Stepping:              2
+         CPU MHz:               2397.194
+         BogoMIPS:              4794.38
+         Hypervisor vendor:     Microsoft
+         Virtualization type:   full
+         L1d cache:             32K
+         L1i cache:             32K
+         L2 cache:              256K
+         L3 cache:              30720K
+         NUMA node0 CPU(s):     0
+         Flags:                 fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss syscall nx lm constant_tsc rep_good nopl eagerfpu pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm abm fsgsbase bmi1 avx2 smep bmi2 erms xsaveopt
+
+Reply from machine Ubuntu1604-LTS-LATEST---westus-standard-d3-v2-Variant :
+         Architecture:          x86_64
+         CPU op-mode(s):        32-bit, 64-bit
+         Byte Order:            Little Endian
+         CPU(s):                4
+         On-line CPU(s) list:   0-3
+         Thread(s) per core:    1
+         Core(s) per socket:    4
+         Socket(s):             1
+         NUMA node(s):          1
+         Vendor ID:             GenuineIntel
+         CPU family:            6
+         Model:                 63
+         Model name:            Intel(R) Xeon(R) CPU E5-2673 v3 @ 2.40GHz
+         Stepping:              2
+         CPU MHz:               2394.448
+         BogoMIPS:              4788.89
+         Hypervisor vendor:     Microsoft
+         Virtualization type:   full
+         L1d cache:             32K
+         L1i cache:             32K
+         L2 cache:              256K
+         L3 cache:              30720K
+         NUMA node0 CPU(s):     0-3
+         Flags:                 fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx lm constant_tsc rep_good nopl eagerfpu pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm abm fsgsbase bmi1 avx2 smep bmi2 erms xsaveopt
+
+Reply from machine Ubuntu1604-LTS-LATEST---westus-standard-d4-v2-Variant :
+         Architecture:          x86_64
+         CPU op-mode(s):        32-bit, 64-bit
+         Byte Order:            Little Endian
+         CPU(s):                8
+         On-line CPU(s) list:   0-7
+         Thread(s) per core:    1
+         Core(s) per socket:    8
+         Socket(s):             1
+         NUMA node(s):          1
+         Vendor ID:             GenuineIntel
+         CPU family:            6
+         Model:                 63
+         Model name:            Intel(R) Xeon(R) CPU E5-2673 v3 @ 2.40GHz
+         Stepping:              2
+         CPU MHz:               2397.206
+         BogoMIPS:              4794.41
+         Hypervisor vendor:     Microsoft
+         Virtualization type:   full
+         L1d cache:             32K
+         L1i cache:             32K
+         L2 cache:              256K
+         L3 cache:              30720K
+         NUMA node0 CPU(s):     0-7
+         Flags:                 fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx lm constant_tsc rep_good nopl eagerfpu pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm abm fsgsbase bmi1 avx2 smep bmi2 erms xsaveopt
+
+Command execution complete.
+It required 00:00:31.3532710 run the command aginst all machines
+It required 00:00:00.0000148 to deallocate the remove the NIC and PIP for the variant group
+It required 00:00:31.3676407 to instantiate the topology, run the command, and take the topology down.
+***************************************************************************************************
+*              HIPPEE Variants Demonstration Complete!  Thanks for playing!                       *
+***************************************************************************************************
+**********************
+Windows PowerShell transcript end
+End time: 20170901111630
+**********************

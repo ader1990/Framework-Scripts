@@ -2,13 +2,13 @@
     [Parameter(Mandatory=$true)] [string] $sourceName="Unknown",
     [Parameter(Mandatory=$true)] [string] $configFileName="Unknown",
     [Parameter(Mandatory=$true)] [string] $distro="Smoke-BVT",
-    [Parameter(Mandatory=$true)] [string] $testCycle="BVT"
+    [Parameter(Mandatory=$true)] [string[]] $testCycles="BVT"
 )
 
 $sourceName = $sourceName.Trim()
 $configFileName = $configFileName.Trim()
 $distro = $distro.Trim()
-$testCycle = $testCycle.Trim()
+$testCycles = $testCycles.Trim()
 
 $logFileName = "c:\temp\transcripts\run_single_bvt-" + $sourceName + "-" + (get-date -format s).replace(":","-")
 Start-Transcript $logFileName -Force
@@ -17,16 +17,19 @@ Start-Transcript $logFileName -Force
 
 #
 #  Launch the automation
-Write-Output "Starting execution of test $testCycle on machine $sourceName" 
+Write-Output "Starting execution of test $testCycles on machine $sourceName" 
 
 Import-AzureRmContext -Path 'C:\Azure\ProfileContext.ctx'
 Select-AzureRmSubscription -SubscriptionId "$AZURE_SUBSCRIPTION_ID" 
 
 $tests_failed = $false
 Set-Location C:\azure-linux-automation
-C:\azure-linux-automation\AzureAutomationManager.ps1 -xmlConfigFile $configFileName -runtests -email –Distro $distro -cycleName $testCycle -UseAzureResourceManager -EconomyMode
-if ($? -ne $true) {
-    $tests_failed = $true
+foreach ($testCycle in $testCycles) {
+    C:\azure-linux-automation\AzureAutomationManager.ps1 -xmlConfigFile $configFileName -runtests -email –Distro $distro -cycleName $testCycle -UseAzureResourceManager -EconomyMode
+    if ($? -ne $true) {
+        $tests_failed = $true
+        break
+    }
 }
 
 Stop-Transcript
