@@ -168,6 +168,7 @@ class AzureBackend : Backend {
     [String] $ProfilePath = "C:\Azure\ProfileContext.ctx"
     [String] $ResourceGroupName = "smoke_working_resource_group"
     [String] $StorageAccountName = "smokework"
+    [String] $sourceImage = "sourceimage"
     [String] $ContainerName = "vhds-under-test"
     [String] $Location = "westus"
     [String] $VMFlavor = "Standard_D2_V2"
@@ -584,10 +585,10 @@ write-verbose  "Checkpoint 1"
 
         #
         #  Create an image from the URI that we can then instantiate
-        $imageConfig = New-AzureRmImageConfig -Location $this.Location
-        $imageConfig = Set-AzureRmImageOsDisk -Image $imageConfig -OsState Generalized -BlobUri $this.blobURI -OsType Linux 
+        #$imageConfig = New-AzureRmImageConfig -Location $this.Location
+        #$imageConfig = Set-AzureRmImageOsDisk -Image $imageConfig -OsState Generalized -BlobUri $this.blobURI -OsType Linux 
 
-        $image = New-AzureRmImage -ImageName $InstanceName -ResourceGroupName $this.ResourceGroupName -Image $imageConfig
+        #$image = New-AzureRmImage -ImageName $InstanceName -ResourceGroupName $this.ResourceGroupName -Image $imageConfig
         
         #
         #  Set up the OS disk
@@ -602,7 +603,9 @@ write-verbose  "Checkpoint 1"
 
         $blobSA = $this.StorageAccountName
         $blobContainer = $this.ContainerName
-        $osDiskVhdUri = "https://$blobSA.blob.core.windows.net/$blobContainer/"+$InstanceName+".vhd"
+        #$osDiskVhdUri = "https://$blobSA.blob.core.windows.net/$blobContainer/"+$InstanceName+".vhd"
+        $osDiskVhdUri = ("https://{0}.blob.core.windows.net/{1}/{2}.vhd" -f `
+                            @($this.StorageAccountName, $this.ContainerName, $this.sourceImage)) 
         write-verbose "OSDIskVHD URI set to $osDiskVhdUri"
         
 
@@ -611,13 +614,14 @@ write-verbose  "Checkpoint 1"
         } else {
             $cred = make_cred
         }
-        write-verbose "Adding the operating system"
-        $vm = Set-AzureRmVMOperatingSystem -VM $vm -Linux -ComputerName $InstanceName -Credential $cred
-        $vm = Set-AzureRmVMSourceImage -VM $vm -Id $image.Id
+        
+        #$vm = Set-AzureRmVMSourceImage -VM $vm -Id $image.Id
 
         write-verbose "Setting up the OS disk"
         $vm = Set-AzureRmVMOSDisk -VM $vm -name $InstanceName -CreateOption fromImage  `
-                                                -Caching ReadWrite -Linux
+                                                -Caching ReadWrite -Linux -VhdUri $vhdURI -SourceImageUri $osDiskVhdUri
+        write-verbose "Adding the operating system"
+        $vm = Set-AzureRmVMOperatingSystem -VM $vm -Linux -ComputerName $InstanceName -Credential $cred
         # $vm = Set-AzureRmVMOSDisk -VM $vm -name $InstanceName -CreateOption fromImage -SourceImageUri $blobURIRaw `
         #                          -Caching ReadWrite -Linux
         # $vm = Set-AzureRmVMOSDisk -VM $vm -VhdUri $osDiskVhdUri -name $InstanceName -CreateOption fromImage -Caching ReadWrite

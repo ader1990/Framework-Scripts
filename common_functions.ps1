@@ -430,3 +430,76 @@ function try_plink([string] $ip,
         }
     }
 }
+
+#Copy VHD to another storage account
+Function CopyVHDToAnotherStorageAccount {
+    param (
+        [string]$sourceStorageAccount,
+        [string]$sourceStorageContainer,
+        [string]$sourceRG,
+        [string]$destinationStorageAccount,
+        [string]$destinationStorageContainer,
+        [string]$destRG,
+        [string]$vhdName,
+        [string]$destVHDName)
+
+    $retValue = $false
+    if (!$destVHDName)
+    {
+        $destVHDName = $vhdName
+    }
+
+    Write-Verbose "Retrieving $sourceStorageAccount storage account key"
+    $SrcStorageAccountKey = (Get-AzureRmStorageAccountKey -ResourceGroupName $sourceRG -Name $sourceStorageAccount)[0].Value
+    [string]$SrcStorageAccount = $sourceStorageAccount
+    [string]$SrcStorageBlob = $vhdName
+    $SrcStorageContainer = $sourceStorageContainer
+
+
+    Write-Verbose "Retrieving $destinationStorageAccount storage account key"
+    $DestAccountKey= (Get-AzureRmStorageAccountKey -ResourceGroupName $destRG -Name $destinationStorageAccount)[0].Value
+    [string]$DestAccountName =  $destinationStorageAccount
+    [string]$DestBlob = $destVHDName
+    $DestContainer = $destinationStorageContainer
+
+    $context = New-AzureStorageContext -StorageAccountName $srcStorageAccount -StorageAccountKey $srcStorageAccountKey 
+    $expireTime = Get-Date
+    $expireTime = $expireTime.AddYears(1)
+    $SasUrl = New-AzureStorageBlobSASToken -container $srcStorageContainer -Blob $srcStorageBlob -Permission R -ExpiryTime $expireTime -FullUri -Context $Context 
+
+    $destContext = New-AzureStorageContext -StorageAccountName $destAccountName -StorageAccountKey $destAccountKey
+    $testContainer = Get-AzureStorageContainer -Name $destContainer -Context $destContext -ErrorAction Ignore
+    if ($testContainer -eq $null) 
+    {
+        $out = New-AzureStorageContainer -Name $destContainer -context $destContext
+    }
+    # Start the Copy
+    Write-Verbose "Copy $vhdName --> $($destContext.StorageAccountName) : Running"
+    $out = Start-AzureStorageBlobCopy -AbsoluteUri $SasUrl  -DestContainer $destContainer -DestContext $destContext -DestBlob $destBlob -Force
+    #
+    # Monitor replication status
+    #
+    $CopyingInProgress = $true
+    while($CopyingInProgress)
+    {
+        $CopyingInProgress = $false
+        $status = Get-AzureStorageBlobCopyState -Container $destContainer -Blob $destBlob -Context $destContext   
+        if ($status.Status -ne "Success") 
+        {
+            $CopyingInProgress = $true
+        }
+        else
+        {
+            Write-Verbose "Copy $DestBlob --> $($destContext.StorageAccountName) : Done"
+            $retValue = $true
+
+        }
+        if ($CopyingInProgress)
+        {
+            $copyPercentage = [math]::Round( $(($status.BytesCopied * 100 / $status.TotalBytes)) , 2 )
+            Write-Verbose "Bytes Copied:$($status.BytesCopied), Total Bytes:$($status.TotalBytes) [ $copyPercentage % ]"            
+            Sleep -Seconds 10
+        }
+    }
+    return $retValue
+}
