@@ -791,7 +791,7 @@ class HypervBackend : Backend {
             "ScriptBlock"={
                 param($InstanceName)
                 if (Get-VM -Name $InstanceName -ErrorAction SilentlyContinue) {
-                    Stop-VM -Name $InstanceName -Force
+                    Stop-VM -Name $InstanceName -Force -TurnOff
                 }
             };
             "ArgumentList"=@($InstanceName);

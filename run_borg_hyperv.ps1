@@ -224,7 +224,9 @@ function Get-ScriptblockCheckVMS {
                 Write-Output $_.Message
             }
             Write-Output "VM $VMName has been created and started successfully with ip $ip."
-            $session = New-PSSession -ComputerName $ipv4Ip -Authentication Basic -Credential $Credential
+            $sessionOptions = $sessionoption = New-PSSessionOption -SkipCACheck -SkipCNCheck -SkipRevocationCheck
+            $session = New-PSSession -ComputerName $ipv4Ip -Authentication Basic -Credential $Credential `
+                                     -Port 443 -UseSSL -SessionOption $sessionOptions
             $kernel = Invoke-Command -ScriptBlock {uname -r} -Session $session
             $session | Remove-PSSession
             # (avladu): add a retry check here, in case the kernel is getting installed
