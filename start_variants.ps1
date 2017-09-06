@@ -27,7 +27,7 @@ param (
     [Parameter(Mandatory=$false)] [string] $location="westus",
 
     [Parameter(Mandatory=$false)] [string] $useExistingResources="True",
-    [Parameter(Mandatory=$false)] [bool]$ForceUploadVHD=$false
+    [Parameter(Mandatory=$false)] [bool] $ForceUploadVHD=$false
 )
 
 $sourceSA = $sourceSA.Trim()
@@ -124,24 +124,26 @@ if ($? -eq $false -or $existingContainer -eq $null) {
 
 Set-AzureRmCurrentStorageAccount –ResourceGroupName $sourceRG -Name $sourceSA
 
-#Copy the VHD to the destination storage account which will be used for tests
-if($ForceUploadVHD)
+# Look for vhd in destination storage account 
+$blobArray = Get-AzureStorageBlob -Container $sourceContainer
+$vhdExists = $false
+foreach($blob in $blobArray)
 {
-    $blobArray = Get-AzureStorageBlob -Container $sourceContainer
-    $copyVHD = $true
-    foreach($blob in $blobArray)
-    {
-        if($blob.Name -eq $destImage)
-        {
-            $copyVHD = $false
-            break
-        }
-    }
-    if($copyVHD)
-    {
-        CopyVHDToAnotherStorageAccount $sourceSA $sourceContainer $sourceRG $destSA $destContainer $destRG $sourceImage $destImage
-    }
+	if($blob.Name -eq $destImage)
+	{
+		$vhdExists = $true
+		break
+	}
 }
+# Copy the VHD to the destination storage account which will be used for tests
+if(($ForceUploadVHD) -or (-Not $vhdExists))
+{
+	CopyVHDToAnotherStorageAccount $sourceSA $sourceContainer $sourceRG $destSA $destContainer $destRG $sourceImage $destImage
+}else{
+	Write-Host "Skipping vhd upload as vhd already exists in destination storage account."
+	Write-Host "If you want to overwrite the existing vhd in destination storage account use '-ForceUploadVHD $True' ."
+}
+
 
 . C:\Framework-Scripts\backend.ps1
 
