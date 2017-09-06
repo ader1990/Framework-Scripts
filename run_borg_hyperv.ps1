@@ -91,6 +91,7 @@ Workflow Cleanup-VMS {
     $scriptBlock = $null
     foreach -parallel ($vmName in $VMNames) {
         $Workflow:scriptBlock = Get-CleanupVMSScript
+        Start-Sleep 1
         try {
             $output = CreateWait-JobFromScript -ScriptBlock $Workflow:scriptBlock `
                 -ArgumentList @($vmName,$Backend) -Timeout $VMCleanTimeout `
@@ -98,6 +99,7 @@ Workflow Cleanup-VMS {
                 -ScriptPath $env:scriptPath
             Write-Output $output
         } catch {
+            Write-Output $_
             $Workflow:errors += 1
         }
     }
@@ -143,6 +145,7 @@ Workflow Copy-VHDS {
     $scriptBlock = $null
     foreach -parallel ($vhdFile in $vhdsFiles) {
         $Workflow:scriptBlock = Get-ScriptBlockVHDS
+        Start-Sleep 1
         $VHDFileName = $vhdFile.Name
         try {
             CreateWait-JobFromScript -ScriptBlock $Workflow:scriptBlock `
@@ -150,6 +153,7 @@ Workflow Copy-VHDS {
                 -Timeout $VHDCopyTimeout -JobName "CopyVHD-$VHDFileName-$suffix-{0}" `
                 -ScriptPath $env:scriptPath
         } catch {
+            Write-Output $_
             $Workflow:errors += 1
         }
     }
@@ -179,6 +183,7 @@ Workflow Create-VMS {
             Start-VM -Name $VMName
             Write-Output "VM $VMName has been created and started successfully."
         }
+        Start-Sleep 1
         try {
             CreateWait-JobFromScript -ScriptBlock $Workflow:scriptBlock `
                 -ArgumentList @($vmName, $vhdFile.FullName) `
@@ -186,6 +191,7 @@ Workflow Create-VMS {
                 -ScriptPath $env:scriptPath
             $Workflow:vmsCreated += $vmName
         } catch {
+            Write-Output $_
             $Workflow:errors += 1
         }
     }
@@ -251,6 +257,7 @@ Workflow Check-VMS {
     $vmsCreated = @()
     foreach -parallel ($vmName in $VMNames) {
         $Workflow:scriptBlock = Get-ScriptblockCheckVMS
+        Start-Sleep 1
         try {
             CreateWait-JobFromScript -ScriptBlock $Workflow:scriptBlock `
                 -ArgumentList @($vmName, $creds, $KernelVersion) `
@@ -258,6 +265,7 @@ Workflow Check-VMS {
                 -ScriptPath $env:scriptPath
             $Workflow:vmsCreated += $vmName
         } catch {
+            Write-Output $_
             $Workflow:errors += 1
         }
     }
