@@ -208,10 +208,9 @@ Workflow Create-VMS {
 function Get-ScriptblockCheckVMS {
     return  {
         param($VMName, $Credential, $KernelVersion)
-        # (avladu): add a retry method
+        $ipv4Ip = $null
         while ($true) {
             try {
-                $ipv4Ip = $null
                 $vm = Get-VM -Name $VMName
                 $vmNetAdapter = Get-VMNetworkAdapter -VM $vm
                 Write-Output "Checking if VM $VMName exposes the IPv4 address...`r`n"
@@ -223,25 +222,30 @@ function Get-ScriptblockCheckVMS {
                 }
                 if (!$ipv4Ip) {
                     Write-Output "VM $VMName does not expose the IPv4 address yet. Retrying...`r`n"
-                    Start-Sleep 5
-                    continue
+                } else {
+                    Write-Output "VM $VMName has been created and started successfully with ip $ipv4Ip."
+                    break
                 }
             } catch {
-                Write-Output $_.Message
+                Write-Output $_
             }
-            Write-Output "VM $VMName has been created and started successfully with ip $ip."
-            $sessionOptions = $sessionoption = New-PSSessionOption -SkipCACheck -SkipCNCheck -SkipRevocationCheck
-            $session = New-PSSession -ComputerName $ipv4Ip -Authentication Basic -Credential $Credential `
-                                     -Port 443 -UseSSL -SessionOption $sessionOptions
-            $kernel = Invoke-Command -ScriptBlock {uname -r} -Session $session
-            $session | Remove-PSSession
-            # (avladu): add a retry check here, in case the kernel is getting installed
-            if ($KernelVersion -ne $kernel) {
-                throw "Kernel versions do not match. Existent kernel $kernel != Desired kernel $KernelVersion"
-            } else {
-                Write-Output "Kernel versions match. Existent kernel $kernel == Desired kernel`r`n"
+        }
+        while ($true) {
+            try {
+                $sessionOptions = $sessionoption = New-PSSessionOption -SkipCACheck -SkipCNCheck -SkipRevocationCheck
+                $session = New-PSSession -ComputerName $ipv4Ip -Authentication Basic -Credential $Credential `
+                                         -Port 443 -UseSSL -SessionOption $sessionOptions
+                $kernel = Invoke-Command -ScriptBlock {uname -r} -Session $session
+                $session | Remove-PSSession
+                # (avladu): add a retry check here, in case the kernel is getting installed
+                if ($KernelVersion -ne $kernel) {
+                    Write-Output "Kernel versions do not match. Existent kernel $kernel != Desired kernel $KernelVersion"
+                } else {
+                    return "Kernel versions match. Existent kernel $kernel == Desired kernel`r`n"
+                }
+            } catch {
+                Write-Output $_
             }
-            break
         }
     }.ToString()
 }

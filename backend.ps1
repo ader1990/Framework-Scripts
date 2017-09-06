@@ -1,6 +1,37 @@
 ##### Install PowerShell 5 using https://github.com/DarwinJS/ChocoPackages/blob/master/PowerShell/v5.1/tools/ChocolateyInstall.ps1#L107-L173
 ##### For 2008 R2, run the .ps1 from: https://download.microsoft.com/download/6/F/5/6F5FF66C-6775-42B0-86C4-47D41F2DA187/Win7AndW2K8R2-KB3191566-x64.zip
 
+function Execute-Retry {
+    Param(
+        [parameter(Mandatory=$true)]
+        $command,
+        [int]$MaxRetryCount=4,
+        [int]$RetryInterval=4
+    )
+
+    $currErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+
+    $retryCount = 0
+    while ($true) {
+        try {
+            $res = Invoke-Command -ScriptBlock $command
+            $ErrorActionPreference = $currErrorActionPreference
+            return $res
+        } catch [System.Exception] {
+            $retryCount++
+            if ($retryCount -ge $maxRetryCount) {
+                $ErrorActionPreference = $currErrorActionPreference
+                throw $_
+            } else {
+                if($_) {
+                    Write-Output $_
+                }
+                Start-Sleep $retryInterval
+            }
+        }
+    }
+}
 
 function CreateWait-JobFromScript {
     param(
