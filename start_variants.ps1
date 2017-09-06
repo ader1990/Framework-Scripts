@@ -10,11 +10,11 @@ param (
     [Parameter(Mandatory=$false)] [string] $sourceSA="smokework",
     [Parameter(Mandatory=$false)] [string] $sourceRG="smoke_working_resource_group",
     [Parameter(Mandatory=$false)] [string] $sourceContainer="vhds-under-test",
-
+    [Parameter(Mandatory=$false)] [string] $sourceImage="sourceimage.vhd",
     [Parameter(Mandatory=$false)] [string] $destSA="smokework",
     [Parameter(Mandatory=$false)] [string] $destRG="smoke_working_resource_group",
     [Parameter(Mandatory=$false)] [string] $destContainer="vhds-under-test",
-
+    [Parameter(Mandatory=$false)] [string] $destImage="TestBase.vhd",
     [Parameter(Mandatory=$false)] [string[]] $Flavors="",
     [Parameter(Mandatory=$false)] [string[]] $requestedNames = "",
     
@@ -26,7 +26,8 @@ param (
     [Parameter(Mandatory=$false)] [string] $NSG="SmokeNSG",
     [Parameter(Mandatory=$false)] [string] $location="westus",
 
-    [Parameter(Mandatory=$false)] [string] $useExistingResources="True"
+    [Parameter(Mandatory=$false)] [string] $useExistingResources="True",
+    [Parameter(Mandatory=$false)] [bool] $ForceUploadVHD=$false
 )
 
 $sourceSA = $sourceSA.Trim()
@@ -123,6 +124,27 @@ if ($? -eq $false -or $existingContainer -eq $null) {
 
 Set-AzureRmCurrentStorageAccount –ResourceGroupName $sourceRG -Name $sourceSA
 
+# Look for vhd in destination storage account 
+$blobArray = Get-AzureStorageBlob -Container $sourceContainer
+$vhdExists = $false
+foreach($blob in $blobArray)
+{
+	if($blob.Name -eq $destImage)
+	{
+		$vhdExists = $true
+		break
+	}
+}
+# Copy the VHD to the destination storage account which will be used for tests
+if(($ForceUploadVHD) -or (-Not $vhdExists))
+{
+	CopyVHDToAnotherStorageAccount $sourceSA $sourceContainer $sourceRG $destSA $destContainer $destRG $sourceImage $destImage
+}else{
+	Write-Host "Skipping vhd upload as vhd already exists in destination storage account."
+	Write-Host "If you want to overwrite the existing vhd in destination storage account use '-ForceUploadVHD $True' ."
+}
+
+
 . C:\Framework-Scripts\backend.ps1
 
 $vnetAddressPrefix = "10.0.0.0/16"
@@ -133,6 +155,7 @@ $azureBackend = $backendFactory.GetBackend("AzureBackend", @(1))
 
 $azureBackend.ResourceGroupName = $destRG
 $azureBackend.StorageAccountName = $destSA
+$azureBackend.sourceImage = $sourceImage
 $azureBackend.ContainerName = $destContainer
 $azureBackend.Location = $location
 $azureBackend.VMFlavor = "Unset"
