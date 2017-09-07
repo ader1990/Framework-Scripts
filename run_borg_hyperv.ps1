@@ -223,7 +223,7 @@ function Get-ScriptblockCheckVMS {
                 if (!$ipv4Ip) {
                     Write-Output "VM $VMName does not expose the IPv4 address yet. Retrying...`r`n"
                 } else {
-                    Write-Output "VM $VMName has been created and started successfully with ip $ipv4Ip."
+                    Write-Output "VM $VMName has been created and started successfully with ip $ipv4Ip.`r`n"
                     break
                 }
             } catch {
@@ -234,16 +234,21 @@ function Get-ScriptblockCheckVMS {
 
         while ($true) {
             try {
-                $sessionOptions = $sessionoption = New-PSSessionOption -SkipCACheck -SkipCNCheck -SkipRevocationCheck
+                $sessionOption = New-PSSessionOption -SkipCACheck -SkipCNCheck -SkipRevocationCheck `
+                                         -MaxConnectionRetryCount 1 -OpenTimeout 5000
                 $session = New-PSSession -ComputerName $ipv4Ip -Authentication Basic -Credential $Credential `
-                                         -Port 443 -UseSSL -SessionOption $sessionOptions
+                                         -Port 443 -UseSSL -SessionOption $sessionOption -ErrorAction SilentlyContinue
+                if (!$session) {
+                    throw "Could not create PSSession for $ipv4Ip"
+                }
                 $kernel = Invoke-Command -ScriptBlock {uname -r} -Session $session
-                $session | Remove-PSSession
+                $session | Remove-PSSession -ErrorAction SilentlyContinue
                 # (avladu): add a retry check here, in case the kernel is getting installed
                 if ($KernelVersion -ne $kernel) {
-                    Write-Output "Kernel versions do not match. Existent kernel $kernel != Desired kernel $KernelVersion"
+                    throw "Kernel versions do not match. Existent kernel $kernel != Desired kernel $KernelVersion`r`n"
                 } else {
-                    return "Kernel versions match. Existent kernel $kernel == Desired kernel`r`n"
+                    Write-Output "Kernel versions match. Existent kernel $kernel == Desired kernel`r`n"
+                    return
                 }
             } catch {
                 Write-Output $_
