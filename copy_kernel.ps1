@@ -384,19 +384,19 @@ if (Test-Path /bin/rpm) {
 
     #
     #  In an ideal world, neither of these would be necessary. However,
-    #  experience has shown that there are many more broken images that
+    #  experience has shown that there are many more broken images than
     #  good, so let's at least try and get the system consistent before
     #  installing the kernel.
     #
-    phoneHome "Trying to make sure the dpkg repository is in a conistent state"
-    Remove-Item -Path /var/lib/dpkg/lock
-    @(dpkg --configure -a)
+    phoneHome "Trying to make sure the dpkg repository is in a consistent state"
+    Remove-Item -Path "/var/lib/dpkg/lock"
+    @(dpkg --configure -a --force-confdef --force-confold)
     if ($? -eq $false) {
         ErrOut($failure_point)
         fail
     }
 
-    @(apt-get install -f)
+    @(apt-get install -f -y)
     if ($? -eq $false) {
         $failure_point="Install_F"
         ErrOut($failure_point)
