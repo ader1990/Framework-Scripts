@@ -175,9 +175,9 @@ Workflow Create-VMS {
         $vmName = $vhdFile.Name.Split('.')[0]
         $Workflow:scriptBlock = {
             param($VMName, $VHDPath)
-            New-VM -Name $VMName -MemoryStartupBytes 2048MB -Generation 1 `
+            New-VM -Name $VMName -MemoryStartupBytes 4096MB -Generation 1 `
                 -SwitchName "External" -VHDPath $VHDPath | Out-Null
-            Set-VM -ProcessorCount 2 -Name $VMName -DynamicMemory:$false
+            Set-VM -ProcessorCount 8 -Name $VMName -DynamicMemory:$false
             Set-VMMemory -DynamicMemoryEnabled $false -VMName $VMName
             Enable-VMIntegrationService -Name "*" -VMName $VMName
             Start-VM -Name $VMName
@@ -229,7 +229,9 @@ function Get-ScriptblockCheckVMS {
             } catch {
                 Write-Output $_
             }
+            Start-Sleep 10
         }
+
         while ($true) {
             try {
                 $sessionOptions = $sessionoption = New-PSSessionOption -SkipCACheck -SkipCNCheck -SkipRevocationCheck
@@ -246,6 +248,8 @@ function Get-ScriptblockCheckVMS {
             } catch {
                 Write-Output $_
             }
+            Start-Sleep 20
+            Get-PSSession | Remove-PSSession
         }
     }.ToString()
 }
